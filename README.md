@@ -34,8 +34,8 @@ Aplicativo móvel nativo Android do **Argos**.
    O plugin `google-services` exige o arquivo `app/google-services.json`. 
    Coloque o arquivo do projeto Firebase na raiz do módulo `app/`.
 
-   > [!WARNING]
-   >  O `google-services.json` **não deve** ser commitado. Em CI, ele é injetado via secret `GOOGLE_SERVICES_JSON`.
+> [!WARNING]
+> O `google-services.json` **não deve** ser commitado. Em CI, ele é injetado via secret `GOOGLE_SERVICES_JSON`.
 
 3. **Compilação e testes**
 
