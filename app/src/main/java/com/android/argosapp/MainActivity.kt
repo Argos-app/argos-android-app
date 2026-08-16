@@ -2,20 +2,37 @@ package com.android.argosapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.compose.setContent
+import com.android.argosapp.data.session.AuthSessionManager
+import com.android.argosapp.data.session.FirebaseAuthSessionManager
+import com.android.argosapp.data.session.SharedPreferencesAuthTokenStorage
+import com.android.argosapp.ui.navigation.ArgosNavHost
 import com.android.argosapp.ui.theme.ArgosappTheme
 
 class MainActivity : ComponentActivity() {
+    private val authTokenStorage by lazy {
+        SharedPreferencesAuthTokenStorage(applicationContext)
+    }
+    private val authSessionManager: AuthSessionManager by lazy {
+        FirebaseAuthSessionManager()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        setContent {
+            ArgosappTheme {
+                ArgosNavHost()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        if (!isChangingConfigurations && authTokenStorage.read().isNullOrBlank()) {
+            authSessionManager.clear()
+        }
+        super.onDestroy()
     }
 }
