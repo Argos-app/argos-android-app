@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="16dp"
+    android:viewportWidth="20"
+    android:viewportHeight="16">
+  <path
+      android:pathData="M18,4L10,9L2,4V2L10,7L18,2M18,0H2C0.89,0 0,0.89 0,2V14C0,14.53 0.211,15.039 0.586,15.414C0.961,15.789 1.47,16 2,16H18C18.53,16 19.039,15.789 19.414,15.414C19.789,15.039 20,14.53 20,14V2C20,0.89 19.1,0 18,0Z"
+      android:fillColor="@color/argos_icon"
+      android:fillAlpha="0.71"/>
+</vector>

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="18dp"
+    android:height="12dp"
+    android:viewportWidth="18"
+    android:viewportHeight="12">
+  <path
+      android:pathData="M9,3.6C8.349,3.6 7.725,3.853 7.264,4.303C6.804,4.753 6.545,5.363 6.545,6C6.545,6.637 6.804,7.247 7.264,7.697C7.725,8.147 8.349,8.4 9,8.4C9.651,8.4 10.275,8.147 10.736,7.697C11.196,7.247 11.455,6.637 11.455,6C11.455,5.363 11.196,4.753 10.736,4.303C10.275,3.853 9.651,3.6 9,3.6ZM9,10C7.915,10 6.874,9.579 6.107,8.828C5.34,8.078 4.909,7.061 4.909,6C4.909,4.939 5.34,3.922 6.107,3.172C6.874,2.421 7.915,2 9,2C10.085,2 11.125,2.421 11.893,3.172C12.66,3.922 13.091,4.939 13.091,6C13.091,7.061 12.66,8.078 11.893,8.828C11.125,9.579 10.085,10 9,10ZM9,0C4.909,0 1.415,2.488 0,6C1.415,9.512 4.909,12 9,12C13.091,12 16.584,9.512 18,6C16.584,2.488 13.091,0 9,0Z"
+      android:fillColor="@color/argos_icon"
+      android:fillAlpha="0.71"/>
+  <path
+      android:pathData="M1.5,10.5L16.5,1.5"
+      android:strokeWidth="2.25"
+      android:fillColor="@color/argos_transparent"
+      android:strokeColor="@color/argos_eye_slash_background"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M2,10L16,2"
+      android:strokeWidth="1.25"
+      android:fillColor="@color/argos_transparent"
+      android:strokeColor="@color/argos_eye_slash_secondary"
+      android:strokeLineCap="round"/>
+</vector>
