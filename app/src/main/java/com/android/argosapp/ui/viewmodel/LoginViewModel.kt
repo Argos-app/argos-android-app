@@ -1,26 +1,30 @@
-package com.android.argosapp.ui.screen.login
+package com.android.argosapp.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.android.argosapp.data.repository.AuthenticatedSession
-import com.android.argosapp.data.repository.FirebaseAuthRepository
-import com.android.argosapp.data.repository.IAuthRepository
-import com.android.argosapp.data.session.AuthTokenStorage
-import com.android.argosapp.data.session.AuthSessionManager
-import com.android.argosapp.data.session.FirebaseAuthSessionManager
-import com.android.argosapp.data.session.SharedPreferencesAuthTokenStorage
+import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
+import com.android.argosapp.auth.session.UserSessionStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class LoginState(
+    val email: String = "",
+    val password: String = "",
+    val isLoading: Boolean = false,
+    val rememberMe: Boolean = true,
+    val passwordVisible: Boolean = false,
+    val error: String? = null,
+    val isAuthenticated: Boolean = false,
+)
 class LoginViewModel(
-    private val repository: IAuthRepository,
-    private val tokenStorage: AuthTokenStorage,
-    private val sessionManager: AuthSessionManager,
+    private val firebaseAuthManager: FirebaseAuthManager,
+    private val argosApiAuthManager: MockedArgosApiAuthManager,
+    private val tokenStorage: UserSessionStorage,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginState(isLoading = true))
@@ -53,7 +57,7 @@ class LoginViewModel(
             return
         }
 
-        authenticate { repository.login(state.email.trim(), state.password) }
+        authenticate { firebaseAuthManager.loginWithCredentials(state.email.trim(), state.password) }
     }
 
     fun loginWithGoogle(idToken: String) {
@@ -62,7 +66,7 @@ class LoginViewModel(
             return
         }
 
-        authenticate { repository.googleLogin(idToken) }
+        authenticate { firebaseAuthManager.loginWithGoogle(idToken) }
     }
 
     fun onGoogleLoginError(throwable: Throwable) {
@@ -74,46 +78,41 @@ class LoginViewModel(
         }
     }
 
-    private fun authenticate(request: suspend () -> AuthenticatedSession) {
+    private fun authenticate(request: suspend () -> String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            runCatching { request() }
-                .onSuccess { result ->
-                    runCatching { persistSessionIfNeeded(result) }
-                        .onSuccess {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    isAuthenticated = true,
-                                    error = null,
-                                    password = "",
-                                )
-                            }
-                        }
-                        .onFailure(::setError)
+            runCatching {
+                val firebaseIdToken = request()
+                val bearerToken = argosApiAuthManager.authenticate(firebaseIdToken)
+
+                tokenStorage.updateBearerToken(
+                    bearerToken = bearerToken,
+                    rememberMe = uiState.value.rememberMe,
+                )
+            }
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isAuthenticated = true,
+                            error = null,
+                            password = "",
+                        )
+                    }
                 }
                 .onFailure(::setError)
         }
     }
 
-    private suspend fun persistSessionIfNeeded(session: AuthenticatedSession) {
-        if (!uiState.value.rememberMe) {
-            tokenStorage.clear()
-            return
-        }
-
-        tokenStorage.save(session.idToken)
-    }
-
     private fun restoreSession() {
         viewModelScope.launch {
-            val hasPersistedToken = !tokenStorage.read().isNullOrBlank()
-            val hasValidSession = hasPersistedToken && sessionManager.hasValidSession()
+            val hasBearerToken = !tokenStorage.getBearerToken().isNullOrBlank()
+            val hasValidSession = hasBearerToken && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {
-                tokenStorage.clear()
-                sessionManager.clear()
+                tokenStorage.clearBearerToken()
+                firebaseAuthManager.signOut()
             }
 
             _uiState.update {
@@ -135,14 +134,18 @@ class LoginViewModel(
     }
 
     companion object {
-        fun factory(context: Context): ViewModelProvider.Factory =
+        fun factory(
+            firebaseAuthManager: FirebaseAuthManager,
+            argosApiAuthManager: MockedArgosApiAuthManager,
+            tokenStorage: UserSessionStorage,
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return LoginViewModel(
-                        repository = FirebaseAuthRepository(),
-                        tokenStorage = SharedPreferencesAuthTokenStorage(context.applicationContext),
-                        sessionManager = FirebaseAuthSessionManager(),
+                        firebaseAuthManager = firebaseAuthManager,
+                        argosApiAuthManager = argosApiAuthManager,
+                        tokenStorage = tokenStorage,
                     ) as T
                 }
             }

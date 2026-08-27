@@ -1,4 +1,4 @@
-package com.android.argosapp.ui.screen.login
+package com.android.argosapp.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -36,10 +36,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
-import com.android.argosapp.ui.components.ArgosButton
-import com.android.argosapp.ui.components.ArgosOutlinedButton
-import com.android.argosapp.ui.components.ArgosTextInput
-import com.android.argosapp.ui.components.ArgosToggle
+import com.android.argosapp.ui.component.ArgosButton
+import com.android.argosapp.ui.component.ArgosOutlinedButton
+import com.android.argosapp.ui.component.ArgosTextInput
+import com.android.argosapp.ui.component.ArgosToggle
 
 @Composable
 fun LoginScreen(

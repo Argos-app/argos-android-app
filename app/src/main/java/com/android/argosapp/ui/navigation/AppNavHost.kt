@@ -10,7 +10,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.android.argosapp.ui.screen.login.LoginRoute
+import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
+import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.ui.navigation.routes.LoginRoute
 
 private object AppRoute {
     const val Login = "login"
@@ -19,6 +22,9 @@ private object AppRoute {
 
 @Composable
 fun ArgosNavHost(
+    firebaseAuthManager: FirebaseAuthManager,
+    argosApiAuthManager: MockedArgosApiAuthManager,
+    tokenStorage: UserSessionStorage,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
@@ -29,6 +35,9 @@ fun ArgosNavHost(
     ) {
         composable(AppRoute.Login) {
             LoginRoute(
+                firebaseAuthManager = firebaseAuthManager,
+                argosApiAuthManager = argosApiAuthManager,
+                tokenStorage = tokenStorage,
                 onNavigateToHome = {
                     navController.navigate(AppRoute.Home) {
                         popUpTo(AppRoute.Login) {

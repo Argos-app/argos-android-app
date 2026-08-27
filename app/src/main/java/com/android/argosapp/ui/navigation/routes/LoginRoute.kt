@@ -1,4 +1,4 @@
-package com.android.argosapp.ui.screen.login
+package com.android.argosapp.ui.navigation.routes
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
@@ -17,33 +17,36 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.android.argosapp.R
-import com.android.argosapp.auth.GoogleSignInHelper
+import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
+import com.android.argosapp.auth.session.UserSessionStorage
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.argosapp.ui.viewmodel.LoginViewModel
+import com.android.argosapp.ui.screen.LoginScreen
 
 @Composable
 fun LoginRoute(
+    firebaseAuthManager: FirebaseAuthManager,
+    argosApiAuthManager: MockedArgosApiAuthManager,
+    tokenStorage: UserSessionStorage,
     onNavigateToHome: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
     val scope = rememberCoroutineScope()
-    val googleSignInHelper = remember(context, scope) {
-        GoogleSignInHelper(
-            context = context,
-            webClientId = context.getString(R.string.default_web_client_id),
-            scope = scope,
-        )
-    }
     val loginViewModel: LoginViewModel = viewModel(
-        factory = LoginViewModel.factory(context.applicationContext),
+        factory = LoginViewModel.factory(
+            firebaseAuthManager = firebaseAuthManager,
+            argosApiAuthManager = argosApiAuthManager,
+            tokenStorage = tokenStorage,
+        ),
     )
     val state by loginViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -85,9 +88,12 @@ fun LoginRoute(
             onPasswordVisibilityChange = loginViewModel::onPasswordVisibilityChanged,
             onForgotPasswordClick = {},
             onGoogleClick = {
-                googleSignInHelper.launch(
-                    loginViewModel::loginWithGoogle,
-                    loginViewModel::onGoogleLoginError,
+                firebaseAuthManager.launchGoogleSignIn(
+                    context = context,
+                    webClientId = context.getString(R.string.default_web_client_id),
+                    scope = scope,
+                    onSuccess = loginViewModel::loginWithGoogle,
+                    onError = loginViewModel::onGoogleLoginError,
                 )
             },
             onLoginClick = loginViewModel::login,
