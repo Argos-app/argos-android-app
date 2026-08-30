@@ -12,7 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/** Centraliza as operações de autenticação e sessão do Firebase Auth. */
+/**
+ * Centraliza as operações de autenticação e sessão do Firebase Auth.
+ */
 class FirebaseAuthManager(
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
 ) {

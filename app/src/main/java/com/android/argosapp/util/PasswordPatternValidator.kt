@@ -18,7 +18,7 @@ class PasswordPatternValidator {
      * - minimalCapital:    Quantidade de caracteres maiúsculos
      * - minimalNotCapital: Quantidade de caracteres minúsculos
      * - minimalNumeric:    Quantidade de caracteres numéricos
-     * - minimalSpecial:    Quantidade de caractéres especiais
+     * - minimalSpecial:    Quantidade de caracteres especiais
      */
     fun validatePassword(password: String): Map<String, Boolean> {
 

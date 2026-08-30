@@ -4,6 +4,9 @@ import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
 import kotlinx.coroutines.delay
 
+/**
+ * Classe mocked que simula uma requisição de auth pela api do Argos.
+ */
 class MockedArgosApiAuthManager(
     private val notFound: Boolean = false,
     private val firstAccess: Boolean = false
