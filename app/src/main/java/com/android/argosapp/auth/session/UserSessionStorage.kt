@@ -3,6 +3,7 @@ package com.android.argosapp.auth.session
 import android.content.Context
 import androidx.core.content.edit
 import com.android.argosapp.model.User
+import com.android.argosapp.util.SharedPreferencesCipher
 import org.json.JSONObject
 
 /**
@@ -14,6 +15,7 @@ class UserSessionStorage(context: Context) {
         const val BEARER_TOKEN_KEY = "bearerToken"
         const val USER_KEY = "user"
         const val REMEMBER_ME_KEY = "rememberMe"
+        const val SESSION_KEY_ALIAS = "argos_session_encryption_key"
 
         var inMemoryBearerToken: String? = null
         var inMemoryUser: User? = null
@@ -23,13 +25,14 @@ class UserSessionStorage(context: Context) {
         SHARED_PREFERENCES_KEY,
         Context.MODE_PRIVATE,
     )
+    private val cipher = SharedPreferencesCipher(SESSION_KEY_ALIAS)
 
     init {
         if (inMemoryBearerToken == null) {
-            inMemoryBearerToken = preferences.getString(BEARER_TOKEN_KEY, null)
+            inMemoryBearerToken = cipher.readSecureValue(preferences, BEARER_TOKEN_KEY)
         }
         if (inMemoryUser == null) {
-            inMemoryUser = deserializeUser(preferences.getString(USER_KEY, null))
+            inMemoryUser = deserializeUser(cipher.readSecureValue(preferences, USER_KEY))
         }
     }
 
@@ -53,8 +56,8 @@ class UserSessionStorage(context: Context) {
             putBoolean(REMEMBER_ME_KEY, rememberMe)
 
             if (rememberMe) {
-                putString(BEARER_TOKEN_KEY, bearerToken)
-                putString(USER_KEY, serializeUser(user))
+                putString(BEARER_TOKEN_KEY, cipher.encrypt(bearerToken))
+                putString(USER_KEY, cipher.encrypt(serializeUser(user)))
             } else {
                 remove(BEARER_TOKEN_KEY)
                 remove(USER_KEY)
@@ -97,4 +100,5 @@ class UserSessionStorage(context: Context) {
             )
         }.getOrNull()
     }
+
 }
