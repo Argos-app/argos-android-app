@@ -4,16 +4,17 @@ import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
 import kotlinx.coroutines.delay
 
-class MockedArgosApiAuthManager {
+class MockedArgosApiAuthManager(
+    private val notFound: Boolean = false,
+    private val firstAccess: Boolean = false
+) {
 
     suspend fun authenticate(
         firebaseIdToken: String,
-        force_not_found: Boolean = false,
-        force_first_access: Boolean = false,
     ): ArgosApiAuthResponse {
         delay(1000)
 
-        if (force_not_found) {
+        if (this.notFound) {
             throw Exception("User not found.")
         }
 
@@ -24,7 +25,7 @@ class MockedArgosApiAuthManager {
                 userEmail = "tobby@argos.com",
                 farmName = "Tobby & CIA",
             ),
-            isFirstAccess = force_first_access,
+            isFirstAccess = this.firstAccess,
         )
     }
 }
