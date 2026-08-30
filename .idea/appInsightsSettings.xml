@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.android.argosapp" />
+                  <option name="mobileSdkAppId" value="1:492847699669:android:6a7805f94173a6f967b45c" />
+                  <option name="projectId" value="argos-app-a3c63" />
+                  <option name="projectNumber" value="492847699669" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

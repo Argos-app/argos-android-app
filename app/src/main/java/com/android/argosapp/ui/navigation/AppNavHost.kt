@@ -1,9 +1,5 @@
 package com.android.argosapp.ui.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -13,10 +9,13 @@ import androidx.navigation.compose.rememberNavController
 import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.ui.navigation.route.FirstAccessChangePasswordRoute
 import com.android.argosapp.ui.navigation.route.LoginRoute
+import com.android.argosapp.ui.screen.HomeScreen
 
 private object AppRoute {
     const val Login = "login"
+    const val FirstAccessChangePassword = "first_access_change_password"
     const val Home = "home"
 }
 
@@ -46,14 +45,47 @@ fun ArgosNavHost(
                         launchSingleTop = true
                     }
                 },
+                onNavigateToFirstAccess = {
+                    navController.navigate(AppRoute.FirstAccessChangePassword) {
+                        popUpTo(AppRoute.Login) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.FirstAccessChangePassword) {
+            FirstAccessChangePasswordRoute(
+                firebaseAuthManager = firebaseAuthManager,
+                argosApiAuthManager = argosApiAuthManager,
+                tokenStorage = tokenStorage,
+                onNavigateToHome = {
+                    navController.navigate(AppRoute.Home) {
+                        popUpTo(AppRoute.FirstAccessChangePassword) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToLogin = {
+                    tokenStorage.clearSession()
+                    firebaseAuthManager.signOut()
+                    navController.navigate(AppRoute.Login) {
+                        popUpTo(AppRoute.FirstAccessChangePassword) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
         composable(AppRoute.Home) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
+            HomeScreen(
+                user = tokenStorage.getUser(),
+                bearerToken = tokenStorage.getBearerToken(),
             )
         }
     }

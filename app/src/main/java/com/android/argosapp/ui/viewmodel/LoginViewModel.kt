@@ -20,6 +20,7 @@ data class LoginState(
     val passwordVisible: Boolean = false,
     val error: String? = null,
     val isAuthenticated: Boolean = false,
+    val isFirstAccess: Boolean = false,
 )
 class LoginViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
@@ -80,7 +81,7 @@ class LoginViewModel(
 
     private fun authenticate(request: suspend () -> String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update { it.copy(isLoading = true, error = null, isFirstAccess = false) }
 
             runCatching {
                 val firebaseIdToken = request()
@@ -91,12 +92,15 @@ class LoginViewModel(
                     user = authResponse.user,
                     rememberMe = uiState.value.rememberMe,
                 )
+
+                authResponse
             }
-                .onSuccess {
+                .onSuccess { authResponse ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            isAuthenticated = true,
+                            isAuthenticated = !authResponse.isFirstAccess,
+                            isFirstAccess = authResponse.isFirstAccess,
                             error = null,
                             password = "",
                         )
@@ -121,6 +125,7 @@ class LoginViewModel(
                 it.copy(
                     isLoading = false,
                     isAuthenticated = hasValidSession,
+                    isFirstAccess = false,
                 )
             }
         }

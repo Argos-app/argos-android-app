@@ -43,6 +43,7 @@ import com.android.argosapp.ui.component.ArgosLegalText
 import com.android.argosapp.ui.component.ArgosPasswordInput
 import com.android.argosapp.ui.theme.ArgosIcon
 import com.android.argosapp.ui.theme.ArgosappTheme
+import com.android.argosapp.util.PasswordPatternValidator
 
 @Composable
 fun FirstAccessChangePasswordScreen(
@@ -308,29 +309,31 @@ private data class PasswordCriterion(
     val isMet: Boolean,
 )
 
-private const val ALLOWED_SPECIAL_CHARACTERS = "@!#\$%&"
+private val passwordValidator = PasswordPatternValidator()
 
 private fun passwordCriteriaFor(password: String): List<PasswordCriterion> {
+    val validation = passwordValidator.validatePassword(password)
+
     return listOf(
         PasswordCriterion(
             label = "Mínimo de 8 caracteres",
-            isMet = password.length >= 8,
+            isMet = validation.getValue("length"),
         ),
         PasswordCriterion(
             label = "Pelo menos uma letra maiúscula",
-            isMet = password.any(Char::isUpperCase),
+            isMet = validation.getValue("minimalCapital"),
         ),
         PasswordCriterion(
             label = "Pelo menos uma letra minúscula",
-            isMet = password.any(Char::isLowerCase),
+            isMet = validation.getValue("minimalNotCapital"),
         ),
         PasswordCriterion(
             label = "Pelo menos um número",
-            isMet = password.any(Char::isDigit),
+            isMet = validation.getValue("minimalNumeric"),
         ),
         PasswordCriterion(
             label = "Pelo menos um caractere especial (@ ! # \$ % &)",
-            isMet = password.any { it in ALLOWED_SPECIAL_CHARACTERS },
+            isMet = validation.getValue("minimalSpecial"),
         ),
     )
 }
