@@ -74,6 +74,14 @@ class FirebaseAuthManager(
         }.getOrDefault(false)
     }
 
+    suspend fun updatePassword(newPassword: String) {
+        val currentUser = requireNotNull(firebaseAuth.currentUser) {
+            "O Firebase não possui um usuário autenticado."
+        }
+
+        currentUser.updatePassword(newPassword).await()
+    }
+
     fun signOut() {
         firebaseAuth.signOut()
     }
