@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         if (!isChangingConfigurations && !tokenStorage.isRememberMeEnabled()) {
-            tokenStorage.clearBearerToken()
+            tokenStorage.clearSession()
         }
 
         super.onDestroy()

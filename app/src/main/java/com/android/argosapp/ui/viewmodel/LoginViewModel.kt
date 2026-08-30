@@ -84,10 +84,11 @@ class LoginViewModel(
 
             runCatching {
                 val firebaseIdToken = request()
-                val bearerToken = argosApiAuthManager.authenticate(firebaseIdToken)
+                val authResponse = argosApiAuthManager.authenticate(firebaseIdToken)
 
-                tokenStorage.updateBearerToken(
-                    bearerToken = bearerToken,
+                tokenStorage.updateSession(
+                    bearerToken = authResponse.bearerToken,
+                    user = authResponse.user,
                     rememberMe = uiState.value.rememberMe,
                 )
             }
@@ -108,10 +109,11 @@ class LoginViewModel(
     private fun restoreSession() {
         viewModelScope.launch {
             val hasBearerToken = !tokenStorage.getBearerToken().isNullOrBlank()
-            val hasValidSession = hasBearerToken && firebaseAuthManager.hasValidSession()
+            val hasUser = tokenStorage.getUser() != null
+            val hasValidSession = hasBearerToken && hasUser && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {
-                tokenStorage.clearBearerToken()
+                tokenStorage.clearSession()
                 firebaseAuthManager.signOut()
             }
 

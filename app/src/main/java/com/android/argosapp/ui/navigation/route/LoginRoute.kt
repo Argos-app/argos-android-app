@@ -1,4 +1,4 @@
-package com.android.argosapp.ui.navigation.routes
+package com.android.argosapp.ui.navigation.route
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable

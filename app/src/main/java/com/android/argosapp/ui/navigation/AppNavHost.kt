@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
-import com.android.argosapp.ui.navigation.routes.LoginRoute
+import com.android.argosapp.ui.navigation.route.LoginRoute
 
 private object AppRoute {
     const val Login = "login"
