@@ -19,6 +19,7 @@ data class LoginState(
     val rememberMe: Boolean = true,
     val passwordVisible: Boolean = false,
     val error: String? = null,
+    val errorEventId: Long = 0,
     val isAuthenticated: Boolean = false,
     val isFirstAccess: Boolean = false,
 )
@@ -54,7 +55,7 @@ class LoginViewModel(
     fun login() {
         val state = uiState.value
         if (state.email.isBlank() || state.password.isBlank()) {
-            _uiState.update { it.copy(error = "Informe email e senha.") }
+            showError("Informe email e senha.")
             return
         }
 
@@ -63,7 +64,7 @@ class LoginViewModel(
 
     fun loginWithGoogle(idToken: String) {
         if (idToken.isBlank()) {
-            _uiState.update { it.copy(error = "Não foi possível obter o token do Google.") }
+            showError("Não foi possível obter o token do Google.")
             return
         }
 
@@ -71,12 +72,10 @@ class LoginViewModel(
     }
 
     fun onGoogleLoginError(throwable: Throwable) {
-        _uiState.update {
-            it.copy(
-                isLoading = false,
-                error = throwable.message ?: "Não foi possível entrar com o Google.",
-            )
-        }
+        showError(
+            message = throwable.message ?: "Não foi possível entrar com o Google.",
+            isLoading = false,
+        )
     }
 
     private fun authenticate(request: suspend () -> String) {
@@ -132,10 +131,18 @@ class LoginViewModel(
     }
 
     private fun setError(throwable: Throwable) {
+        showError(
+            message = throwable.message ?: "Não foi possível realizar o login.",
+            isLoading = false,
+        )
+    }
+
+    private fun showError(message: String, isLoading: Boolean = false) {
         _uiState.update {
             it.copy(
-                isLoading = false,
-                error = throwable.message ?: "Não foi possível realizar o login.",
+                isLoading = isLoading,
+                error = message,
+                errorEventId = it.errorEventId + 1,
             )
         }
     }

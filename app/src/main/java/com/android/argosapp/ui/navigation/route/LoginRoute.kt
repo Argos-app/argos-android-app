@@ -50,7 +50,7 @@ fun LoginRoute(
         if (state.isFirstAccess) onNavigateToFirstAccess()
     }
 
-    LaunchedEffect(state.error) {
+    LaunchedEffect(state.errorEventId) {
         state.error?.let { error ->
             showErrorFeedback(
                 context = context,

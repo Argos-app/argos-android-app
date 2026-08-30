@@ -23,6 +23,7 @@ data class FirstAccessChangePasswordState(
     val isLoading: Boolean = false,
     val isPasswordChanged: Boolean = false,
     val error: String? = null,
+    val errorEventId: Long = 0,
 )
 
 class FirstAccessChangePasswordViewModel(
@@ -60,18 +61,18 @@ class FirstAccessChangePasswordViewModel(
         val state = uiState.value
         val passwordRules = passwordValidator.validatePassword(state.newPassword)
         if (!passwordRules.values.all { it }) {
-            _uiState.update { it.copy(error = "Atenda aos critérios da nova senha.") }
+            showError("Atenda aos critérios da nova senha.")
             return
         }
         if (state.newPassword != state.passwordConfirmation) {
-            _uiState.update { it.copy(error = "As senhas informadas não coincidem.") }
+            showError("As senhas informadas não coincidem.")
             return
         }
 
         viewModelScope.launch {
             val bearerToken = tokenStorage.getBearerToken()
             if (bearerToken.isNullOrBlank()) {
-                _uiState.update { it.copy(error = "Sua sessão expirou. Entre novamente.") }
+                showError("Sua sessão expirou. Entre novamente.")
                 return@launch
             }
 
@@ -90,13 +91,21 @@ class FirstAccessChangePasswordViewModel(
                     }
                 }
                 .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = throwable.message ?: "Não foi possível alterar a senha.",
-                        )
-                    }
+                    showError(
+                        message = throwable.message ?: "Não foi possível alterar a senha.",
+                        isLoading = false,
+                    )
                 }
+        }
+    }
+
+    private fun showError(message: String, isLoading: Boolean = false) {
+        _uiState.update {
+            it.copy(
+                isLoading = isLoading,
+                error = message,
+                errorEventId = it.errorEventId + 1,
+            )
         }
     }
 

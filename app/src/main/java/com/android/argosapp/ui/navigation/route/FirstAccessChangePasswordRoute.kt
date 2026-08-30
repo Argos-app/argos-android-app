@@ -42,7 +42,7 @@ fun FirstAccessChangePasswordRoute(
         if (state.isPasswordChanged) onNavigateToHome()
     }
 
-    LaunchedEffect(state.error) {
+    LaunchedEffect(state.errorEventId) {
         state.error?.let { error ->
             showErrorFeedback(
                 context = context,
