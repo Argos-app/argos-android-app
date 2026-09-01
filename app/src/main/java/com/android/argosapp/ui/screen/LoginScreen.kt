@@ -1,10 +1,8 @@
-package com.android.argosapp.ui.screen.login
+package com.android.argosapp.ui.screen
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,34 +10,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
-import com.android.argosapp.ui.components.ArgosButton
-import com.android.argosapp.ui.components.ArgosOutlinedButton
-import com.android.argosapp.ui.components.ArgosTextInput
-import com.android.argosapp.ui.components.ArgosToggle
+import com.android.argosapp.ui.component.ArgosAuthHeader
+import com.android.argosapp.ui.component.ArgosButton
+import com.android.argosapp.ui.component.ArgosEmailIcon
+import com.android.argosapp.ui.component.ArgosLegalText
+import com.android.argosapp.ui.component.ArgosOutlinedButton
+import com.android.argosapp.ui.component.ArgosPasswordInput
+import com.android.argosapp.ui.component.ArgosTextInput
+import com.android.argosapp.ui.component.ArgosToggle
 
 @Composable
 fun LoginScreen(
@@ -59,7 +50,6 @@ fun LoginScreen(
     onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val eyeInteraction = remember { MutableInteractionSource() }
     val colors = MaterialTheme.colorScheme
 
     Column(
@@ -71,22 +61,8 @@ fun LoginScreen(
     ) {
         Spacer(modifier = Modifier.height(28.dp))
 
-        Image(
-            painter = painterResource(R.drawable.argos_horizontal_logo),
-            contentDescription = "Argos",
-            modifier = Modifier
-                .fillMaxWidth(0.74f)
-                .height(62.dp),
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "O aplicativo que gere, cuida e organiza para você.",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = colors.onBackground,
-                fontSize = 14.sp,
-            ),
+        ArgosAuthHeader(
+            subtitle = "O aplicativo que gere, cuida e organiza para você.",
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -96,32 +72,18 @@ fun LoginScreen(
             onValueChange = onEmailChange,
             label = "Email",
             placeholder = "seuemail@dominio.com",
-            leadingContent = { EmailIcon() },
+            leadingContent = { ArgosEmailIcon() },
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        ArgosTextInput(
+        ArgosPasswordInput(
             value = password,
             onValueChange = onPasswordChange,
             label = "Senha",
             placeholder = "senhadeacesso123",
-            leadingContent = { LockIcon() },
-            trailingContent = {
-                EyeIcon(
-                    passwordVisible = passwordVisible,
-                    modifier = Modifier.clickable(
-                        interactionSource = eyeInteraction,
-                        indication = null,
-                        onClick = onPasswordVisibilityChange,
-                    ),
-                )
-            },
-            visualTransformation = if (passwordVisible) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
+            passwordVisible = passwordVisible,
+            onPasswordVisibilityChange = onPasswordVisibilityChange,
         )
         Spacer(modifier = Modifier.height(17.dp))
 
@@ -193,52 +155,11 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        val legalText = buildAnnotatedString {
-            append("Ao entrar você concorda com os ")
-            pushStringAnnotation(tag = "terms", annotation = "terms")
-            withStyle(
-                SpanStyle(
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold,
-                ),
-            ) {
-                append("Termos")
-            }
-            pop()
-            append(" e a ")
-            pushStringAnnotation(tag = "privacy", annotation = "privacy")
-            withStyle(
-                SpanStyle(
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold,
-                ),
-            ) {
-                append("Política de Privacidade")
-            }
-            pop()
-            append(" do Argos.")
-        }
-        ClickableText(
-            text = legalText,
+        ArgosLegalText(
+            onTermsClick = onTermsClick,
+            onPrivacyClick = onPrivacyClick,
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = 4.dp),
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = colors.onSurfaceVariant,
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 15.sp,
-            ),
-            onClick = { offset ->
-                legalText
-                    .getStringAnnotations("terms", offset, offset)
-                    .firstOrNull()
-                    ?.let { onTermsClick() }
-                legalText
-                    .getStringAnnotations("privacy", offset, offset)
-                    .firstOrNull()
-                    ?.let { onPrivacyClick() }
-            },
         )
     }
 }
@@ -255,45 +176,6 @@ private fun DividerLine(modifier: Modifier) {
             strokeWidth = 1.dp.toPx(),
         )
     }
-}
-
-@Composable
-private fun EmailIcon(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.email_icon),
-        contentDescription = "Email",
-        modifier = modifier.size(20.dp),
-        contentScale = ContentScale.Fit,
-    )
-}
-
-@Composable
-private fun LockIcon(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.lock_icon),
-        contentDescription = "Senha",
-        modifier = modifier.size(20.dp),
-        contentScale = ContentScale.Fit,
-    )
-}
-
-@Composable
-private fun EyeIcon(
-    passwordVisible: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Image(
-        painter = painterResource(
-            if (passwordVisible) {
-                R.drawable.open_eye_icon
-            } else {
-                R.drawable.closed_eye_icon
-            },
-        ),
-        contentDescription = if (passwordVisible) "Ocultar senha" else "Mostrar senha",
-        modifier = modifier.size(24.dp),
-        contentScale = ContentScale.Fit,
-    )
 }
 
 @Preview(

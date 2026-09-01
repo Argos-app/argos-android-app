@@ -1,4 +1,4 @@
-package com.android.argosapp.ui.components
+package com.android.argosapp.ui.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
