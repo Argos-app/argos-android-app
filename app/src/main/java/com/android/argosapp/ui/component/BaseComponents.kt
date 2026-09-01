@@ -48,9 +48,10 @@ fun ArgosButton(
         ),
     ) {
         if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(22.dp),
+            ArgosLoadingIndicator(
+                size = 22.dp,
                 color = colors.onPrimary,
+                trackColor = colors.onPrimary.copy(alpha = 0.22f),
                 strokeWidth = 2.dp,
             )
         } else {

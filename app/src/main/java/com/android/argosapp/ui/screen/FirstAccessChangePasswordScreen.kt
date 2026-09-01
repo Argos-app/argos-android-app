@@ -40,6 +40,7 @@ import com.android.argosapp.ui.component.ArgosAuthHeader
 import com.android.argosapp.ui.component.ArgosButton
 import com.android.argosapp.ui.component.ArgosEmailIcon
 import com.android.argosapp.ui.component.ArgosLegalText
+import com.android.argosapp.ui.component.ArgosLoadingOverlay
 import com.android.argosapp.ui.component.ArgosPasswordInput
 import com.android.argosapp.ui.theme.ArgosIcon
 import com.android.argosapp.ui.theme.ArgosappTheme
@@ -62,105 +63,111 @@ fun FirstAccessChangePasswordScreen(
     onBackToLoginClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
+    loadingText: String = "Alterando sua senha...",
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     val passwordCriteria = remember(newPassword) { passwordCriteriaFor(newPassword) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 23.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    ArgosLoadingOverlay(
+        visible = isLoading,
+        text = loadingText,
+        modifier = modifier.fillMaxSize(),
     ) {
-        Spacer(modifier = Modifier.height(56.dp))
-
-        ArgosAuthHeader(
-            subtitle = "Primeiro Acesso, defina uma nova senha.",
-            subtitleSpacing = 10.dp,
-        )
-
-        Spacer(modifier = Modifier.height(54.dp))
-
-        ReadOnlyInfoInput(
-            value = fullName,
-            label = "Nome Completo",
-            leadingContent = { PersonIcon() },
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        ReadOnlyInfoInput(
-            value = email,
-            label = "Email",
-            leadingContent = { ArgosEmailIcon() },
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        ArgosPasswordInput(
-            value = newPassword,
-            onValueChange = onNewPasswordChange,
-            label = "Nova senha",
-            placeholder = "senhadeacesso",
-            passwordVisible = newPasswordVisible,
-            onPasswordVisibilityChange = onNewPasswordVisibilityChange,
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        ArgosPasswordInput(
-            value = passwordConfirmation,
-            onValueChange = onPasswordConfirmationChange,
-            label = "Confirme a nova senha",
-            placeholder = "senhadeacesso",
-            passwordVisible = passwordConfirmationVisible,
-            onPasswordVisibilityChange = onPasswordConfirmationVisibilityChange,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PasswordCriteriaList(
-            criteria = passwordCriteria,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 9.dp),
-        )
+                .fillMaxSize()
+                .background(colors.background)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 23.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.height(56.dp))
 
-        Spacer(modifier = Modifier.height(26.dp))
+            ArgosAuthHeader(
+                subtitle = "Primeiro Acesso, defina uma nova senha.",
+                subtitleSpacing = 10.dp,
+            )
 
-        ArgosButton(
-            text = "Alterar Senha",
-            onClick = onChangePasswordClick,
-            isLoading = isLoading,
-            modifier = Modifier.padding(horizontal = 5.dp),
-        )
+            Spacer(modifier = Modifier.height(54.dp))
 
-        Spacer(modifier = Modifier.height(10.dp))
+            ReadOnlyInfoInput(
+                value = fullName,
+                label = "Nome Completo",
+                leadingContent = { PersonIcon() },
+            )
 
-        Text(
-            text = "Voltar para tela de login",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = colors.primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-            ),
-            modifier = Modifier.clickable(onClick = onBackToLoginClick),
-        )
+            Spacer(modifier = Modifier.height(18.dp))
 
-        Spacer(modifier = Modifier.height(28.dp))
+            ReadOnlyInfoInput(
+                value = email,
+                label = "Email",
+                leadingContent = { ArgosEmailIcon() },
+            )
 
-        ArgosLegalText(
-            onTermsClick = onTermsClick,
-            onPrivacyClick = onPrivacyClick,
-            modifier = Modifier.padding(horizontal = 30.dp),
-            fontSize = 10.sp,
-            lineHeight = 14.sp,
-        )
+            Spacer(modifier = Modifier.height(18.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
+            ArgosPasswordInput(
+                value = newPassword,
+                onValueChange = onNewPasswordChange,
+                label = "Nova senha",
+                placeholder = "senhadeacesso",
+                passwordVisible = newPasswordVisible,
+                onPasswordVisibilityChange = onNewPasswordVisibilityChange,
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ArgosPasswordInput(
+                value = passwordConfirmation,
+                onValueChange = onPasswordConfirmationChange,
+                label = "Confirme a nova senha",
+                placeholder = "senhadeacesso",
+                passwordVisible = passwordConfirmationVisible,
+                onPasswordVisibilityChange = onPasswordConfirmationVisibilityChange,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            PasswordCriteriaList(
+                criteria = passwordCriteria,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 9.dp),
+            )
+
+            Spacer(modifier = Modifier.height(26.dp))
+
+            ArgosButton(
+                text = "Alterar Senha",
+                onClick = onChangePasswordClick,
+                modifier = Modifier.padding(horizontal = 5.dp),
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Voltar para tela de login",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = colors.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                ),
+                modifier = Modifier.clickable(onClick = onBackToLoginClick),
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            ArgosLegalText(
+                onTermsClick = onTermsClick,
+                onPrivacyClick = onPrivacyClick,
+                modifier = Modifier.padding(horizontal = 30.dp),
+                fontSize = 10.sp,
+                lineHeight = 14.sp,
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
     }
 }
 

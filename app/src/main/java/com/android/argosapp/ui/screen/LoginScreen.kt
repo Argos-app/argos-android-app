@@ -27,6 +27,7 @@ import com.android.argosapp.ui.component.ArgosAuthHeader
 import com.android.argosapp.ui.component.ArgosButton
 import com.android.argosapp.ui.component.ArgosEmailIcon
 import com.android.argosapp.ui.component.ArgosLegalText
+import com.android.argosapp.ui.component.ArgosLoadingOverlay
 import com.android.argosapp.ui.component.ArgosOutlinedButton
 import com.android.argosapp.ui.component.ArgosPasswordInput
 import com.android.argosapp.ui.component.ArgosTextInput
@@ -48,54 +49,60 @@ fun LoginScreen(
     onLoginClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
+    loadingText: String = "Te autenticando...",
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .padding(horizontal = 28.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    ArgosLoadingOverlay(
+        visible = isLoading,
+        text = loadingText,
+        modifier = modifier.fillMaxSize(),
     ) {
-        Spacer(modifier = Modifier.height(28.dp))
-
-        ArgosAuthHeader(
-            subtitle = "O aplicativo que gere, cuida e organiza para você.",
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        ArgosTextInput(
-            value = email,
-            onValueChange = onEmailChange,
-            label = "Email",
-            placeholder = "seuemail@dominio.com",
-            leadingContent = { ArgosEmailIcon() },
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        ArgosPasswordInput(
-            value = password,
-            onValueChange = onPasswordChange,
-            label = "Senha",
-            placeholder = "senhadeacesso123",
-            passwordVisible = passwordVisible,
-            onPasswordVisibilityChange = onPasswordVisibilityChange,
-        )
-        Spacer(modifier = Modifier.height(17.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.background)
+                .padding(horizontal = 28.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ArgosToggle(
-                checked = rememberMe,
-                onCheckedChange = onRememberMeChange,
+            Spacer(modifier = Modifier.height(28.dp))
+
+            ArgosAuthHeader(
+                subtitle = "O aplicativo que gere, cuida e organiza para você.",
             )
-            Spacer(modifier = Modifier.width(6.dp))
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            ArgosTextInput(
+                value = email,
+                onValueChange = onEmailChange,
+                label = "Email",
+                placeholder = "seuemail@dominio.com",
+                leadingContent = { ArgosEmailIcon() },
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ArgosPasswordInput(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = "Senha",
+                placeholder = "senhadeacesso123",
+                passwordVisible = passwordVisible,
+                onPasswordVisibilityChange = onPasswordVisibilityChange,
+            )
+            Spacer(modifier = Modifier.height(17.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ArgosToggle(
+                    checked = rememberMe,
+                    onCheckedChange = onRememberMeChange,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Lembrar de mim",
                     style = MaterialTheme.typography.bodySmall.copy(
@@ -107,60 +114,60 @@ fun LoginScreen(
                         onRememberMeChange(!rememberMe)
                     },
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Esqueci a senha",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                    ),
+                    modifier = Modifier.clickable(onClick = onForgotPasswordClick),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(17.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DividerLine(modifier = Modifier.weight(1f))
+                Text(
+                    text = "ou",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.onSurfaceVariant,
+                        fontSize = 12.sp,
+                    ),
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                )
+                DividerLine(modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(17.dp))
+
+            ArgosOutlinedButton(
+                text = "Entrar com Google",
+                icon = painterResource(R.drawable.google_icon),
+                onClick = onGoogleClick,
+            )
+
+            Spacer(modifier = Modifier.height(42.dp))
+
+            ArgosButton(
+                text = "Entrar",
+                onClick = onLoginClick,
+            )
+
             Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = "Esqueci a senha",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = colors.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                ),
-                modifier = Modifier.clickable(onClick = onForgotPasswordClick),
+
+            ArgosLegalText(
+                onTermsClick = onTermsClick,
+                onPrivacyClick = onPrivacyClick,
+                modifier = Modifier
+                    .padding(horizontal = 4.dp),
             )
         }
-
-        Spacer(modifier = Modifier.height(17.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            DividerLine(modifier = Modifier.weight(1f))
-            Text(
-                text = "ou",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = colors.onSurfaceVariant,
-                    fontSize = 12.sp,
-                ),
-                modifier = Modifier.padding(horizontal = 6.dp),
-            )
-            DividerLine(modifier = Modifier.weight(1f))
-        }
-
-        Spacer(modifier = Modifier.height(17.dp))
-
-        ArgosOutlinedButton(
-            text = "Entrar com Google",
-            icon = painterResource(R.drawable.google_icon),
-            onClick = onGoogleClick,
-        )
-
-        Spacer(modifier = Modifier.height(42.dp))
-
-        ArgosButton(
-            text = "Entrar",
-            onClick = onLoginClick,
-            isLoading = isLoading,
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        ArgosLegalText(
-            onTermsClick = onTermsClick,
-            onPrivacyClick = onPrivacyClick,
-            modifier = Modifier
-                .padding(horizontal = 4.dp),
-        )
     }
 }
 
