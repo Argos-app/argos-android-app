@@ -49,7 +49,6 @@ import com.android.argosapp.util.PasswordPatternValidator
 @Composable
 fun FirstAccessChangePasswordScreen(
     fullName: String,
-    email: String,
     newPassword: String,
     passwordConfirmation: String,
     newPasswordVisible: Boolean,
@@ -85,27 +84,11 @@ fun FirstAccessChangePasswordScreen(
             Spacer(modifier = Modifier.height(56.dp))
 
             ArgosAuthHeader(
-                subtitle = "Primeiro Acesso, defina uma nova senha.",
+                subtitle = "Bem vindo ${fullName.split(" ")[0]}! Redefina sua senha.",
                 subtitleSpacing = 10.dp,
             )
 
-            Spacer(modifier = Modifier.height(54.dp))
-
-            ReadOnlyInfoInput(
-                value = fullName,
-                label = "Nome Completo",
-                leadingContent = { PersonIcon() },
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            ReadOnlyInfoInput(
-                value = email,
-                label = "Email",
-                leadingContent = { ArgosEmailIcon() },
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(56.dp))
 
             ArgosPasswordInput(
                 value = newPassword,
@@ -355,8 +338,7 @@ private fun passwordCriteriaFor(password: String): List<PasswordCriterion> {
 private fun FirstAccessChangePasswordScreenPreview() {
     ArgosappTheme {
         FirstAccessChangePasswordScreen(
-            fullName = "Vinícius de Oliveira",
-            email = "vinicius.argos@institutojef.org.br",
+            fullName = "Tobby Tobias",
             newPassword = "senhadeacesso",
             passwordConfirmation = "senhadeacesso",
             newPasswordVisible = false,

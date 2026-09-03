@@ -56,7 +56,6 @@ fun FirstAccessChangePasswordRoute(
     val user = state.user ?: return
     FirstAccessChangePasswordScreen(
         fullName = user.userName,
-        email = user.userEmail,
         newPassword = state.newPassword,
         passwordConfirmation = state.passwordConfirmation,
         newPasswordVisible = state.newPasswordVisible,
