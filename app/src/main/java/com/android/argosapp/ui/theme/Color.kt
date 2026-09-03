@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 // ARGOS DESIGN SYSTEM
 val ArgosBackground = Color(0xFFF4F1EB)
 val ArgosGreen = Color(0xFF06412F)
+val ArgosLoadingTrack = Color(0xFF8AAFA1)
 val ArgosAccent = Color(0xFF62BB4D)
 val ArgosFieldBackground = Color(0xFFFBFBFB)
 val ArgosFieldBorder = Color(0xFFD2D2D2)
