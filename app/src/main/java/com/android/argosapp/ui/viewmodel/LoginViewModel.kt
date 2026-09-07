@@ -78,6 +78,10 @@ class LoginViewModel(
         )
     }
 
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
     private fun authenticate(request: suspend () -> String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, isFirstAccess = false) }

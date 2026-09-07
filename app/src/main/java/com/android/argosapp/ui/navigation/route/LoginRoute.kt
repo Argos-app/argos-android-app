@@ -59,6 +59,7 @@ fun LoginRoute(
                 backgroundColor = colors.error.toArgb(),
                 textColor = colors.onError.toArgb(),
             )
+            loginViewModel.clearError()
         }
     }
 
