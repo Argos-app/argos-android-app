@@ -28,6 +28,7 @@ fun LoginRoute(
     tokenStorage: UserSessionStorage,
     onNavigateToHome: () -> Unit = {},
     onNavigateToFirstAccess: () -> Unit = {},
+    onNavigateToRedefinePassword: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -81,7 +82,7 @@ fun LoginRoute(
             onPasswordChange = loginViewModel::onPasswordChanged,
             onRememberMeChange = loginViewModel::onRememberMeChanged,
             onPasswordVisibilityChange = loginViewModel::onPasswordVisibilityChanged,
-            onForgotPasswordClick = {},
+            onForgotPasswordClick = onNavigateToRedefinePassword,
             onGoogleClick = {
                 firebaseAuthManager.launchGoogleSignIn(
                     context = context,
