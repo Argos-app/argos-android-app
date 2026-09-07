@@ -1,6 +1,8 @@
 package com.android.argosapp.auth.manager
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
@@ -104,6 +106,15 @@ class FirebaseAuthManager(
 
     suspend fun confirmPasswordReset(oobCode: String, newPassword: String) {
         firebaseAuth.confirmPasswordReset(oobCode, newPassword).await()
+    }
+
+    fun extractPasswordResetCode(intent: Intent): String? {
+        val data = intent.data ?: return null
+
+        return data.getQueryParameter("oobCode")
+            ?: data.getQueryParameter("link")
+                ?.let(Uri::parse)
+                ?.getQueryParameter("oobCode")
     }
 
     fun signOut() {

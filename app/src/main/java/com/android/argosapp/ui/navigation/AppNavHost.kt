@@ -1,6 +1,7 @@
 package com.android.argosapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,9 +27,18 @@ fun ArgosNavHost(
     firebaseAuthManager: FirebaseAuthManager,
     argosApiAuthManager: MockedArgosApiAuthManager,
     tokenStorage: UserSessionStorage,
+    passwordResetCode: String? = null,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
+    LaunchedEffect(passwordResetCode) {
+        if (!passwordResetCode.isNullOrBlank()) {
+            navController.navigate(AppRoute.RedefinePassword) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = AppRoute.Login,
@@ -66,6 +76,7 @@ fun ArgosNavHost(
         composable(AppRoute.RedefinePassword) {
             RedefinePasswordRoute(
                 firebaseAuthManager = firebaseAuthManager,
+                passwordResetCode = passwordResetCode,
                 onNavigateToLogin = {
                     navController.popBackStack(AppRoute.Login, inclusive = false)
                 },
