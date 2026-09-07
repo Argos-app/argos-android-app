@@ -22,9 +22,7 @@ class MainActivity : ComponentActivity() {
         FirebaseAuthManager()
     }
     private val argosApiAuthManager by lazy {
-        MockedArgosApiAuthManager(
-            firstAccess = true // força fluxo de primeiro acesso
-        )
+        MockedArgosApiAuthManager()
     }
     private val tokenStorage by lazy {
         UserSessionStorage(applicationContext)
