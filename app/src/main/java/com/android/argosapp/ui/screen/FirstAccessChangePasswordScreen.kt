@@ -38,8 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
 import com.android.argosapp.ui.component.ArgosAuthHeader
 import com.android.argosapp.ui.component.ArgosButton
-import com.android.argosapp.ui.component.ArgosEmailIcon
-import com.android.argosapp.ui.component.ArgosLegalText
 import com.android.argosapp.ui.component.ArgosLoadingOverlay
 import com.android.argosapp.ui.component.ArgosPasswordInput
 import com.android.argosapp.ui.theme.ArgosIcon
@@ -60,8 +58,6 @@ fun FirstAccessChangePasswordScreen(
     onPasswordConfirmationVisibilityChange: () -> Unit,
     onChangePasswordClick: () -> Unit,
     onBackToLoginClick: () -> Unit,
-    onTermsClick: () -> Unit,
-    onPrivacyClick: () -> Unit,
     loadingText: String = "Alterando sua senha...",
     modifier: Modifier = Modifier,
 ) {
@@ -141,15 +137,6 @@ fun FirstAccessChangePasswordScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            ArgosLegalText(
-                onTermsClick = onTermsClick,
-                onPrivacyClick = onPrivacyClick,
-                modifier = Modifier.padding(horizontal = 30.dp),
-                fontSize = 10.sp,
-                lineHeight = 14.sp,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -350,8 +337,6 @@ private fun FirstAccessChangePasswordScreenPreview() {
             onPasswordConfirmationVisibilityChange = {},
             onChangePasswordClick = {},
             onBackToLoginClick = {},
-            onTermsClick = {},
-            onPrivacyClick = {},
         )
     }
 }

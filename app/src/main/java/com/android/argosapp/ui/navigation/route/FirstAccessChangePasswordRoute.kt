@@ -67,7 +67,5 @@ fun FirstAccessChangePasswordRoute(
         onPasswordConfirmationVisibilityChange = viewModel::onPasswordConfirmationVisibilityChanged,
         onChangePasswordClick = viewModel::changePassword,
         onBackToLoginClick = onNavigateToLogin,
-        onTermsClick = {},
-        onPrivacyClick = {},
     )
 }

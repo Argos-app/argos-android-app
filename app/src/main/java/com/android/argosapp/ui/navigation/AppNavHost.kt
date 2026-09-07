@@ -11,11 +11,13 @@ import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.ui.navigation.route.FirstAccessChangePasswordRoute
 import com.android.argosapp.ui.navigation.route.LoginRoute
+import com.android.argosapp.ui.navigation.route.RedefinePasswordRoute
 import com.android.argosapp.ui.screen.HomeScreen
 
 private object AppRoute {
     const val Login = "login"
     const val FirstAccessChangePassword = "first_access_change_password"
+    const val RedefinePassword = "redefine_password"
     const val Home = "home"
 }
 
@@ -52,6 +54,20 @@ fun ArgosNavHost(
                         }
                         launchSingleTop = true
                     }
+                },
+                onNavigateToRedefinePassword = {
+                    navController.navigate(AppRoute.RedefinePassword) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.RedefinePassword) {
+            RedefinePasswordRoute(
+                firebaseAuthManager = firebaseAuthManager,
+                onNavigateToLogin = {
+                    navController.popBackStack(AppRoute.Login, inclusive = false)
                 },
             )
         }
