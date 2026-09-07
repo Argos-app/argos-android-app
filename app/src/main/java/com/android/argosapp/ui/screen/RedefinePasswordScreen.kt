@@ -145,13 +145,13 @@ fun RedefinePasswordScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(95.dp),
+                    .height(110.dp),
             ) {
                 BackButton(
                     onClick = onBackClick,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(start = 26.dp),
+                        .padding(start = 26.dp, top = 4.dp),
                 )
 
                 Text(
@@ -275,13 +275,13 @@ fun RedefinePasswordChangePasswordScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp),
+                    .height(110.dp),
             ) {
                 BackButton(
                     onClick = onBackClick,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(start = 24.dp),
+                        .padding(start = 24.dp, top = 4.dp),
                 )
 
                 Text(
@@ -433,13 +433,13 @@ fun RedefinePasswordEmailSentScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(95.dp),
+                .height(110.dp),
         ) {
             BackButton(
                 onClick = onBackClick,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 26.dp),
+                    .padding(start = 26.dp, top = 4.dp),
             )
 
             Text(
@@ -487,7 +487,7 @@ fun RedefinePasswordEmailSentScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Enviamos um link para redefinir sua senha para o seu e-mail.\nVerifique sua caixa de entrada e siga as instruções para continuar.",
+            text = "Enviamos um link para redefinir sua senha para o seu e-mail.",
             modifier = Modifier.padding(horizontal = 50.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium.copy(
