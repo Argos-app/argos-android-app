@@ -1,5 +1,8 @@
 package com.android.argosapp.ui.viewmodel
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -8,7 +11,9 @@ import com.android.argosapp.ui.screen.RedefinePasswordFlowState
 import com.android.argosapp.util.PasswordPatternValidator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,13 +32,21 @@ data class RedefinePasswordState(
     val errorEventId: Long = 0,
 )
 
+sealed interface RedefinePasswordEvent {
+    data object NavigateToLogin : RedefinePasswordEvent
+}
+
 class RedefinePasswordViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
+    context: Context,
 ) : ViewModel() {
 
+    private val appContext = context.applicationContext
     private val passwordValidator = PasswordPatternValidator()
     private val _uiState = MutableStateFlow(RedefinePasswordState())
     val uiState: StateFlow<RedefinePasswordState> = _uiState.asStateFlow()
+    private val _events = MutableSharedFlow<RedefinePasswordEvent>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
 
     fun onEmailChanged(value: String) {
         _uiState.update { it.copy(email = value, error = null) }
@@ -84,6 +97,19 @@ class RedefinePasswordViewModel(
 
     fun resendResetEmail() {
         if (uiState.value.resendSecondsRemaining == 0) sendResetEmail()
+    }
+
+    fun onOpenEmailAppClick() {
+        try {
+            appContext.startActivity(
+                Intent.makeMainSelectorActivity(
+                    Intent.ACTION_MAIN,
+                    Intent.CATEGORY_APP_EMAIL,
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        } catch (_: ActivityNotFoundException) {
+            showError("Nenhum aplicativo de e-mail está instalado.")
+        }
     }
 
     fun onPasswordResetCodeReceived(oobCode: String) {
@@ -148,7 +174,12 @@ class RedefinePasswordViewModel(
         }
     }
 
-    fun goBack() {
+    fun onBackClick() {
+        if (uiState.value.flowState == RedefinePasswordFlowState.REQUEST_CODE) {
+            _events.tryEmit(RedefinePasswordEvent.NavigateToLogin)
+            return
+        }
+
         _uiState.update { state ->
             when (state.flowState) {
                 RedefinePasswordFlowState.EMAIL_SENT -> state.copy(
@@ -189,11 +220,14 @@ class RedefinePasswordViewModel(
     companion object {
         private const val RESEND_DELAY_SECONDS = 60
 
-        fun factory(firebaseAuthManager: FirebaseAuthManager): ViewModelProvider.Factory =
+        fun factory(
+            firebaseAuthManager: FirebaseAuthManager,
+            context: Context,
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return RedefinePasswordViewModel(firebaseAuthManager) as T
+                    return RedefinePasswordViewModel(firebaseAuthManager, context) as T
                 }
             }
     }

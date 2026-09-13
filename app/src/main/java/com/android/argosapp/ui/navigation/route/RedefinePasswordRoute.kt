@@ -1,7 +1,5 @@
 package com.android.argosapp.ui.navigation.route
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,6 +12,7 @@ import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.ui.component.showErrorFeedback
 import com.android.argosapp.ui.screen.RedefinePasswordFlowScreen
 import com.android.argosapp.ui.screen.RedefinePasswordFlowState
+import com.android.argosapp.ui.viewmodel.RedefinePasswordEvent
 import com.android.argosapp.ui.viewmodel.RedefinePasswordViewModel
 
 @Composable
@@ -25,12 +24,20 @@ fun RedefinePasswordRoute(
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
     val viewModel: RedefinePasswordViewModel = viewModel(
-        factory = RedefinePasswordViewModel.factory(firebaseAuthManager),
+        factory = RedefinePasswordViewModel.factory(firebaseAuthManager, context),
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(passwordResetCode) {
         passwordResetCode?.let(viewModel::onPasswordResetCodeReceived)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                RedefinePasswordEvent.NavigateToLogin -> onNavigateToLogin()
+            }
+        }
     }
 
     LaunchedEffect(state.errorEventId) {
@@ -61,30 +68,8 @@ fun RedefinePasswordRoute(
         onChangePasswordClick = viewModel::changePassword,
         resendSecondsRemaining = state.resendSecondsRemaining,
         onResendEmailClick = viewModel::resendResetEmail,
-        onOpenEmailAppClick = {
-            try {
-                context.startActivity(
-                    Intent.makeMainSelectorActivity(
-                        Intent.ACTION_MAIN,
-                        Intent.CATEGORY_APP_EMAIL,
-                    ),
-                )
-            } catch (_: ActivityNotFoundException) {
-                showErrorFeedback(
-                    context = context,
-                    message = "Nenhum aplicativo de e-mail está instalado.",
-                    backgroundColor = colors.error.toArgb(),
-                    textColor = colors.onError.toArgb(),
-                )
-            }
-        },
-        onBackClick = {
-            if (state.flowState == RedefinePasswordFlowState.REQUEST_CODE) {
-                onNavigateToLogin()
-            } else {
-                viewModel.goBack()
-            }
-        },
+        onOpenEmailAppClick = viewModel::onOpenEmailAppClick,
+        onBackClick = viewModel::onBackClick,
         onNavigateToLogin = onNavigateToLogin,
     )
 }
