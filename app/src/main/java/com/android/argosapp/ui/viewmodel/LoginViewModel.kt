@@ -4,8 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,8 +24,7 @@ data class LoginState(
 )
 class LoginViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
-    private val argosApiAuthManager: MockedArgosApiAuthManager,
-    private val tokenStorage: UserSessionStorage,
+    private val argosApiAuthManager: ArgosApiAuthManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginState(isLoading = true))
@@ -88,11 +86,8 @@ class LoginViewModel(
 
             runCatching {
                 val firebaseIdToken = request()
-                val authResponse = argosApiAuthManager.authenticate(firebaseIdToken)
-
-                tokenStorage.updateSession(
-                    bearerToken = authResponse.bearerToken,
-                    user = authResponse.user,
+                val authResponse = argosApiAuthManager.authenticate(
+                    firebaseIdToken = firebaseIdToken,
                     rememberMe = uiState.value.rememberMe,
                 )
 
@@ -115,12 +110,12 @@ class LoginViewModel(
 
     private fun restoreSession() {
         viewModelScope.launch {
-            val hasBearerToken = !tokenStorage.getBearerToken().isNullOrBlank()
-            val hasUser = tokenStorage.getUser() != null
+            val hasBearerToken = !argosApiAuthManager.getBearerToken().isNullOrBlank()
+            val hasUser = argosApiAuthManager.getUser() != null
             val hasValidSession = hasBearerToken && hasUser && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {
-                tokenStorage.clearSession()
+                argosApiAuthManager.clearSession()
                 firebaseAuthManager.signOut()
             }
 
@@ -154,8 +149,7 @@ class LoginViewModel(
     companion object {
         fun factory(
             firebaseAuthManager: FirebaseAuthManager,
-            argosApiAuthManager: MockedArgosApiAuthManager,
-            tokenStorage: UserSessionStorage,
+            argosApiAuthManager: ArgosApiAuthManager,
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -163,7 +157,6 @@ class LoginViewModel(
                     return LoginViewModel(
                         firebaseAuthManager = firebaseAuthManager,
                         argosApiAuthManager = argosApiAuthManager,
-                        tokenStorage = tokenStorage,
                     ) as T
                 }
             }

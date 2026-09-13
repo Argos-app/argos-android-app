@@ -70,6 +70,7 @@ fun RedefinePasswordFlowScreen(
     onChangePasswordClick: () -> Unit,
     resendSecondsRemaining: Int,
     onResendEmailClick: () -> Unit,
+    onOpenEmailAppClick: () -> Unit,
     onBackClick: () -> Unit,
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
@@ -93,6 +94,7 @@ fun RedefinePasswordFlowScreen(
             },
             isResendEnabled = resendSecondsRemaining == 0,
             onResendClick = onResendEmailClick,
+            onOpenEmailAppClick = onOpenEmailAppClick,
             modifier = modifier,
         )
 
@@ -419,6 +421,7 @@ fun RedefinePasswordEmailSentScreen(
     resendText: String = "Enviar novamente (00:59)",
     isResendEnabled: Boolean = false,
     onResendClick: () -> Unit = {},
+    onOpenEmailAppClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -497,7 +500,15 @@ fun RedefinePasswordEmailSentScreen(
             ),
         )
 
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        ArgosButton(
+            text = "Abrir App de Email",
+            onClick = onOpenEmailAppClick,
+            modifier = Modifier.padding(horizontal = 29.dp),
+        )
+
+        Spacer(modifier = Modifier.height(17.dp))
 
         Text(
             text = "Não recebeu o email?",
@@ -694,6 +705,7 @@ private fun RedefinePasswordFlowPreview(state: RedefinePasswordFlowState) {
             onChangePasswordClick = {},
             resendSecondsRemaining = 59,
             onResendEmailClick = {},
+            onOpenEmailAppClick = {},
             onBackClick = {},
             onNavigateToLogin = {},
         )

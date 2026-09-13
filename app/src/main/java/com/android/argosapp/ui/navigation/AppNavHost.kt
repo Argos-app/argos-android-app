@@ -8,8 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.ui.navigation.route.FirstAccessChangePasswordRoute
 import com.android.argosapp.ui.navigation.route.LoginRoute
 import com.android.argosapp.ui.navigation.route.RedefinePasswordRoute
@@ -25,8 +24,7 @@ private object AppRoute {
 @Composable
 fun ArgosNavHost(
     firebaseAuthManager: FirebaseAuthManager,
-    argosApiAuthManager: MockedArgosApiAuthManager,
-    tokenStorage: UserSessionStorage,
+    argosApiAuthManager: ArgosApiAuthManager,
     passwordResetCode: String? = null,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
@@ -48,7 +46,6 @@ fun ArgosNavHost(
             LoginRoute(
                 firebaseAuthManager = firebaseAuthManager,
                 argosApiAuthManager = argosApiAuthManager,
-                tokenStorage = tokenStorage,
                 onNavigateToHome = {
                     navController.navigate(AppRoute.Home) {
                         popUpTo(AppRoute.Login) {
@@ -87,7 +84,6 @@ fun ArgosNavHost(
             FirstAccessChangePasswordRoute(
                 firebaseAuthManager = firebaseAuthManager,
                 argosApiAuthManager = argosApiAuthManager,
-                tokenStorage = tokenStorage,
                 onNavigateToHome = {
                     navController.navigate(AppRoute.Home) {
                         popUpTo(AppRoute.FirstAccessChangePassword) {
@@ -97,7 +93,7 @@ fun ArgosNavHost(
                     }
                 },
                 onNavigateToLogin = {
-                    tokenStorage.clearSession()
+                    argosApiAuthManager.clearSession()
                     firebaseAuthManager.signOut()
                     navController.navigate(AppRoute.Login) {
                         popUpTo(AppRoute.FirstAccessChangePassword) {
@@ -111,8 +107,8 @@ fun ArgosNavHost(
 
         composable(AppRoute.Home) {
             HomeScreen(
-                user = tokenStorage.getUser(),
-                bearerToken = tokenStorage.getBearerToken(),
+                user = argosApiAuthManager.getUser(),
+                bearerToken = argosApiAuthManager.getBearerToken(),
             )
         }
     }

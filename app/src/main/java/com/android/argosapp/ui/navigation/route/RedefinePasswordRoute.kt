@@ -1,5 +1,7 @@
 package com.android.argosapp.ui.navigation.route
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,6 +61,23 @@ fun RedefinePasswordRoute(
         onChangePasswordClick = viewModel::changePassword,
         resendSecondsRemaining = state.resendSecondsRemaining,
         onResendEmailClick = viewModel::resendResetEmail,
+        onOpenEmailAppClick = {
+            try {
+                context.startActivity(
+                    Intent.makeMainSelectorActivity(
+                        Intent.ACTION_MAIN,
+                        Intent.CATEGORY_APP_EMAIL,
+                    ),
+                )
+            } catch (_: ActivityNotFoundException) {
+                showErrorFeedback(
+                    context = context,
+                    message = "Nenhum aplicativo de e-mail está instalado.",
+                    backgroundColor = colors.error.toArgb(),
+                    textColor = colors.onError.toArgb(),
+                )
+            }
+        },
         onBackClick = {
             if (state.flowState == RedefinePasswordFlowState.REQUEST_CODE) {
                 onNavigateToLogin()

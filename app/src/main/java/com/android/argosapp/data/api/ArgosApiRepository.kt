@@ -25,22 +25,24 @@ private interface ArgosApiService {
  * Por padrão, usa a API de produção. Defina [homologation] como `true` para
  * direcionar as requisições ao ambiente de homologação.
  */
-class ArgosApiRepository(
+open class ArgosApiRepository(
     homologation: Boolean = false,
 ) {
 
     private companion object {
-        const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/"
-        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/"
+        const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
+        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
     }
 
-    private val api = Retrofit.Builder()
-        .baseUrl(if (homologation) HOMOLOGATION_BASE_URL else PRODUCTION_BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(ArgosApiService::class.java)
+    private val api by lazy {
+        Retrofit.Builder()
+            .baseUrl(if (homologation) HOMOLOGATION_BASE_URL else PRODUCTION_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ArgosApiService::class.java)
+    }
 
-    suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse {
+    open suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse {
         val response = api.signIn("Bearer $firebaseIdToken")
 
         return ArgosApiAuthResponse(
@@ -52,7 +54,7 @@ class ArgosApiRepository(
         )
     }
 
-    suspend fun updateUserAccessStatus(bearerToken: String) {
+    open suspend fun updateUserAccessStatus(bearerToken: String) {
         api.updateFirstAccess("Bearer $bearerToken")
     }
 

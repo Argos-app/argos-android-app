@@ -8,9 +8,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.ui.screen.FirstAccessChangePasswordScreen
 import com.android.argosapp.ui.component.showErrorFeedback
 import com.android.argosapp.ui.viewmodel.FirstAccessChangePasswordViewModel
@@ -18,8 +17,7 @@ import com.android.argosapp.ui.viewmodel.FirstAccessChangePasswordViewModel
 @Composable
 fun FirstAccessChangePasswordRoute(
     firebaseAuthManager: FirebaseAuthManager,
-    argosApiAuthManager: MockedArgosApiAuthManager,
-    tokenStorage: UserSessionStorage,
+    argosApiAuthManager: ArgosApiAuthManager,
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
@@ -29,7 +27,6 @@ fun FirstAccessChangePasswordRoute(
         factory = FirstAccessChangePasswordViewModel.factory(
             firebaseAuthManager = firebaseAuthManager,
             argosApiAuthManager = argosApiAuthManager,
-            tokenStorage = tokenStorage,
         ),
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
