@@ -2,10 +2,7 @@ package com.android.argosapp.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,26 +12,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
 import com.android.argosapp.ui.component.ArgosAuthHeader
 import com.android.argosapp.ui.component.ArgosButton
@@ -42,8 +31,14 @@ import com.android.argosapp.ui.component.ArgosEmailIcon
 import com.android.argosapp.ui.component.ArgosLegalText
 import com.android.argosapp.ui.component.ArgosLoadingOverlay
 import com.android.argosapp.ui.component.ArgosPasswordInput
+import com.android.argosapp.ui.component.ArgosScreen
+import com.android.argosapp.ui.component.ArgosTextInput
+import com.android.argosapp.ui.theme.ArgosDimensions
 import com.android.argosapp.ui.theme.ArgosIcon
-import com.android.argosapp.ui.theme.ArgosappTheme
+import com.android.argosapp.ui.theme.ArgosSpacing
+import com.android.argosapp.ui.theme.ArgosTheme
+import com.android.argosapp.ui.theme.argosCaption
+import com.android.argosapp.ui.theme.argosButtonLabelSmall
 import com.android.argosapp.util.PasswordPatternValidator
 
 @Composable
@@ -74,38 +69,41 @@ fun FirstAccessChangePasswordScreen(
         text = loadingText,
         modifier = modifier.fillMaxSize(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 23.dp),
+        ArgosScreen(
+            modifier = Modifier,
+            scrollable = true,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(56.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.section))
 
             ArgosAuthHeader(
                 subtitle = "Primeiro Acesso, defina uma nova senha.",
-                subtitleSpacing = 10.dp,
+                subtitleSpacing = ArgosSpacing.md,
             )
 
-            Spacer(modifier = Modifier.height(54.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.section))
 
-            ReadOnlyInfoInput(
+            ArgosTextInput(
                 value = fullName,
+                onValueChange = {},
                 label = "Nome Completo",
+                placeholder = "",
+                readOnly = true,
                 leadingContent = { PersonIcon() },
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
-            ReadOnlyInfoInput(
+            ArgosTextInput(
                 value = email,
+                onValueChange = {},
                 label = "Email",
+                placeholder = "",
+                readOnly = true,
                 leadingContent = { ArgosEmailIcon() },
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             ArgosPasswordInput(
                 value = newPassword,
@@ -116,7 +114,7 @@ fun FirstAccessChangePasswordScreen(
                 onPasswordVisibilityChange = onNewPasswordVisibilityChange,
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             ArgosPasswordInput(
                 value = passwordConfirmation,
@@ -127,104 +125,43 @@ fun FirstAccessChangePasswordScreen(
                 onPasswordVisibilityChange = onPasswordConfirmationVisibilityChange,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             PasswordCriteriaList(
                 criteria = passwordCriteria,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 9.dp),
+                    .padding(horizontal = ArgosSpacing.sm),
             )
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.xl))
 
             ArgosButton(
                 text = "Alterar Senha",
                 onClick = onChangePasswordClick,
-                modifier = Modifier.padding(horizontal = 5.dp),
+                modifier = Modifier.padding(horizontal = ArgosSpacing.xs),
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.md))
 
             Text(
                 text = "Voltar para tela de login",
-                style = MaterialTheme.typography.bodyMedium.copy(
+                style = MaterialTheme.typography.argosButtonLabelSmall.copy(
                     color = colors.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
                 ),
                 modifier = Modifier.clickable(onClick = onBackToLoginClick),
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.xxl))
 
             ArgosLegalText(
                 onTermsClick = onTermsClick,
                 onPrivacyClick = onPrivacyClick,
-                modifier = Modifier.padding(horizontal = 30.dp),
-                fontSize = 10.sp,
-                lineHeight = 14.sp,
+                modifier = Modifier.padding(horizontal = ArgosSpacing.legalTextHorizontal),
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.md))
         }
-    }
-}
-
-@Composable
-private fun ReadOnlyInfoInput(
-    value: String,
-    label: String,
-    leadingContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(start = 9.dp),
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = colors.primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-            ),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        BasicTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            cursorBrush = SolidColor(colors.primary),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = colors.onSurfaceVariant,
-                fontSize = 12.sp,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .alpha(0.6f),
-            decorationBox = { innerTextField ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp)
-                        .clip(RoundedCornerShape(30.dp))
-                        .background(colors.surface)
-                        .border(1.dp, colors.outline, RoundedCornerShape(30.dp))
-                        .padding(horizontal = 19.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    leadingContent()
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Box(modifier = Modifier.weight(1f)) {
-                        innerTextField()
-                    }
-                }
-            },
-        )
     }
 }
 
@@ -238,11 +175,9 @@ private fun PasswordCriteriaList(
     Column(modifier = modifier) {
         Text(
             text = "Para sua segurança, a senha deve conter:",
-            style = MaterialTheme.typography.bodySmall.copy(
+            style = MaterialTheme.typography.argosCaption.copy(
                 color = colors.primary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
             ),
         )
 
@@ -252,24 +187,20 @@ private fun PasswordCriteriaList(
             ) {
                 Text(
                     text = "•",
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.argosCaption.copy(
                         color = colors.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        lineHeight = 14.sp,
                     ),
                 )
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(ArgosSpacing.xs))
                 Text(
                     text = criterion.label,
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.argosCaption.copy(
                         color = colors.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        lineHeight = 14.sp,
                     ),
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(ArgosSpacing.tight))
                 Image(
                     painter = painterResource(
                         if (criterion.isMet) {
@@ -283,7 +214,7 @@ private fun PasswordCriteriaList(
                     } else {
                         "Critério pendente"
                     },
-                    modifier = Modifier.size(10.dp),
+                    modifier = Modifier.size(ArgosDimensions.statusIcon),
                     contentScale = ContentScale.Fit,
                 )
             }
@@ -293,7 +224,7 @@ private fun PasswordCriteriaList(
 
 @Composable
 private fun PersonIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(22.dp)) {
+    Canvas(modifier = modifier.size(ArgosDimensions.mediumIcon)) {
         val iconColor = ArgosIcon
         drawCircle(
             color = iconColor,
@@ -353,7 +284,7 @@ private fun passwordCriteriaFor(password: String): List<PasswordCriterion> {
 )
 @Composable
 private fun FirstAccessChangePasswordScreenPreview() {
-    ArgosappTheme {
+    ArgosTheme {
         FirstAccessChangePasswordScreen(
             fullName = "Vinícius de Oliveira",
             email = "vinicius.argos@institutojef.org.br",

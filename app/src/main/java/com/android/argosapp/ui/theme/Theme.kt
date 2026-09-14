@@ -19,10 +19,11 @@ private val ArgosLightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun ArgosappTheme(content: @Composable () -> Unit) {
+fun ArgosTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = ArgosLightColorScheme,
-        typography = Typography,
-        content = content
+        typography = ArgosTypography,
+        shapes = ArgosMaterialShapes,
+        content = content,
     )
 }
