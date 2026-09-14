@@ -26,16 +26,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
+import com.android.argosapp.ui.theme.ArgosDimensions
+import com.android.argosapp.ui.theme.ArgosSpacing
+import com.android.argosapp.ui.theme.argosBody
+import com.android.argosapp.ui.theme.argosLegalText
 
 @Composable
 fun ArgosAuthHeader(
     subtitle: String,
     modifier: Modifier = Modifier,
-    subtitleSpacing: Dp = 16.dp,
+    subtitleSpacing: Dp = ArgosSpacing.lg,
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -48,7 +49,7 @@ fun ArgosAuthHeader(
             contentDescription = "Argos",
             modifier = Modifier
                 .fillMaxWidth(0.74f)
-                .height(62.dp),
+                .height(ArgosDimensions.logoHeight),
             contentScale = ContentScale.Fit,
         )
 
@@ -56,9 +57,8 @@ fun ArgosAuthHeader(
 
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            style = MaterialTheme.typography.argosBody.copy(
                 color = colors.onBackground,
-                fontSize = 14.sp,
             ),
         )
     }
@@ -106,8 +106,6 @@ fun ArgosLegalText(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
-    fontSize: TextUnit = 11.sp,
-    lineHeight: TextUnit = 15.sp,
 ) {
     val colors = MaterialTheme.colorScheme
     val legalText = buildAnnotatedString {
@@ -139,11 +137,9 @@ fun ArgosLegalText(
     ClickableText(
         text = legalText,
         modifier = modifier.fillMaxWidth(),
-        style = MaterialTheme.typography.bodySmall.copy(
+        style = MaterialTheme.typography.argosLegalText.copy(
             color = colors.onSurfaceVariant,
-            fontSize = fontSize,
             textAlign = TextAlign.Center,
-            lineHeight = lineHeight,
         ),
         onClick = { offset ->
             legalText
@@ -163,7 +159,7 @@ fun ArgosEmailIcon(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.email_icon),
         contentDescription = null,
-        modifier = modifier.size(20.dp),
+        modifier = modifier.size(ArgosDimensions.icon),
         contentScale = ContentScale.Fit,
     )
 }
@@ -173,7 +169,7 @@ private fun ArgosLockIcon(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.lock_icon),
         contentDescription = null,
-        modifier = modifier.size(20.dp),
+        modifier = modifier.size(ArgosDimensions.icon),
         contentScale = ContentScale.Fit,
     )
 }
@@ -192,7 +188,7 @@ private fun ArgosPasswordVisibilityIcon(
             },
         ),
         contentDescription = if (passwordVisible) "Ocultar senha" else "Mostrar senha",
-        modifier = modifier.size(24.dp),
+        modifier = modifier.size(ArgosDimensions.largeIcon),
         contentScale = ContentScale.Fit,
     )
 }

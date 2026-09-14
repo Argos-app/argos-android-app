@@ -8,7 +8,7 @@ import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.ui.navigation.ArgosNavHost
-import com.android.argosapp.ui.theme.ArgosappTheme
+import com.android.argosapp.ui.theme.ArgosTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            ArgosappTheme {
+            ArgosTheme {
                 ArgosNavHost(
                     firebaseAuthManager = firebaseAuthManager,
                     argosApiAuthManager = argosApiAuthManager,

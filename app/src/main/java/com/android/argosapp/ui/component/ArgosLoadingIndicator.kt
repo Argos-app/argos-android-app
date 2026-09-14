@@ -27,19 +27,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.android.argosapp.ui.theme.ArgosBackground
 import com.android.argosapp.ui.theme.ArgosGreen
 import com.android.argosapp.ui.theme.ArgosLoadingTrack
+import com.android.argosapp.ui.theme.ArgosDimensions
+import com.android.argosapp.ui.theme.ArgosSpacing
+import com.android.argosapp.ui.theme.argosBody
 
 @Composable
 fun ArgosLoadingIndicator(
     modifier: Modifier = Modifier,
-    size: Dp = 88.dp,
+    size: Dp = ArgosDimensions.loadingIndicatorSize,
     color: Color = ArgosGreen,
     trackColor: Color = ArgosLoadingTrack,
-    strokeWidth: Dp = 8.dp,
+    strokeWidth: Dp = ArgosDimensions.loadingStrokeWidth,
 ) {
     CircularProgressIndicator(
         modifier = modifier.size(size),
@@ -58,7 +59,7 @@ fun ArgosLoadingOverlay(
     overlayColor: Color = ArgosBackground.copy(alpha = 0.89f),
     indicatorColor: Color = ArgosGreen,
     indicatorTrackColor: Color = ArgosLoadingTrack,
-    blurRadius: Dp = 4.dp,
+    blurRadius: Dp = ArgosDimensions.loadingBlurRadius,
     content: @Composable () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -107,11 +108,10 @@ fun ArgosLoadingOverlay(
                     )
                     Text(
                         text = text,
-                        modifier = Modifier.padding(top = 18.dp),
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        modifier = Modifier.padding(top = ArgosSpacing.overlayContentGap),
+                        style = MaterialTheme.typography.argosBody.copy(
                             color = indicatorColor,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
                         ),
                     )
                 }

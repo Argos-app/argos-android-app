@@ -1,9 +1,7 @@
 package com.android.argosapp.ui.screen
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.android.argosapp.R
 import com.android.argosapp.ui.component.ArgosAuthHeader
 import com.android.argosapp.ui.component.ArgosButton
@@ -30,8 +27,12 @@ import com.android.argosapp.ui.component.ArgosLegalText
 import com.android.argosapp.ui.component.ArgosLoadingOverlay
 import com.android.argosapp.ui.component.ArgosOutlinedButton
 import com.android.argosapp.ui.component.ArgosPasswordInput
+import com.android.argosapp.ui.component.ArgosScreen
 import com.android.argosapp.ui.component.ArgosTextInput
 import com.android.argosapp.ui.component.ArgosToggle
+import com.android.argosapp.ui.theme.ArgosSpacing
+import com.android.argosapp.ui.theme.ArgosTheme
+import com.android.argosapp.ui.theme.argosSupportingText
 
 @Composable
 fun LoginScreen(
@@ -59,14 +60,12 @@ fun LoginScreen(
         text = loadingText,
         modifier = modifier.fillMaxSize(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
-                .padding(horizontal = 28.dp, vertical = 24.dp),
+        ArgosScreen(
+            modifier = Modifier,
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalPadding = ArgosSpacing.xl,
         ) {
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.xxl))
 
             ArgosAuthHeader(
                 subtitle = "O aplicativo que gere, cuida e organiza para você.",
@@ -82,7 +81,7 @@ fun LoginScreen(
                 leadingContent = { ArgosEmailIcon() },
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.md))
 
             ArgosPasswordInput(
                 value = password,
@@ -92,7 +91,7 @@ fun LoginScreen(
                 passwordVisible = passwordVisible,
                 onPasswordVisibilityChange = onPasswordVisibilityChange,
             )
-            Spacer(modifier = Modifier.height(17.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -102,13 +101,12 @@ fun LoginScreen(
                     checked = rememberMe,
                     onCheckedChange = onRememberMeChange,
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(ArgosSpacing.tight))
                 Text(
                     text = "Lembrar de mim",
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.argosSupportingText.copy(
                         color = colors.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
                     ),
                     modifier = Modifier.clickable {
                         onRememberMeChange(!rememberMe)
@@ -117,16 +115,15 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "Esqueci a senha",
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.argosSupportingText.copy(
                         color = colors.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
                     ),
                     modifier = Modifier.clickable(onClick = onForgotPasswordClick),
                 )
             }
 
-            Spacer(modifier = Modifier.height(17.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -135,16 +132,15 @@ fun LoginScreen(
                 DividerLine(modifier = Modifier.weight(1f))
                 Text(
                     text = "ou",
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.argosSupportingText.copy(
                         color = colors.onSurfaceVariant,
-                        fontSize = 12.sp,
                     ),
-                    modifier = Modifier.padding(horizontal = 6.dp),
+                    modifier = Modifier.padding(horizontal = ArgosSpacing.tight),
                 )
                 DividerLine(modifier = Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(17.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.lg))
 
             ArgosOutlinedButton(
                 text = "Entrar com Google",
@@ -152,7 +148,7 @@ fun LoginScreen(
                 onClick = onGoogleClick,
             )
 
-            Spacer(modifier = Modifier.height(42.dp))
+            Spacer(modifier = Modifier.height(ArgosSpacing.section))
 
             ArgosButton(
                 text = "Entrar",
@@ -164,8 +160,7 @@ fun LoginScreen(
             ArgosLegalText(
                 onTermsClick = onTermsClick,
                 onPrivacyClick = onPrivacyClick,
-                modifier = Modifier
-                    .padding(horizontal = 4.dp),
+                modifier = Modifier.padding(horizontal = ArgosSpacing.xs),
             )
         }
     }
@@ -193,20 +188,22 @@ private fun DividerLine(modifier: Modifier) {
 )
 @Composable
 private fun LoginScreenPreview() {
-    LoginScreen(
-        email = "",
-        password = "",
-        rememberMe = true,
-        passwordVisible = false,
-        isLoading = false,
-        onEmailChange = {},
-        onPasswordChange = {},
-        onRememberMeChange = {},
-        onPasswordVisibilityChange = {},
-        onForgotPasswordClick = {},
-        onGoogleClick = {},
-        onLoginClick = {},
-        onTermsClick = {},
-        onPrivacyClick = {},
-    )
+    ArgosTheme {
+        LoginScreen(
+            email = "",
+            password = "",
+            rememberMe = true,
+            passwordVisible = false,
+            isLoading = false,
+            onEmailChange = {},
+            onPasswordChange = {},
+            onRememberMeChange = {},
+            onPasswordVisibilityChange = {},
+            onForgotPasswordClick = {},
+            onGoogleClick = {},
+            onLoginClick = {},
+            onTermsClick = {},
+            onPrivacyClick = {},
+        )
+    }
 }
