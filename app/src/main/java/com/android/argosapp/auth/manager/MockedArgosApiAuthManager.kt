@@ -2,6 +2,8 @@ package com.android.argosapp.auth.manager
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
+import com.android.argosapp.util.AppLogger
+import java.util.concurrent.CancellationException
 import kotlinx.coroutines.delay
 
 /**
@@ -16,21 +18,32 @@ class MockedArgosApiAuthManager(
     suspend fun authenticate(
         firebaseIdToken: String,
     ): ArgosApiAuthResponse {
-        delay(1000)
+        AppLogger.debug(AppLogger.AUTH_TAG, "argos_authenticate_started")
 
-        if (notFound) {
-            throw NoSuchElementException("User not found.")
+        return try {
+            delay(1000)
+
+            if (notFound) {
+                throw NoSuchElementException("User not found.")
+            }
+
+            ArgosApiAuthResponse(
+                bearerToken = "mocked-bearer-token",
+                user = User(
+                    userName = "Tobby",
+                    userEmail = "tobby@argos.com",
+                    farmName = "Tobby & CIA",
+                ),
+                isFirstAccess = isFirstAccess,
+            ).also {
+                AppLogger.info(AppLogger.AUTH_TAG, "argos_authenticate_success")
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            AppLogger.error(AppLogger.AUTH_TAG, "argos_authenticate_failure", error)
+            throw error
         }
-
-        return ArgosApiAuthResponse(
-            bearerToken = "mocked-bearer-token",
-            user = User(
-                userName = "Tobby",
-                userEmail = "tobby@argos.com",
-                farmName = "Tobby & CIA",
-            ),
-            isFirstAccess = isFirstAccess,
-        )
     }
 
     /**
@@ -38,12 +51,22 @@ class MockedArgosApiAuthManager(
      * primeiro acesso após definir a nova senha.
      */
     suspend fun updateUserAccessStatus(bearerToken: String) {
-        delay(1000)
+        AppLogger.debug(AppLogger.FIRST_ACCESS_TAG, "first_access_status_update_started")
 
-        if (bearerToken.isBlank()) {
-            throw SecurityException("Bearer token inválido.")
+        try {
+            delay(1000)
+
+            if (bearerToken.isBlank()) {
+                throw SecurityException("Bearer token inválido.")
+            }
+
+            isFirstAccess = false
+            AppLogger.info(AppLogger.FIRST_ACCESS_TAG, "first_access_status_update_success")
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            AppLogger.error(AppLogger.FIRST_ACCESS_TAG, "first_access_status_update_failure", error)
+            throw error
         }
-
-        isFirstAccess = false
     }
 }

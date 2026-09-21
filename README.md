@@ -68,6 +68,22 @@ O projeto possui testes unitários de repositório (ver pasta `app/src/test`):
 ./gradlew testDebugUnitTest
 ```
 
+## Logs e tratamento de erros
+
+Os fluxos de autenticação usam eventos padronizados no Logcat. Durante o
+desenvolvimento, filtre as tags do aplicativo com:
+
+```bash
+adb logcat -s ARGOS_AUTH ARGOS_LOGIN ARGOS_FIRST ARGOS_RESET ARGOS_SESSION
+```
+
+Os eventos seguem o formato `event=nome chave=valor`. Senhas, tokens, códigos
+de redefinição, emails e outras credenciais nunca devem ser registrados.
+
+Falhas técnicas são convertidas em `AuthErrorCode` antes de chegar à UI. O
+ViewModel publica o código; a rota resolve a mensagem em `strings.xml` e
+exibe o feedback adequado. Não use `Throwable.message` diretamente na tela.
+
 ## Contribuindo
 
 Siga as boas práticas de contribuição descritas no arquivo **[CONTRIBUTING.md](CONTRIBUTING.md)**.
