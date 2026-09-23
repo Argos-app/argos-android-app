@@ -12,9 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.android.argosapp.R
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.argosapp.ui.viewmodel.LoginViewModel
@@ -24,10 +23,10 @@ import com.android.argosapp.ui.component.showErrorFeedback
 @Composable
 fun LoginRoute(
     firebaseAuthManager: FirebaseAuthManager,
-    argosApiAuthManager: MockedArgosApiAuthManager,
-    tokenStorage: UserSessionStorage,
+    argosApiAuthManager: ArgosApiAuthManager,
     onNavigateToHome: () -> Unit = {},
     onNavigateToFirstAccess: () -> Unit = {},
+    onNavigateToRedefinePassword: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -37,7 +36,6 @@ fun LoginRoute(
         factory = LoginViewModel.factory(
             firebaseAuthManager = firebaseAuthManager,
             argosApiAuthManager = argosApiAuthManager,
-            tokenStorage = tokenStorage,
         ),
     )
     val state by loginViewModel.uiState.collectAsStateWithLifecycle()
@@ -58,6 +56,7 @@ fun LoginRoute(
                 backgroundColor = colors.error.toArgb(),
                 textColor = colors.onError.toArgb(),
             )
+            loginViewModel.clearError()
         }
     }
 
@@ -81,7 +80,7 @@ fun LoginRoute(
             onPasswordChange = loginViewModel::onPasswordChanged,
             onRememberMeChange = loginViewModel::onRememberMeChanged,
             onPasswordVisibilityChange = loginViewModel::onPasswordVisibilityChanged,
-            onForgotPasswordClick = {},
+            onForgotPasswordClick = onNavigateToRedefinePassword,
             onGoogleClick = {
                 firebaseAuthManager.launchGoogleSignIn(
                     context = context,

@@ -4,8 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.model.User
 import com.android.argosapp.util.PasswordPatternValidator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,14 +27,13 @@ data class FirstAccessChangePasswordState(
 
 class FirstAccessChangePasswordViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
-    private val argosApiAuthManager: MockedArgosApiAuthManager,
-    private val tokenStorage: UserSessionStorage,
+    private val argosApiAuthManager: ArgosApiAuthManager,
 ) : ViewModel() {
 
     private val passwordValidator = PasswordPatternValidator()
 
     private val _uiState = MutableStateFlow(
-        FirstAccessChangePasswordState(user = tokenStorage.getUser()),
+        FirstAccessChangePasswordState(user = argosApiAuthManager.getUser()),
     )
     val uiState: StateFlow<FirstAccessChangePasswordState> = _uiState.asStateFlow()
 
@@ -70,7 +68,7 @@ class FirstAccessChangePasswordViewModel(
         }
 
         viewModelScope.launch {
-            val bearerToken = tokenStorage.getBearerToken()
+            val bearerToken = argosApiAuthManager.getBearerToken()
             if (bearerToken.isNullOrBlank()) {
                 showError("Sua sessão expirou. Entre novamente.")
                 return@launch
@@ -80,7 +78,7 @@ class FirstAccessChangePasswordViewModel(
 
             runCatching {
                 firebaseAuthManager.updatePassword(state.newPassword)
-                argosApiAuthManager.updateUserAccessStatus(bearerToken)
+                argosApiAuthManager.updateUserAccessStatus()
             }
                 .onSuccess {
                     _uiState.update {
@@ -112,8 +110,7 @@ class FirstAccessChangePasswordViewModel(
     companion object {
         fun factory(
             firebaseAuthManager: FirebaseAuthManager,
-            argosApiAuthManager: MockedArgosApiAuthManager,
-            tokenStorage: UserSessionStorage,
+            argosApiAuthManager: ArgosApiAuthManager,
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -121,7 +118,6 @@ class FirstAccessChangePasswordViewModel(
                     return FirstAccessChangePasswordViewModel(
                         firebaseAuthManager = firebaseAuthManager,
                         argosApiAuthManager = argosApiAuthManager,
-                        tokenStorage = tokenStorage,
                     ) as T
                 }
             }

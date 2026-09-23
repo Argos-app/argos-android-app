@@ -25,22 +25,20 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.android.argosapp.ui.theme.ArgosBackground
 import com.android.argosapp.ui.theme.ArgosGreen
 import com.android.argosapp.ui.theme.ArgosLoadingTrack
-import com.android.argosapp.ui.theme.ArgosDimensions
-import com.android.argosapp.ui.theme.ArgosSpacing
-import com.android.argosapp.ui.theme.argosBody
 
 @Composable
 fun ArgosLoadingIndicator(
     modifier: Modifier = Modifier,
-    size: Dp = ArgosDimensions.loadingIndicatorSize,
+    size: Dp = 88.dp,
     color: Color = ArgosGreen,
     trackColor: Color = ArgosLoadingTrack,
-    strokeWidth: Dp = ArgosDimensions.loadingStrokeWidth,
+    strokeWidth: Dp = 8.dp,
 ) {
     CircularProgressIndicator(
         modifier = modifier.size(size),
@@ -59,7 +57,7 @@ fun ArgosLoadingOverlay(
     overlayColor: Color = ArgosBackground.copy(alpha = 0.89f),
     indicatorColor: Color = ArgosGreen,
     indicatorTrackColor: Color = ArgosLoadingTrack,
-    blurRadius: Dp = ArgosDimensions.loadingBlurRadius,
+    blurRadius: Dp = 4.dp,
     content: @Composable () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -108,10 +106,11 @@ fun ArgosLoadingOverlay(
                     )
                     Text(
                         text = text,
-                        modifier = Modifier.padding(top = ArgosSpacing.overlayContentGap),
-                        style = MaterialTheme.typography.argosBody.copy(
+                        modifier = Modifier.padding(top = 18.dp),
+                        style = MaterialTheme.typography.bodyMedium.copy(
                             color = indicatorColor,
                             fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
                         ),
                     )
                 }

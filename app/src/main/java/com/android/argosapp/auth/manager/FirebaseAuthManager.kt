@@ -1,30 +1,25 @@
 package com.android.argosapp.auth.manager
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
+import com.android.argosapp.data.api.FirebaseRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 /**
  * Centraliza as operações de autenticação e sessão do Firebase Auth.
  */
 class FirebaseAuthManager(
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val firebaseRepository: FirebaseRepository,
 ) {
-
     suspend fun loginWithCredentials(email: String, password: String): String {
-        firebaseAuth
-            .signInWithEmailAndPassword(email, password)
-            .await()
-
-        return getCurrentIdToken()
+        return firebaseRepository.loginWithCredentials(email, password)
     }
 
     fun launchGoogleSignIn(
@@ -59,40 +54,39 @@ class FirebaseAuthManager(
     }
 
     suspend fun loginWithGoogle(idToken: String): String {
-        firebaseAuth
-            .signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
-            .await()
-
-        return getCurrentIdToken()
+        return firebaseRepository.loginWithGoogle(idToken)
     }
 
     suspend fun hasValidSession(): Boolean {
-        if (firebaseAuth.currentUser == null) return false
-
-        return runCatching {
-            getCurrentIdToken().isNotBlank()
-        }.getOrDefault(false)
+        return firebaseRepository.hasValidSession()
     }
 
     suspend fun updatePassword(newPassword: String) {
-        val currentUser = requireNotNull(firebaseAuth.currentUser) {
-            "O Firebase não possui um usuário autenticado."
-        }
+        firebaseRepository.updatePassword(newPassword)
+    }
 
-        currentUser.updatePassword(newPassword).await()
+    suspend fun redefinePassword(email: String) {
+        firebaseRepository.redefinePassword(email)
+    }
+
+    suspend fun verifyPasswordResetCode(oobCode: String): String {
+        return firebaseRepository.verifyPasswordResetCode(oobCode)
+    }
+
+    suspend fun confirmPasswordReset(oobCode: String, newPassword: String) {
+        firebaseRepository.confirmPasswordReset(oobCode, newPassword)
+    }
+
+    fun extractPasswordResetCode(intent: Intent): String? {
+        val data = intent.data ?: return null
+
+        return data.getQueryParameter("oobCode")
+            ?: data.getQueryParameter("link")
+                ?.let(Uri::parse)
+                ?.getQueryParameter("oobCode")
     }
 
     fun signOut() {
-        firebaseAuth.signOut()
-    }
-
-    private suspend fun getCurrentIdToken(): String {
-        val currentUser = requireNotNull(firebaseAuth.currentUser) {
-            "O Firebase não possui um usuário autenticado."
-        }
-
-        return requireNotNull(currentUser.getIdToken(false).await()?.token?.takeIf { it.isNotBlank() }) {
-            "O Firebase não retornou um ID token válido."
-        }
+        firebaseRepository.signOut()
     }
 }

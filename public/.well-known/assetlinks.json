@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.android.argosapp",
+      "sha256_cert_fingerprints": [
+        "E8:79:95:07:55:87:83:6D:33:D6:A5:18:37:DF:49:3C:65:F6:ED:A7:65:F7:8F:92:DC:2E:D8:A8:FC:1E:E1:C8"
+      ]
+    }
+  }
+]

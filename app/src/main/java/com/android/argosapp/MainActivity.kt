@@ -1,23 +1,32 @@
 package com.android.argosapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.data.api.ArgosApiRepository
+import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.ui.navigation.ArgosNavHost
-import com.android.argosapp.ui.theme.ArgosTheme
+import com.android.argosapp.ui.theme.ArgosappTheme
 
 class MainActivity : ComponentActivity() {
 
+    private var passwordResetCode by mutableStateOf<String?>(null)
+
     private val firebaseAuthManager by lazy {
-        FirebaseAuthManager()
+        FirebaseAuthManager(FirebaseRepository())
     }
     private val argosApiAuthManager by lazy {
-        MockedArgosApiAuthManager(
-            firstAccess = true // força fluxo de primeiro acesso
+        ArgosApiAuthManager(
+            argosApiRepository = ArgosApiRepository(homologation = true),
+            userSessionStorage = tokenStorage,
         )
     }
     private val tokenStorage by lazy {
@@ -26,22 +35,29 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        passwordResetCode = firebaseAuthManager.extractPasswordResetCode(intent)
         enableEdgeToEdge()
 
         setContent {
-            ArgosTheme {
+            ArgosappTheme {
                 ArgosNavHost(
                     firebaseAuthManager = firebaseAuthManager,
                     argosApiAuthManager = argosApiAuthManager,
-                    tokenStorage = tokenStorage,
+                    passwordResetCode = passwordResetCode,
                 )
             }
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        passwordResetCode = firebaseAuthManager.extractPasswordResetCode(intent)
+    }
+
     override fun onDestroy() {
-        if (!isChangingConfigurations && !tokenStorage.isRememberMeEnabled()) {
-            tokenStorage.clearSession()
+        if (!isChangingConfigurations && !argosApiAuthManager.isRememberMeEnabled()) {
+            argosApiAuthManager.clearSession()
         }
 
         super.onDestroy()
