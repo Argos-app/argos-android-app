@@ -9,8 +9,6 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.api.FirebaseRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import com.android.argosapp.util.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
@@ -26,11 +24,7 @@ class FirebaseAuthManager(
         AppLogger.debug(AppLogger.AUTH_TAG, "auth_credentials_started")
 
         return try {
-            firebaseAuth
-                .signInWithEmailAndPassword(email, password)
-                .await()
-
-            getCurrentIdToken().also {
+            firebaseRepository.loginWithCredentials(email, password).also {
                 AppLogger.info(AppLogger.AUTH_TAG, "auth_credentials_success")
             }
         } catch (error: CancellationException) {
@@ -82,11 +76,7 @@ class FirebaseAuthManager(
         AppLogger.debug(AppLogger.AUTH_TAG, "auth_google_firebase_started")
 
         return try {
-            firebaseAuth
-                .signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
-                .await()
-
-            getCurrentIdToken().also {
+            firebaseRepository.loginWithGoogle(idToken).also {
                 AppLogger.info(AppLogger.AUTH_TAG, "auth_google_firebase_success")
             }
         } catch (error: CancellationException) {
@@ -98,15 +88,10 @@ class FirebaseAuthManager(
     }
 
     suspend fun hasValidSession(): Boolean {
-        if (firebaseAuth.currentUser == null) {
-            AppLogger.debug(AppLogger.SESSION_TAG, "session_check_empty")
-            return false
-        }
-
         AppLogger.debug(AppLogger.SESSION_TAG, "session_check_started")
 
         return try {
-            getCurrentIdToken().isNotBlank().also { isValid ->
+            firebaseRepository.hasValidSession().also { isValid ->
                 AppLogger.info(
                     AppLogger.SESSION_TAG,
                     "session_check_finished",
@@ -122,13 +107,10 @@ class FirebaseAuthManager(
     }
 
     suspend fun updatePassword(newPassword: String) {
-        firebaseRepository.updatePassword(newPassword)
-    }
-
         AppLogger.debug(AppLogger.AUTH_TAG, "password_update_started")
 
         try {
-            currentUser.updatePassword(newPassword).await()
+            firebaseRepository.updatePassword(newPassword)
             AppLogger.info(AppLogger.AUTH_TAG, "password_update_success")
         } catch (error: CancellationException) {
             throw error
@@ -138,9 +120,12 @@ class FirebaseAuthManager(
         }
     }
 
-    fun signOut() {
-        firebaseAuth.signOut()
-        AppLogger.info(AppLogger.SESSION_TAG, "session_signed_out")
+    suspend fun redefinePassword(email: String) {
+        firebaseRepository.redefinePassword(email)
+    }
+
+    suspend fun verifyPasswordResetCode(oobCode: String): String {
+        return firebaseRepository.verifyPasswordResetCode(oobCode)
     }
 
     suspend fun confirmPasswordReset(oobCode: String, newPassword: String) {
@@ -158,5 +143,6 @@ class FirebaseAuthManager(
 
     fun signOut() {
         firebaseRepository.signOut()
+        AppLogger.info(AppLogger.SESSION_TAG, "session_signed_out")
     }
 }

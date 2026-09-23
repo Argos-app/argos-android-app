@@ -21,9 +21,9 @@ class ArgosApiAuthManager(
         userSessionStorage.updateSession(
             bearerToken = authResponse.bearerToken,
             user = User(
-                userName = authResponse.userName,
-                userEmail = authResponse.email,
-                farmName = authResponse.farmName,
+                userName = authResponse.user.userName,
+                userEmail = authResponse.user.userEmail,
+                farmName = authResponse.user.farmName
             ),
             rememberMe = rememberMe,
         )

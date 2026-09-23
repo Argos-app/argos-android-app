@@ -100,7 +100,7 @@ class FirstAccessChangePasswordViewModel(
 
             try {
                 firebaseAuthManager.updatePassword(state.newPassword)
-                argosApiAuthManager.updateUserAccessStatus(bearerToken)
+                argosApiAuthManager.updateUserAccessStatus()
                 AppLogger.info(AppLogger.FIRST_ACCESS_TAG, "first_access_completed")
                 _uiState.update {
                     it.copy(

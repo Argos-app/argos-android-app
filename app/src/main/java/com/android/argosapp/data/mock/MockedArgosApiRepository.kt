@@ -2,6 +2,7 @@ package com.android.argosapp.data.mock
 
 import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.model.User
 import kotlinx.coroutines.delay
 
 /**
@@ -22,9 +23,11 @@ class MockedArgosApiRepository(
 
         return ArgosApiAuthResponse(
             bearerToken = "mocked-bearer-token",
-            userName = "Tobby",
-            email = "tobby@argos.com",
-            farmName = "Tobby & CIA",
+            user = User(
+                userName = "Tobby",
+                userEmail = "tobby@argos.com",
+                farmName = "Tobby & CIA"
+            ),
             isFirstAccess = isFirstAccess,
         )
     }

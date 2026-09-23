@@ -5,9 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.auth.error.AuthErrorCode
 import com.android.argosapp.auth.error.AuthErrorMapper
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.ui.event.AuthUiEvent
 import com.android.argosapp.util.AppLogger
 import java.util.concurrent.CancellationException
@@ -133,8 +132,8 @@ class LoginViewModel(
     private fun restoreSession() {
         viewModelScope.launch {
             AppLogger.debug(AppLogger.SESSION_TAG, "session_restore_started")
-            val hasBearerToken = !tokenStorage.getBearerToken().isNullOrBlank()
-            val hasUser = tokenStorage.getUser() != null
+            val hasBearerToken = !argosApiAuthManager.getBearerToken().isNullOrBlank()
+            val hasUser = argosApiAuthManager.getUser() != null
             val hasValidSession = hasBearerToken && hasUser && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {

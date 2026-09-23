@@ -1,6 +1,7 @@
 package com.android.argosapp.data.api
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.model.User
 import retrofit2.Retrofit
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -47,9 +48,11 @@ open class ArgosApiRepository(
 
         return ArgosApiAuthResponse(
             bearerToken = response.bearerToken,
-            userName = response.userName,
-            email = response.email,
-            farmName = response.farmName,
+            user = User(
+                userName = response.user.userName,
+                userEmail = response.user.userEmail,
+                farmName = response.user.farmName
+            ),
             isFirstAccess = response.isFirstAccess
         )
     }

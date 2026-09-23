@@ -34,7 +34,7 @@ class MockedArgosApiAuthManager(
                     userEmail = "tobby@argos.com",
                     farmName = "Tobby & CIA",
                 ),
-                isFirstAccess = isFirstAccess,
+                isFirstAccess = isFirstAccess
             ).also {
                 AppLogger.info(AppLogger.AUTH_TAG, "argos_authenticate_success")
             }
