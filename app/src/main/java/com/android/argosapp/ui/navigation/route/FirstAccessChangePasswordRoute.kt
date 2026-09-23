@@ -12,6 +12,8 @@ import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.ui.screen.FirstAccessChangePasswordScreen
 import com.android.argosapp.ui.component.showErrorFeedback
+import com.android.argosapp.ui.error.messageRes
+import com.android.argosapp.ui.event.AuthUiEvent
 import com.android.argosapp.ui.viewmodel.FirstAccessChangePasswordViewModel
 
 @Composable
@@ -39,14 +41,16 @@ fun FirstAccessChangePasswordRoute(
         if (state.isPasswordChanged) onNavigateToHome()
     }
 
-    LaunchedEffect(state.errorEventId) {
-        state.error?.let { error ->
-            showErrorFeedback(
-                context = context,
-                message = error,
-                backgroundColor = colors.error.toArgb(),
-                textColor = colors.onError.toArgb(),
-            )
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is AuthUiEvent.ShowError -> showErrorFeedback(
+                    context = context,
+                    message = context.getString(event.code.messageRes()),
+                    backgroundColor = colors.error.toArgb(),
+                    textColor = colors.onError.toArgb(),
+                )
+            }
         }
     }
 

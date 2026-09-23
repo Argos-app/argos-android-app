@@ -19,6 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.argosapp.ui.viewmodel.LoginViewModel
 import com.android.argosapp.ui.screen.LoginScreen
 import com.android.argosapp.ui.component.showErrorFeedback
+import com.android.argosapp.ui.error.messageRes
+import com.android.argosapp.ui.event.AuthUiEvent
 
 @Composable
 fun LoginRoute(
@@ -48,15 +50,16 @@ fun LoginRoute(
         if (state.isFirstAccess) onNavigateToFirstAccess()
     }
 
-    LaunchedEffect(state.errorEventId) {
-        state.error?.let { error ->
-            showErrorFeedback(
-                context = context,
-                message = error,
-                backgroundColor = colors.error.toArgb(),
-                textColor = colors.onError.toArgb(),
-            )
-            loginViewModel.clearError()
+    LaunchedEffect(Unit) {
+        loginViewModel.events.collect { event ->
+            when (event) {
+                is AuthUiEvent.ShowError -> showErrorFeedback(
+                    context = context,
+                    message = context.getString(event.code.messageRes()),
+                    backgroundColor = colors.error.toArgb(),
+                    textColor = colors.onError.toArgb(),
+                )
+            }
         }
     }
 

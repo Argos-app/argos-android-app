@@ -3,10 +3,18 @@ package com.android.argosapp.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.argosapp.auth.error.AuthErrorCode
+import com.android.argosapp.auth.error.AuthErrorMapper
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.ArgosApiAuthManager
+import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
+import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.ui.event.AuthUiEvent
+import com.android.argosapp.util.AppLogger
+import java.util.concurrent.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -17,8 +25,6 @@ data class LoginState(
     val isLoading: Boolean = false,
     val rememberMe: Boolean = true,
     val passwordVisible: Boolean = false,
-    val error: String? = null,
-    val errorEventId: Long = 0,
     val isAuthenticated: Boolean = false,
     val isFirstAccess: Boolean = false,
 )
@@ -29,17 +35,19 @@ class LoginViewModel(
 
     private val _uiState = MutableStateFlow(LoginState(isLoading = true))
     val uiState: StateFlow<LoginState> = _uiState.asStateFlow()
+    private val _events = MutableSharedFlow<AuthUiEvent>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
 
     init {
         restoreSession()
     }
 
     fun onEmailChanged(value: String) {
-        _uiState.update { it.copy(email = value, error = null) }
+        _uiState.update { it.copy(email = value) }
     }
 
     fun onPasswordChanged(value: String) {
-        _uiState.update { it.copy(password = value, error = null) }
+        _uiState.update { it.copy(password = value) }
     }
 
     fun onRememberMeChanged(value: Boolean) {
@@ -53,71 +61,92 @@ class LoginViewModel(
     fun login() {
         val state = uiState.value
         if (state.email.isBlank() || state.password.isBlank()) {
-            showError("Informe email e senha.")
+            AppLogger.debug(AppLogger.LOGIN_TAG, "login_validation_failed", "code" to AuthErrorCode.EMPTY_FIELDS.name)
+            showError(AuthErrorCode.EMPTY_FIELDS)
             return
         }
 
-        authenticate { firebaseAuthManager.loginWithCredentials(state.email.trim(), state.password) }
+        authenticate(method = "password") {
+            firebaseAuthManager.loginWithCredentials(state.email.trim(), state.password)
+        }
     }
 
     fun loginWithGoogle(idToken: String) {
         if (idToken.isBlank()) {
-            showError("Não foi possível obter o token do Google.")
+            AppLogger.debug(AppLogger.LOGIN_TAG, "login_validation_failed", "code" to AuthErrorCode.GOOGLE_CANCELLED.name)
+            showError(AuthErrorCode.GOOGLE_CANCELLED)
             return
         }
 
-        authenticate { firebaseAuthManager.loginWithGoogle(idToken) }
+        authenticate(method = "google") { firebaseAuthManager.loginWithGoogle(idToken) }
     }
 
     fun onGoogleLoginError(throwable: Throwable) {
-        showError(
-            message = throwable.message ?: "Não foi possível entrar com o Google.",
-            isLoading = false,
-        )
+        if (throwable is CancellationException) throw throwable
+
+        val code = AuthErrorMapper.from(throwable)
+        AppLogger.error(AppLogger.LOGIN_TAG, "login_failure", throwable, "code" to code.name)
+        showError(code)
     }
 
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
-    }
-
-    private fun authenticate(request: suspend () -> String) {
+    private fun authenticate(method: String, request: suspend () -> String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, isFirstAccess = false) }
+            _uiState.update { it.copy(isLoading = true, isFirstAccess = false) }
 
-            runCatching {
+            try {
                 val firebaseIdToken = request()
                 val authResponse = argosApiAuthManager.authenticate(
                     firebaseIdToken = firebaseIdToken,
                     rememberMe = uiState.value.rememberMe,
                 )
 
-                authResponse
-            }
-                .onSuccess { authResponse ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isAuthenticated = !authResponse.isFirstAccess,
-                            isFirstAccess = authResponse.isFirstAccess,
-                            error = null,
-                            password = "",
-                        )
-                    }
+                AppLogger.info(
+                    AppLogger.LOGIN_TAG,
+                    "login_success",
+                    "method" to method,
+                    "first_access" to authResponse.isFirstAccess,
+                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isAuthenticated = !authResponse.isFirstAccess,
+                        isFirstAccess = authResponse.isFirstAccess,
+                        password = "",
+                    )
                 }
-                .onFailure(::setError)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                val code = AuthErrorMapper.from(error)
+                AppLogger.error(
+                    AppLogger.LOGIN_TAG,
+                    "login_failure",
+                    error,
+                    "method" to method,
+                    "code" to code.name,
+                )
+                showError(code)
+            }
         }
     }
 
     private fun restoreSession() {
         viewModelScope.launch {
-            val hasBearerToken = !argosApiAuthManager.getBearerToken().isNullOrBlank()
-            val hasUser = argosApiAuthManager.getUser() != null
+            AppLogger.debug(AppLogger.SESSION_TAG, "session_restore_started")
+            val hasBearerToken = !tokenStorage.getBearerToken().isNullOrBlank()
+            val hasUser = tokenStorage.getUser() != null
             val hasValidSession = hasBearerToken && hasUser && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {
                 argosApiAuthManager.clearSession()
                 firebaseAuthManager.signOut()
             }
+
+            AppLogger.info(
+                AppLogger.SESSION_TAG,
+                "session_restore_finished",
+                "valid" to hasValidSession,
+            )
 
             _uiState.update {
                 it.copy(
@@ -129,21 +158,9 @@ class LoginViewModel(
         }
     }
 
-    private fun setError(throwable: Throwable) {
-        showError(
-            message = throwable.message ?: "Não foi possível realizar o login.",
-            isLoading = false,
-        )
-    }
-
-    private fun showError(message: String, isLoading: Boolean = false) {
-        _uiState.update {
-            it.copy(
-                isLoading = isLoading,
-                error = message,
-                errorEventId = it.errorEventId + 1,
-            )
-        }
+    private fun showError(code: AuthErrorCode) {
+        _uiState.update { it.copy(isLoading = false) }
+        _events.tryEmit(AuthUiEvent.ShowError(code))
     }
 
     companion object {
