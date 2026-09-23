@@ -30,8 +30,7 @@ data class LoginState(
 )
 class LoginViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
-    private val argosApiAuthManager: MockedArgosApiAuthManager,
-    private val tokenStorage: UserSessionStorage,
+    private val argosApiAuthManager: ArgosApiAuthManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginState(isLoading = true))
@@ -96,11 +95,8 @@ class LoginViewModel(
 
             try {
                 val firebaseIdToken = request()
-                val authResponse = argosApiAuthManager.authenticate(firebaseIdToken)
-
-                tokenStorage.updateSession(
-                    bearerToken = authResponse.bearerToken,
-                    user = authResponse.user,
+                val authResponse = argosApiAuthManager.authenticate(
+                    firebaseIdToken = firebaseIdToken,
                     rememberMe = uiState.value.rememberMe,
                 )
 
@@ -142,7 +138,7 @@ class LoginViewModel(
             val hasValidSession = hasBearerToken && hasUser && firebaseAuthManager.hasValidSession()
 
             if (!hasValidSession) {
-                tokenStorage.clearSession()
+                argosApiAuthManager.clearSession()
                 firebaseAuthManager.signOut()
             }
 
@@ -170,8 +166,7 @@ class LoginViewModel(
     companion object {
         fun factory(
             firebaseAuthManager: FirebaseAuthManager,
-            argosApiAuthManager: MockedArgosApiAuthManager,
-            tokenStorage: UserSessionStorage,
+            argosApiAuthManager: ArgosApiAuthManager,
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -179,7 +174,6 @@ class LoginViewModel(
                     return LoginViewModel(
                         firebaseAuthManager = firebaseAuthManager,
                         argosApiAuthManager = argosApiAuthManager,
-                        tokenStorage = tokenStorage,
                     ) as T
                 }
             }

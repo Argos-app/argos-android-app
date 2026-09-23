@@ -1,32 +1,42 @@
 package com.android.argosapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.ui.navigation.route.FirstAccessChangePasswordRoute
 import com.android.argosapp.ui.navigation.route.LoginRoute
+import com.android.argosapp.ui.navigation.route.RedefinePasswordRoute
 import com.android.argosapp.ui.screen.HomeScreen
 
 private object AppRoute {
     const val Login = "login"
     const val FirstAccessChangePassword = "first_access_change_password"
+    const val RedefinePassword = "redefine_password"
     const val Home = "home"
 }
 
 @Composable
 fun ArgosNavHost(
     firebaseAuthManager: FirebaseAuthManager,
-    argosApiAuthManager: MockedArgosApiAuthManager,
-    tokenStorage: UserSessionStorage,
+    argosApiAuthManager: ArgosApiAuthManager,
+    passwordResetCode: String? = null,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
+    LaunchedEffect(passwordResetCode) {
+        if (!passwordResetCode.isNullOrBlank()) {
+            navController.navigate(AppRoute.RedefinePassword) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = AppRoute.Login,
@@ -36,7 +46,6 @@ fun ArgosNavHost(
             LoginRoute(
                 firebaseAuthManager = firebaseAuthManager,
                 argosApiAuthManager = argosApiAuthManager,
-                tokenStorage = tokenStorage,
                 onNavigateToHome = {
                     navController.navigate(AppRoute.Home) {
                         popUpTo(AppRoute.Login) {
@@ -53,6 +62,21 @@ fun ArgosNavHost(
                         launchSingleTop = true
                     }
                 },
+                onNavigateToRedefinePassword = {
+                    navController.navigate(AppRoute.RedefinePassword) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.RedefinePassword) {
+            RedefinePasswordRoute(
+                firebaseAuthManager = firebaseAuthManager,
+                passwordResetCode = passwordResetCode,
+                onNavigateToLogin = {
+                    navController.popBackStack(AppRoute.Login, inclusive = false)
+                },
             )
         }
 
@@ -60,7 +84,6 @@ fun ArgosNavHost(
             FirstAccessChangePasswordRoute(
                 firebaseAuthManager = firebaseAuthManager,
                 argosApiAuthManager = argosApiAuthManager,
-                tokenStorage = tokenStorage,
                 onNavigateToHome = {
                     navController.navigate(AppRoute.Home) {
                         popUpTo(AppRoute.FirstAccessChangePassword) {
@@ -70,7 +93,7 @@ fun ArgosNavHost(
                     }
                 },
                 onNavigateToLogin = {
-                    tokenStorage.clearSession()
+                    argosApiAuthManager.clearSession()
                     firebaseAuthManager.signOut()
                     navController.navigate(AppRoute.Login) {
                         popUpTo(AppRoute.FirstAccessChangePassword) {
@@ -84,8 +107,8 @@ fun ArgosNavHost(
 
         composable(AppRoute.Home) {
             HomeScreen(
-                user = tokenStorage.getUser(),
-                bearerToken = tokenStorage.getBearerToken(),
+                user = argosApiAuthManager.getUser(),
+                bearerToken = argosApiAuthManager.getBearerToken(),
             )
         }
     }

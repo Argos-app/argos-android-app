@@ -8,9 +8,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.argosapp.auth.manager.ArgosApiAuthManager
 import com.android.argosapp.auth.manager.FirebaseAuthManager
-import com.android.argosapp.auth.manager.MockedArgosApiAuthManager
-import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.ui.screen.FirstAccessChangePasswordScreen
 import com.android.argosapp.ui.component.showErrorFeedback
 import com.android.argosapp.ui.error.messageRes
@@ -20,8 +19,7 @@ import com.android.argosapp.ui.viewmodel.FirstAccessChangePasswordViewModel
 @Composable
 fun FirstAccessChangePasswordRoute(
     firebaseAuthManager: FirebaseAuthManager,
-    argosApiAuthManager: MockedArgosApiAuthManager,
-    tokenStorage: UserSessionStorage,
+    argosApiAuthManager: ArgosApiAuthManager,
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
@@ -31,7 +29,6 @@ fun FirstAccessChangePasswordRoute(
         factory = FirstAccessChangePasswordViewModel.factory(
             firebaseAuthManager = firebaseAuthManager,
             argosApiAuthManager = argosApiAuthManager,
-            tokenStorage = tokenStorage,
         ),
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -60,7 +57,6 @@ fun FirstAccessChangePasswordRoute(
     val user = state.user ?: return
     FirstAccessChangePasswordScreen(
         fullName = user.userName,
-        email = user.userEmail,
         newPassword = state.newPassword,
         passwordConfirmation = state.passwordConfirmation,
         newPasswordVisible = state.newPasswordVisible,
@@ -72,7 +68,5 @@ fun FirstAccessChangePasswordRoute(
         onPasswordConfirmationVisibilityChange = viewModel::onPasswordConfirmationVisibilityChanged,
         onChangePasswordClick = viewModel::changePassword,
         onBackToLoginClick = onNavigateToLogin,
-        onTermsClick = {},
-        onPrivacyClick = {},
     )
 }
