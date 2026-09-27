@@ -10,4 +10,12 @@
     <string name="auth_error_user_not_found">Usuário não encontrado.</string>
     <string name="auth_error_reset_invalid">O link de redefinição é inválido ou expirou.</string>
     <string name="auth_error_unknown">Não foi possível concluir a operação.</string>
+    <string name="loading_authenticating">Te autenticando...</string>
+    <string name="loading_changing_password">Alterando sua senha...</string>
+    <string name="first_access_welcome">Bem-vindo, %1$s! Redefina sua senha.</string>
+    <string name="auth_legal">Ao entrar você concorda com os <b><i>Termos</i></b> e a <b><i>Política de Privacidade</i></b> do Argos.</string>
+    <string name="reset_legal">Ao continuar você concorda com os <b><i>Termos</i></b> e a <b><i>Política de Privacidade</i></b> do Argos.</string>
+    <string name="password_criterion_met">Critério atendido</string>
+    <string name="password_criterion_pending">Critério pendente</string>
+    <string name="resend_email_countdown">Enviar novamente (%1$02d:%2$02d)</string>
 </resources>

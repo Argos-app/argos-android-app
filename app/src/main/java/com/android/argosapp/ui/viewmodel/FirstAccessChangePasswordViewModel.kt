@@ -1,146 +1,44 @@
 package com.android.argosapp.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import android.content.Context
 import com.android.argosapp.auth.error.AuthErrorCode
 import com.android.argosapp.auth.error.AuthErrorMapper
-import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.auth.manager.ArgosApiAuthManager
-import com.android.argosapp.model.User
-import com.android.argosapp.ui.event.AuthUiEvent
-import com.android.argosapp.util.AppLogger
+import com.android.argosapp.auth.manager.FirebaseAuthManager
 import com.android.argosapp.util.PasswordPatternValidator
-import java.util.concurrent.CancellationException
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-data class FirstAccessChangePasswordState(
-    val user: User? = null,
-    val newPassword: String = "",
-    val passwordConfirmation: String = "",
-    val newPasswordVisible: Boolean = false,
-    val passwordConfirmationVisible: Boolean = false,
-    val isLoading: Boolean = false,
-    val isPasswordChanged: Boolean = false,
-)
-
 class FirstAccessChangePasswordViewModel(
+    context: Context,
     private val firebaseAuthManager: FirebaseAuthManager,
     private val argosApiAuthManager: ArgosApiAuthManager,
-) : ViewModel() {
-
+) {
+    private val scope = CoroutineScope(Dispatchers.Main)
     private val passwordValidator = PasswordPatternValidator()
+    val userName = argosApiAuthManager.getUser()?.userName.orEmpty()
 
-    private val _uiState = MutableStateFlow(
-        FirstAccessChangePasswordState(user = argosApiAuthManager.getUser()),
-    )
-    val uiState: StateFlow<FirstAccessChangePasswordState> = _uiState.asStateFlow()
-    private val _events = MutableSharedFlow<AuthUiEvent>(extraBufferCapacity = 1)
-    val events = _events.asSharedFlow()
-
-    fun onNewPasswordChanged(value: String) {
-        _uiState.update { it.copy(newPassword = value) }
-    }
-
-    fun onPasswordConfirmationChanged(value: String) {
-        _uiState.update { it.copy(passwordConfirmation = value) }
-    }
-
-    fun onNewPasswordVisibilityChanged() {
-        _uiState.update { it.copy(newPasswordVisible = !it.newPasswordVisible) }
-    }
-
-    fun onPasswordConfirmationVisibilityChanged() {
-        _uiState.update {
-            it.copy(passwordConfirmationVisible = !it.passwordConfirmationVisible)
+    fun changePassword(
+        newPassword: String,
+        confirmation: String,
+        onLoading: (Boolean) -> Unit,
+        onError: (AuthErrorCode) -> Unit,
+        onSuccess: () -> Unit,
+    ) {
+        when {
+            !passwordValidator.validatePassword(newPassword).values.all { it } -> return onError(AuthErrorCode.INVALID_PASSWORD)
+            newPassword != confirmation -> return onError(AuthErrorCode.PASSWORD_MISMATCH)
+            argosApiAuthManager.getBearerToken().isNullOrBlank() -> return onError(AuthErrorCode.SESSION_EXPIRED)
         }
-    }
-
-    fun changePassword() {
-        val state = uiState.value
-        val passwordRules = passwordValidator.validatePassword(state.newPassword)
-        if (!passwordRules.values.all { it }) {
-            AppLogger.debug(
-                AppLogger.FIRST_ACCESS_TAG,
-                "first_access_validation_failed",
-                "code" to AuthErrorCode.INVALID_PASSWORD.name,
-            )
-            showError(AuthErrorCode.INVALID_PASSWORD)
-            return
-        }
-        if (state.newPassword != state.passwordConfirmation) {
-            AppLogger.debug(
-                AppLogger.FIRST_ACCESS_TAG,
-                "first_access_validation_failed",
-                "code" to AuthErrorCode.PASSWORD_MISMATCH.name,
-            )
-            showError(AuthErrorCode.PASSWORD_MISMATCH)
-            return
-        }
-
-        viewModelScope.launch {
-            val bearerToken = argosApiAuthManager.getBearerToken()
-            if (bearerToken.isNullOrBlank()) {
-                AppLogger.debug(
-                    AppLogger.FIRST_ACCESS_TAG,
-                    "first_access_validation_failed",
-                    "code" to AuthErrorCode.SESSION_EXPIRED.name,
-                )
-                showError(AuthErrorCode.SESSION_EXPIRED)
-                return@launch
-            }
-
-            _uiState.update { it.copy(isLoading = true) }
-
-            try {
-                firebaseAuthManager.updatePassword(state.newPassword)
+        scope.launch {
+            onLoading(true)
+            runCatching {
+                firebaseAuthManager.updatePassword(newPassword)
                 argosApiAuthManager.updateUserAccessStatus()
-                AppLogger.info(AppLogger.FIRST_ACCESS_TAG, "first_access_completed")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isPasswordChanged = true,
-                    )
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Throwable) {
-                val code = AuthErrorMapper.from(error)
-                AppLogger.error(
-                    AppLogger.FIRST_ACCESS_TAG,
-                    "first_access_failure",
-                    error,
-                    "code" to code.name,
-                )
-                showError(code)
-            }
+            }.onSuccess { onSuccess() }
+                .onFailure { onError(AuthErrorMapper.from(it)) }
+            onLoading(false)
         }
-    }
-
-    private fun showError(code: AuthErrorCode) {
-        _uiState.update { it.copy(isLoading = false) }
-        _events.tryEmit(AuthUiEvent.ShowError(code))
-    }
-
-    companion object {
-        fun factory(
-            firebaseAuthManager: FirebaseAuthManager,
-            argosApiAuthManager: ArgosApiAuthManager,
-        ): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return FirstAccessChangePasswordViewModel(
-                        firebaseAuthManager = firebaseAuthManager,
-                        argosApiAuthManager = argosApiAuthManager,
-                    ) as T
-                }
-            }
     }
 }
