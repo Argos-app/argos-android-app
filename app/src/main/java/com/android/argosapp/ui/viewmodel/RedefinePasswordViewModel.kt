@@ -3,14 +3,14 @@ package com.android.argosapp.ui.viewmodel
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.util.PasswordPatternValidator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class RedefinePasswordViewModel(
-    private val firebaseAuthManager: FirebaseAuthManager,
+    private val authManager: AuthManager,
     private val context: Context,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
@@ -20,7 +20,7 @@ class RedefinePasswordViewModel(
         if (email.isBlank()) return onError("Informe seu e-mail.")
         scope.launch {
             onLoading(true)
-            runCatching { firebaseAuthManager.redefinePassword(email.trim()) }
+            runCatching { authManager.redefinePassword(email.trim()) }
                 .onSuccess { onSent() }
                 .onFailure { onError(it.message ?: "Não foi possível enviar o e-mail.") }
             onLoading(false)
@@ -31,7 +31,7 @@ class RedefinePasswordViewModel(
         if (code.isBlank()) return
         scope.launch {
             onLoading(true)
-            runCatching { firebaseAuthManager.verifyPasswordResetCode(code) }
+            runCatching { authManager.verifyPasswordResetCode(code) }
                 .onSuccess { onValid(code) }
                 .onFailure { onError(it.message ?: "O link de redefinição é inválido ou expirou.") }
             onLoading(false)
@@ -46,7 +46,7 @@ class RedefinePasswordViewModel(
         }
         scope.launch {
             onLoading(true)
-            runCatching { firebaseAuthManager.confirmPasswordReset(code, password) }
+            runCatching { authManager.confirmPasswordReset(code, password) }
                 .onSuccess { onSuccess() }
                 .onFailure { onError(it.message ?: "Não foi possível alterar a senha.") }
             onLoading(false)

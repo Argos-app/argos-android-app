@@ -8,9 +8,9 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.R
-import com.android.argosapp.auth.manager.ArgosApiAuthManager
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
 import com.android.argosapp.ui.error.messageRes
@@ -19,20 +19,14 @@ import com.android.argosapp.util.PasswordPatternValidator
 
 class FirstAccessChangePasswordActivity : ComponentActivity() {
     private lateinit var binding: ActivityFirstAccessChangePasswordBinding
-    private val firebaseAuthManager by lazy { FirebaseAuthManager(FirebaseRepository()) }
-    private val argosApiAuthManager by lazy {
-        ArgosApiAuthManager(
+    private val authManager by lazy {
+        AuthManager(
             ArgosApiRepository(homologation = true),
+            FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )
     }
-    private val viewModel by lazy {
-        FirstAccessChangePasswordViewModel(
-            applicationContext,
-            firebaseAuthManager,
-            argosApiAuthManager,
-        )
-    }
+    private val viewModel by lazy { FirstAccessChangePasswordViewModel(authManager) }
     private val passwordValidator = PasswordPatternValidator()
     private var newPasswordVisible = false
     private var confirmationVisible = false
@@ -86,8 +80,8 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
     }
 
     private fun returnToLogin() {
-        argosApiAuthManager.clearSession()
-        firebaseAuthManager.signOut()
+        authManager.clearSession()
+        authManager.signOut()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }

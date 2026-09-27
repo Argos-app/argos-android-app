@@ -3,26 +3,24 @@ package com.android.argosapp.ui.viewmodel
 import android.content.Context
 import com.android.argosapp.auth.error.AuthErrorCode
 import com.android.argosapp.auth.error.AuthErrorMapper
-import com.android.argosapp.auth.manager.ArgosApiAuthManager
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val context: Context,
-    private val firebaseAuthManager: FirebaseAuthManager,
-    private val argosApiAuthManager: ArgosApiAuthManager,
+    private val authManager: AuthManager,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun restoreSession(onLoading: (Boolean) -> Unit, onAuthenticated: () -> Unit) = scope.launch {
         onLoading(true)
-        val hasSession = !argosApiAuthManager.getBearerToken().isNullOrBlank() &&
-            argosApiAuthManager.getUser() != null && firebaseAuthManager.hasValidSession()
+        val hasSession = !authManager.getBearerToken().isNullOrBlank() &&
+            authManager.getUser() != null && authManager.hasValidSession()
         if (hasSession) onAuthenticated() else {
-            argosApiAuthManager.clearSession()
-            firebaseAuthManager.signOut()
+            authManager.clearSession()
+            authManager.signOut()
         }
         onLoading(false)
     }
@@ -39,8 +37,8 @@ class LoginViewModel(
         scope.launch {
             onLoading(true)
             runCatching {
-                val token = firebaseAuthManager.loginWithCredentials(email.trim(), password)
-                argosApiAuthManager.authenticate(token, rememberMe)
+                val token = authManager.loginWithCredentials(email.trim(), password)
+                authManager.authenticate(token, rememberMe)
             }.onSuccess { onAuthenticated(it.isFirstAccess) }
                 .onFailure { onError(AuthErrorMapper.from(it)) }
             onLoading(false)
@@ -58,8 +56,8 @@ class LoginViewModel(
         scope.launch {
             onLoading(true)
             runCatching {
-                val token = firebaseAuthManager.loginWithGoogle(idToken)
-                argosApiAuthManager.authenticate(token, rememberMe)
+                val token = authManager.loginWithGoogle(idToken)
+                authManager.authenticate(token, rememberMe)
             }.onSuccess { onAuthenticated(it.isFirstAccess) }
                 .onFailure { onError(AuthErrorMapper.from(it)) }
             onLoading(false)
@@ -73,7 +71,7 @@ class LoginViewModel(
         onError: (AuthErrorCode) -> Unit,
         onAuthenticated: (Boolean) -> Unit,
     ) {
-        firebaseAuthManager.launchGoogleSignIn(
+        authManager.launchGoogleSignIn(
             context = context,
             webClientId = webClientId,
             scope = scope,

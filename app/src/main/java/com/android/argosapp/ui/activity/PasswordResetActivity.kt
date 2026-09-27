@@ -9,7 +9,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
+import com.android.argosapp.auth.session.UserSessionStorage
+import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.databinding.ActivityPasswordResetBinding
 import com.android.argosapp.ui.fragment.PasswordChangedFragment
@@ -20,8 +22,14 @@ import com.android.argosapp.ui.viewmodel.RedefinePasswordViewModel
 
 class PasswordResetActivity : FragmentActivity() {
     private lateinit var binding: ActivityPasswordResetBinding
-    private val firebaseAuthManager by lazy { FirebaseAuthManager(FirebaseRepository()) }
-    val viewModel by lazy { RedefinePasswordViewModel(firebaseAuthManager, applicationContext) }
+    private val authManager by lazy {
+        AuthManager(
+            ArgosApiRepository(homologation = true),
+            FirebaseRepository(),
+            UserSessionStorage(applicationContext),
+        )
+    }
+    val viewModel by lazy { RedefinePasswordViewModel(authManager, applicationContext) }
     private var resetCode = ""
     private var resetEmail = ""
     private var displayedStep: Step? = null
@@ -55,7 +63,7 @@ class PasswordResetActivity : FragmentActivity() {
             }
         }
         refreshResendCountdown()
-        firebaseAuthManager.extractPasswordResetCode(intent)?.let(::verifyCode)
+        authManager.extractPasswordResetCode(intent)?.let(::verifyCode)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -72,7 +80,7 @@ class PasswordResetActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        firebaseAuthManager.extractPasswordResetCode(intent)?.let(::verifyCode)
+        authManager.extractPasswordResetCode(intent)?.let(::verifyCode)
     }
 
     fun goBack() {

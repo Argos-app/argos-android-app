@@ -1,23 +1,18 @@
 package com.android.argosapp.ui.viewmodel
 
-import android.content.Context
 import com.android.argosapp.auth.error.AuthErrorCode
 import com.android.argosapp.auth.error.AuthErrorMapper
-import com.android.argosapp.auth.manager.ArgosApiAuthManager
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
+import com.android.argosapp.util.AppLogger
 import com.android.argosapp.util.PasswordPatternValidator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class FirstAccessChangePasswordViewModel(
-    context: Context,
-    private val firebaseAuthManager: FirebaseAuthManager,
-    private val argosApiAuthManager: ArgosApiAuthManager,
-) {
+class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) {
     private val scope = CoroutineScope(Dispatchers.Main)
     private val passwordValidator = PasswordPatternValidator()
-    val userName = argosApiAuthManager.getUser()?.userName.orEmpty()
+    val userName = authManager.getUser()?.userName.orEmpty()
 
     fun changePassword(
         newPassword: String,
@@ -27,17 +22,49 @@ class FirstAccessChangePasswordViewModel(
         onSuccess: () -> Unit,
     ) {
         when {
-            !passwordValidator.validatePassword(newPassword).values.all { it } -> return onError(AuthErrorCode.INVALID_PASSWORD)
-            newPassword != confirmation -> return onError(AuthErrorCode.PASSWORD_MISMATCH)
-            argosApiAuthManager.getBearerToken().isNullOrBlank() -> return onError(AuthErrorCode.SESSION_EXPIRED)
+            !passwordValidator.validatePassword(newPassword).values.all { it } -> {
+                AppLogger.debug(
+                    AppLogger.FIRST_ACCESS_TAG,
+                    "first_access_validation_rejected",
+                    "code" to AuthErrorCode.INVALID_PASSWORD.name,
+                )
+                return onError(AuthErrorCode.INVALID_PASSWORD)
+            }
+            newPassword != confirmation -> {
+                AppLogger.debug(
+                    AppLogger.FIRST_ACCESS_TAG,
+                    "first_access_validation_rejected",
+                    "code" to AuthErrorCode.PASSWORD_MISMATCH.name,
+                )
+                return onError(AuthErrorCode.PASSWORD_MISMATCH)
+            }
+            authManager.getBearerToken().isNullOrBlank() -> {
+                AppLogger.debug(
+                    AppLogger.FIRST_ACCESS_TAG,
+                    "first_access_validation_rejected",
+                    "code" to AuthErrorCode.SESSION_EXPIRED.name,
+                )
+                return onError(AuthErrorCode.SESSION_EXPIRED)
+            }
         }
         scope.launch {
             onLoading(true)
             runCatching {
-                firebaseAuthManager.updatePassword(newPassword)
-                argosApiAuthManager.updateUserAccessStatus()
-            }.onSuccess { onSuccess() }
-                .onFailure { onError(AuthErrorMapper.from(it)) }
+                authManager.updatePassword(newPassword)
+                authManager.updateUserAccessStatus()
+            }.onSuccess {
+                AppLogger.info(AppLogger.FIRST_ACCESS_TAG, "first_access_completed")
+                onSuccess()
+            }.onFailure { error ->
+                val code = AuthErrorMapper.from(error)
+                AppLogger.error(
+                    AppLogger.FIRST_ACCESS_TAG,
+                    "first_access_failure",
+                    error,
+                    "code" to code.name,
+                )
+                onError(code)
+            }
             onLoading(false)
         }
     }

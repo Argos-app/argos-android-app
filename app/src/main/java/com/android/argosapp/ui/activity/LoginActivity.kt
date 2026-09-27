@@ -6,10 +6,8 @@ import android.text.InputType
 import android.view.View
 import androidx.activity.ComponentActivity
 import com.android.argosapp.R
-import com.android.argosapp.auth.manager.ArgosApiAuthManager
-import com.android.argosapp.auth.manager.FirebaseAuthManager
+import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
-import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.data.mock.MockedArgosApiRepository
 import com.android.argosapp.databinding.ActivityLoginBinding
@@ -18,16 +16,14 @@ import com.android.argosapp.ui.viewmodel.LoginViewModel
 
 class LoginActivity : ComponentActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private val firebaseAuthManager by lazy { FirebaseAuthManager(FirebaseRepository()) }
-    private val argosApiAuthManager by lazy {
-        ArgosApiAuthManager(
+    private val authManager by lazy {
+        AuthManager(
             MockedArgosApiRepository(firstAccess = true),
+            FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )
     }
-    private val viewModel by lazy {
-        LoginViewModel(this, firebaseAuthManager, argosApiAuthManager)
-    }
+    private val viewModel by lazy { LoginViewModel(this, authManager) }
     private var passwordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
