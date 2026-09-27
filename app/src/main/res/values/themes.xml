@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Argosapp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Argosapp" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:fontFamily">@font/dm_sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#FFF4F1EB</item>
+        <item name="android:navigationBarColor">#FFF4F1EB</item>
+    </style>
+
 </resources>

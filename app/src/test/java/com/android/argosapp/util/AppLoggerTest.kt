@@ -1,5 +1,6 @@
 package com.android.argosapp.util
 
+import com.android.argosapp.util.logging.AppLogger
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

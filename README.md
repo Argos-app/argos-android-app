@@ -6,7 +6,7 @@ Aplicativo móvel nativo Android do **Argos**.
 
 ![Android](https://img.shields.io/badge/Android-36-brightgreen?logo=android)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple?logo=kotlin)
-![Compose](https://img.shields.io/badge/UI-Compose%20(Material%203)-darkblue?logo=jetpackcompose)
+![UI](https://img.shields.io/badge/UI-XML%20%2B%20View%20Binding-darkblue)
 ![AGP](https://img.shields.io/badge/AGP-9.0.1-orange?logo=gradle)
 ![Gradle](https://img.shields.io/badge/Gradle-9.1.0-lightblue?logo=gradle)
 [![CI](https://github.com/Argos-app/argos-android-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Argos-app/argos-android-app/actions/workflows/ci.yml)
@@ -101,5 +101,5 @@ docs(readme): atualiza instruções de setup
 ## Recursos
 
 - [Documentação oficial do Firebase para Android](https://firebase.google.com/docs/android/setup)
-- [Jetpack Compose](https://developer.android.com/develop/ui/compose)
+- [View Binding](https://developer.android.com/topic/libraries/view-binding)
 - [Conventional Commits](https://www.conventionalcommits.org)

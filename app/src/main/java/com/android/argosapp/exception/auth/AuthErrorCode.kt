@@ -1,0 +1,14 @@
+package com.android.argosapp.exception.auth
+
+enum class AuthErrorCode {
+    EMPTY_FIELDS,
+    INVALID_CREDENTIALS,
+    NETWORK,
+    GOOGLE_CANCELLED,
+    SESSION_EXPIRED,
+    INVALID_PASSWORD,
+    PASSWORD_MISMATCH,
+    USER_NOT_FOUND,
+    PASSWORD_RESET_INVALID,
+    UNKNOWN,
+}

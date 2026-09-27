@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:fillViewport="true" android:background="@color/argos_background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:gravity="center_horizontal" android:paddingBottom="38dp">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="110dp">
+            <ImageButton android:id="@+id/backButton" android:layout_width="42dp" android:layout_height="42dp"
+                android:layout_gravity="center_vertical|start" android:layout_marginStart="26dp" android:background="@drawable/screen_back_button" android:contentDescription="Voltar" android:padding="11dp" android:scaleType="fitCenter" android:src="@drawable/go_back" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/argos_green" android:textSize="22sp" android:textStyle="bold" android:layout_gravity="center" android:text="Redefinir Senha" />
+        </FrameLayout>
+        <Space android:layout_width="1dp" android:layout_height="110dp" />
+        <ImageView android:layout_width="140dp" android:layout_height="133dp"
+            android:background="@drawable/screen_email_sent_circle" android:contentDescription="@null"
+            android:paddingHorizontal="36dp" android:paddingVertical="34dp"
+            android:scaleType="fitCenter" android:src="@drawable/email_sended" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="32dp" android:gravity="center" android:text="Verifique seu email" android:textColor="@color/argos_green" android:textSize="22sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:gravity="center" android:paddingHorizontal="40dp"
+            android:text="Enviamos as instruções de recuperação de senha para o seu email." android:textColor="@color/argos_green" android:textSize="16sp" android:lineSpacingExtra="2dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/openEmailButton" style="@style/Widget.Material3.Button" app:backgroundTint="@color/argos_green" app:cornerRadius="28dp" android:insetTop="0dp" android:insetBottom="0dp" android:minHeight="0dp" android:stateListAnimator="@null" android:textAllCaps="false" android:textColor="@android:color/white" android:textSize="16sp" android:textStyle="bold"
+            android:layout_width="match_parent" android:layout_height="54dp"
+            android:layout_marginStart="29dp" android:layout_marginEnd="29dp" android:layout_marginTop="24dp"
+            android:text="Abrir App de Email" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="17dp" android:gravity="center" android:text="Não recebeu o email?" android:textColor="@color/argos_green" android:textSize="16sp" />
+        <TextView android:id="@+id/resendLink" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="14dp" android:enabled="false" android:textColor="@color/argos_loading_track" android:textSize="16sp" android:textStyle="bold" />
+        <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="1" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:textColor="@color/argos_muted" android:textSize="11sp" android:paddingHorizontal="55dp" android:text="@string/reset_legal" />
+    </LinearLayout>
+</ScrollView>

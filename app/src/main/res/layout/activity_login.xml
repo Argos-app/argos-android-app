@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/argos_background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+        android:orientation="vertical" android:paddingStart="28dp" android:paddingEnd="28dp"
+        android:paddingTop="52dp" android:paddingBottom="13dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_horizontal" android:orientation="vertical">
+            <ImageView android:id="@+id/authLogo" android:layout_width="260dp" android:layout_height="62dp"
+                android:contentDescription="@string/app_name" android:scaleType="fitCenter" android:src="@drawable/argos_horizontal_logo" />
+            <TextView android:id="@+id/authSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:gravity="center" android:textColor="@android:color/black" android:textSize="14sp" />
+        </LinearLayout>
+        <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="0.3" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/argos_green" android:textSize="14sp" android:textStyle="bold" android:layout_marginStart="8dp" android:text="Email" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="58dp" android:background="@drawable/screen_input_surface" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="19dp" android:layout_marginTop="8dp" android:paddingEnd="12dp">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="@null" android:src="@drawable/email_icon" />
+            <EditText android:id="@+id/emailInput" android:layout_width="0dp" android:layout_height="match_parent" android:background="@null" android:singleLine="true" android:paddingStart="12dp" android:textColor="@color/argos_green" android:textColorHint="@color/argos_placeholder" android:textSize="15sp" android:layout_weight="1" android:hint="seuemail@dominio.com"
+                android:inputType="textEmailAddress" android:paddingEnd="0dp" />
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/argos_green" android:textSize="14sp" android:textStyle="bold" android:layout_marginStart="8dp" android:layout_marginTop="12dp" android:text="Senha" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="58dp" android:background="@drawable/screen_input_surface" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="19dp" android:paddingEnd="8dp" android:layout_marginTop="8dp">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="@null" android:src="@drawable/lock_icon" />
+            <EditText android:id="@+id/passwordInput" android:layout_width="0dp" android:layout_height="match_parent" android:background="@null" android:singleLine="true" android:paddingStart="12dp" android:textColor="@color/argos_green" android:textColorHint="@color/argos_placeholder" android:textSize="15sp" android:layout_weight="1" android:hint="senhadeacesso"
+                android:inputType="textPassword" android:paddingEnd="0dp" />
+            <ImageButton android:id="@+id/passwordVisibilityButton" android:layout_width="48dp" android:layout_height="48dp" android:background="@android:color/transparent" android:contentDescription="Mostrar senha" android:padding="12dp" android:scaleType="fitCenter" android:src="@drawable/closed_eye_icon" />
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="17dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="7dp">
+
+            <CheckBox
+                android:id="@+id/rememberMeCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:button="@drawable/check_remember"
+                android:buttonTint="@null"
+                android:checked="true"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="  Lembrar de mim"
+                android:textColor="@color/argos_green"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+            <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+            <TextView android:id="@+id/forgotPasswordLink" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/argos_green" android:textSize="12sp" android:textStyle="bold" android:text="Esqueci a senha" />
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="8dp">
+            <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/argos_divider" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="6dp"
+                android:text="ou" android:textColor="@color/argos_placeholder" android:textSize="12sp" />
+            <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/argos_divider" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/googleButton" style="@style/Widget.Material3.Button.OutlinedButton" app:backgroundTint="@color/argos_transparent" app:cornerRadius="30dp" app:strokeColor="@color/argos_border" app:strokeWidth="1dp" android:insetTop="0dp" android:insetBottom="0dp" android:minHeight="0dp" android:gravity="center_vertical|start" android:paddingStart="14dp" android:paddingEnd="14dp" android:textColor="@color/argos_green" android:textSize="15sp" android:textStyle="bold"
+            android:layout_width="match_parent" android:layout_height="58dp" android:layout_marginTop="17dp"
+            app:icon="@drawable/google_icon" app:iconGravity="textStart" app:iconPadding="10dp"
+            app:iconSize="22dp" app:iconTint="@null" android:text="Entrar com Google" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/loginButton" style="@style/Widget.Material3.Button" app:backgroundTint="@color/argos_green" app:cornerRadius="28dp" android:insetTop="0dp" android:insetBottom="0dp" android:minHeight="0dp" android:stateListAnimator="@null" android:textAllCaps="false" android:textColor="@android:color/white" android:textSize="16sp" android:textStyle="bold"
+            android:layout_width="match_parent" android:layout_height="54dp"
+            android:layout_marginTop="20dp" android:text="Entrar" />
+
+        <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="1" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:textColor="@color/argos_muted" android:textSize="11sp" android:text="@string/auth_legal" android:lineSpacingExtra="1dp" />
+    </LinearLayout>
+    <FrameLayout android:id="@+id/loadingOverlay" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="@color/argos_loading_background" android:clickable="true" android:focusable="true" android:visibility="gone">
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:gravity="center" android:orientation="vertical">
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                style="@style/Widget.Material3.CircularProgressIndicator"
+                android:layout_width="88dp" android:layout_height="88dp" android:contentDescription="Carregando"
+                android:indeterminate="true" app:indicatorSize="88dp" app:trackThickness="8dp"
+                app:trackCornerRadius="4dp" app:indicatorColor="@color/argos_green" app:trackColor="@color/argos_loading_track" />
+            <TextView android:id="@+id/loadingMessage" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:textColor="@color/argos_green" android:textSize="14sp" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>
