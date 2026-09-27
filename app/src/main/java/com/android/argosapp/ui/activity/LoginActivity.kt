@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import androidx.activity.ComponentActivity
+import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
 import com.android.argosapp.data.api.FirebaseRepository
-import com.android.argosapp.data.mock.MockedArgosApiRepository
 import com.android.argosapp.databinding.ActivityLoginBinding
 import com.android.argosapp.ui.error.messageRes
 import com.android.argosapp.ui.viewmodel.LoginViewModel
@@ -18,7 +18,7 @@ class LoginActivity : ComponentActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val authManager by lazy {
         AuthManager(
-            MockedArgosApiRepository(firstAccess = true),
+            (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )

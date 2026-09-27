@@ -7,10 +7,10 @@ import android.view.View
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.core.widget.doAfterTextChanged
+import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
-import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
 import com.android.argosapp.ui.error.messageRes
@@ -21,7 +21,7 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
     private lateinit var binding: ActivityFirstAccessChangePasswordBinding
     private val authManager by lazy {
         AuthManager(
-            ArgosApiRepository(homologation = true),
+            (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )

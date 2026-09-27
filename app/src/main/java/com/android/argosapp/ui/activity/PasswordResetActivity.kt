@@ -8,10 +8,10 @@ import android.os.SystemClock
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
-import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.databinding.ActivityPasswordResetBinding
 import com.android.argosapp.ui.fragment.PasswordChangedFragment
@@ -24,7 +24,7 @@ class PasswordResetActivity : FragmentActivity() {
     private lateinit var binding: ActivityPasswordResetBinding
     private val authManager by lazy {
         AuthManager(
-            ArgosApiRepository(homologation = true),
+            (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )

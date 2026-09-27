@@ -3,16 +3,16 @@ package com.android.argosapp.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.android.argosapp.ArgosApplication
 import com.android.argosapp.auth.manager.AuthManager
 import com.android.argosapp.auth.session.UserSessionStorage
-import com.android.argosapp.data.api.ArgosApiRepository
 import com.android.argosapp.data.api.FirebaseRepository
 import com.android.argosapp.databinding.ActivityHomeBinding
 
 class HomeActivity : ComponentActivity() {
     private val authManager by lazy {
         AuthManager(
-            ArgosApiRepository(homologation = true),
+            (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
             UserSessionStorage(applicationContext),
         )
