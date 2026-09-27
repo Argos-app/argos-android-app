@@ -1,14 +1,14 @@
 package com.android.argosapp
 
 import android.app.Application
-import com.android.argosapp.data.api.ArgosApiRepository
-import com.android.argosapp.data.mock.MockedArgosApiRepository
-import com.android.argosapp.util.AppLogger
+import com.android.argosapp.data.repository.ArgosApiRepository
+import com.android.argosapp.data.repository.MockedArgosApiRepository
+import com.android.argosapp.util.logging.AppLogger
 import timber.log.Timber
 
 class ArgosApplication : Application() {
     val runMode: ArgosRunMode =
-        if (BuildConfig.DEBUG) ArgosRunMode.RUN_MOCKED_WITH_FIRST_ACCESS
+        if (BuildConfig.DEBUG) ArgosRunMode.RUN_MOCKED
         else ArgosRunMode.RUN_HOMOLOGATION
 
     val argosApiRepository: ArgosApiRepository by lazy {
@@ -33,5 +33,13 @@ class ArgosApplication : Application() {
             "application_run_mode_selected",
             "mode" to runMode.name,
         )
+    }
+
+    enum class ArgosRunMode {
+        RUN_HOMOLOGATION,
+        RUN_PRODUCTION,
+        RUN_MOCKED,
+        RUN_MOCKED_WITH_FIRST_ACCESS,
+        RUN_MOCKED_WITH_NOT_FOUND,
     }
 }
