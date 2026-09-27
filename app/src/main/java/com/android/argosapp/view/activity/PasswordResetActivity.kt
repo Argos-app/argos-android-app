@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -35,7 +34,7 @@ class PasswordResetActivity : FragmentActivity() {
     private var resetCode = ""
     private var resetEmail = ""
     private var displayedStep: Step? = null
-    private var resendAvailableAtElapsedMillis = 0L
+    private var resendAvailableAtMillis = 0L
     private val resendTimerHandler = Handler(Looper.getMainLooper())
     private val resendTimerTick = object : Runnable {
         override fun run() = refreshResendCountdown()
@@ -45,7 +44,7 @@ class PasswordResetActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        resendAvailableAtElapsedMillis = savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
+        resendAvailableAtMillis = savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
         resetEmail = savedInstanceState?.getString(STATE_RESET_EMAIL).orEmpty()
         binding = ActivityPasswordResetBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -69,7 +68,7 @@ class PasswordResetActivity : FragmentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtElapsedMillis)
+        outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
         outState.putString(STATE_RESET_EMAIL, resetEmail)
         super.onSaveInstanceState(outState)
     }
@@ -111,7 +110,7 @@ class PasswordResetActivity : FragmentActivity() {
     }
 
     fun resendEmail() {
-        if (SystemClock.elapsedRealtime() < resendAvailableAtElapsedMillis) {
+        if (System.currentTimeMillis() < resendAvailableAtMillis) {
             refreshResendCountdown()
             return
         }
@@ -147,7 +146,7 @@ class PasswordResetActivity : FragmentActivity() {
     fun refreshResendCountdown() {
         resendTimerHandler.removeCallbacks(resendTimerTick)
 
-        val remainingMillis = (resendAvailableAtElapsedMillis - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+        val remainingMillis = (resendAvailableAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
         val remainingSeconds = ((remainingMillis + 999L) / 1_000L).toInt()
         val emailSentFragment = supportFragmentManager.findFragmentById(R.id.passwordResetContainer) as? ResetEmailSentFragment
         if (emailSentFragment != null && emailSentFragment.view != null) {
@@ -160,7 +159,7 @@ class PasswordResetActivity : FragmentActivity() {
     }
 
     private fun startResendCooldown() {
-        resendAvailableAtElapsedMillis = SystemClock.elapsedRealtime() + RESEND_COOLDOWN_MILLIS
+        resendAvailableAtMillis = System.currentTimeMillis() + RESEND_COOLDOWN_MILLIS
         refreshResendCountdown()
     }
 
@@ -175,7 +174,7 @@ class PasswordResetActivity : FragmentActivity() {
 
     private companion object {
         const val RESEND_COOLDOWN_MILLIS = 60_000L
-        const val STATE_RESEND_AVAILABLE_AT = "resend_available_at_elapsed_millis"
+        const val STATE_RESEND_AVAILABLE_AT = "resend_available_at_millis"
         const val STATE_RESET_EMAIL = "reset_email"
     }
 
