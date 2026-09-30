@@ -3,9 +3,41 @@
 
     <style name="Theme.Argosapp" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:fontFamily">@font/dm_sans</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">true</item>0
         <item name="android:statusBarColor">#FFF4F1EB</item>
         <item name="android:navigationBarColor">#FFF4F1EB</item>
+    </style>
+
+    <style name="Theme.Argosapp.Home" parent="Theme.Argosapp">
+        <item name="android:statusBarColor">@color/argos_green</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="HomeSectionLabel">
+        <item name="android:fontFamily">@font/dm_sans</item>
+        <item name="android:textColor">@color/argos_text_primary</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="HomeCalendarWeekday">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/dm_sans</item>
+        <item name="android:textColor">@color/argos_text_primary</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="HomeCalendarDay">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">43dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/dm_sans</item>
+        <item name="android:textColor">@color/argos_green</item>
+        <item name="android:textSize">9sp</item>
     </style>
 
 </resources>

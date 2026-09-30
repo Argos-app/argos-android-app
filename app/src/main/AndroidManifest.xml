@@ -28,7 +28,10 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".view.activity.HomeActivity" android:exported="false" />
+        <activity
+            android:name=".view.activity.HomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Argosapp.Home" />
         <activity
             android:name=".view.activity.FirstAccessChangePasswordActivity"
             android:exported="false"
