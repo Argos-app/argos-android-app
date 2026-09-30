@@ -10,7 +10,7 @@ import kotlinx.coroutines.delay
 class MockedArgosApiRepository(
     private val notFound: Boolean = false,
     firstAccess: Boolean = false,
-) : ArgosApiRepository() {
+) : ArgosApiRepository {
     private var isFirstAccess = firstAccess
 
     override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse {
