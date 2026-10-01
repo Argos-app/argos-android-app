@@ -2,6 +2,9 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
+import com.android.argosapp.util.logging.RepositoryAppLogger
+import retrofit2.HttpException
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Header
@@ -12,12 +15,12 @@ private interface ArgosApiService {
     @POST("auth/signin")
     suspend fun signIn(
         @Header("Authorization") authorization: String,
-    ): ArgosApiAuthResponse
+    ): Response<ArgosApiAuthResponse>
 
     @PUT("auth/first-access")
     suspend fun updateFirstAccess(
         @Header("Authorization") authorization: String,
-    )
+    ): Response<Unit>
 }
 
 /** Implementação Retrofit da comunicação com a API Argos. */
@@ -30,29 +33,94 @@ class RemoteArgosApiRepository(
         const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
     }
 
+    private val logger = RepositoryAppLogger("RemoteArgosApiRepository")
+    private val environment = if (homologation) "homologation" else "production"
+    private val baseUrl = if (homologation) HOMOLOGATION_BASE_URL else PRODUCTION_BASE_URL
+
+    init {
+        logger.info(
+            "repository_initialized",
+            "environment" to environment,
+            "base_url" to baseUrl,
+        )
+    }
+
     private val api by lazy {
         Retrofit.Builder()
-            .baseUrl(if (homologation) HOMOLOGATION_BASE_URL else PRODUCTION_BASE_URL)
+            .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ArgosApiService::class.java)
     }
 
-    override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse {
+    override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse = logger.runSuspending(
+        operation = "authenticate",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "POST",
+            "endpoint" to "auth/signin",
+        ),
+        failureFields = { error ->
+            arrayOf(
+                "http_status" to (error as? HttpException)?.code(),
+                "error_type" to error.javaClass.simpleName,
+            )
+        },
+    ) {
         val response = api.signIn("Bearer $firebaseIdToken")
 
-        return ArgosApiAuthResponse(
-            bearerToken = response.bearerToken,
+        logResponse("authenticate", response.code(), response.isSuccessful)
+
+        if (!response.isSuccessful) throw HttpException(response)
+
+        val body = requireNotNull(response.body()) {
+            "Successful sign-in response contained no body."
+        }
+
+        ArgosApiAuthResponse(
+            bearerToken = body.bearerToken,
             user = User(
-                userName = response.user.userName,
-                userEmail = response.user.userEmail,
-                farmName = response.user.farmName,
+                userName = body.user.userName,
+                userEmail = body.user.userEmail,
+                farmName = body.user.farmName,
             ),
-            isFirstAccess = response.isFirstAccess,
-        )
+            isFirstAccess = body.isFirstAccess,
+        ).also {
+            logger.info(
+                "authenticate_result_mapped",
+                "first_access" to it.isFirstAccess,
+                "has_bearer_token" to it.bearerToken.isNotBlank(),
+                "has_user" to true,
+            )
+        }
     }
 
-    override suspend fun updateUserAccessStatus(bearerToken: String) {
-        api.updateFirstAccess("Bearer $bearerToken")
+    override suspend fun updateUserAccessStatus(bearerToken: String): Unit = logger.runSuspending(
+        operation = "update_user_access_status",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "PUT",
+            "endpoint" to "auth/first-access",
+        ),
+        failureFields = { error ->
+            arrayOf(
+                "http_status" to (error as? HttpException)?.code(),
+                "error_type" to error.javaClass.simpleName,
+            )
+        },
+    ) {
+        val response = api.updateFirstAccess("Bearer $bearerToken")
+
+        logResponse("update_user_access_status", response.code(), response.isSuccessful)
+
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    private fun logResponse(operation: String, statusCode: Int, successful: Boolean) {
+        logger.info(
+            "${operation}_response_received",
+            "http_status" to statusCode,
+            "successful" to successful,
+        )
     }
 }
