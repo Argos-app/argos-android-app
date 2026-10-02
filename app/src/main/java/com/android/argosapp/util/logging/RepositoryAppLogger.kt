@@ -33,7 +33,7 @@ class RepositoryAppLogger(
         AppLogger.REPOSITORY_TAG,
         event,
         throwable,
-        withRepository(fields),
+        withRepository(arrayOf("error_message" to throwable?.message, *fields)),
     )
 
     private fun withRepository(
