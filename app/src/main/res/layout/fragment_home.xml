@@ -88,6 +88,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:textFontWeight="600"
                     android:text="@string/home_herd_health"
                     android:textColor="@color/argos_text_secondary"
                     android:textSize="12sp" />
@@ -95,7 +96,6 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginHorizontal="32dp"
                     android:layout_marginTop="14dp"
                     android:layout_marginBottom="32dp"
                     android:background="#FFE2DCCF" />
@@ -104,19 +104,31 @@
                     style="@style/HomeSectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/home_choose_action" />
+                    android:text="@string/home_choose_action"
+                    android:textFontWeight="700"
+                    android:textSize="13sp" />
 
-                <LinearLayout
+                <HorizontalScrollView
+                    android:id="@+id/homeActionScroll"
                     android:layout_width="match_parent"
                     android:layout_height="128dp"
                     android:layout_marginTop="26dp"
-                    android:orientation="horizontal">
+                    android:clipToPadding="false"
+                    android:scrollbars="none"
+                    android:overScrollMode="never">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
 
                     <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
+                        android:id="@+id/homeManageMedication"
+                        android:layout_width="192dp"
                         android:layout_height="match_parent"
-                        android:layout_marginEnd="10dp"
-                        android:layout_weight="1"
+                        android:layout_marginEnd="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
                         app:cardBackgroundColor="#FFFBFAF9"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
@@ -130,29 +142,31 @@
                             android:padding="8dp">
 
                             <ImageView
-                                android:layout_width="58dp"
-                                android:layout_height="58dp"
+                                android:layout_width="54dp"
+                                android:layout_height="54dp"
                                 android:contentDescription="@null"
                                 android:src="@drawable/pill_icon" />
 
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="10dp"
                                 android:gravity="center"
-                                android:maxLines="1"
+                                android:maxLines="2"
                                 android:text="@string/home_manage_medication"
                                 android:textColor="@color/argos_text_primary"
-                                android:textSize="10sp"
+                                android:textSize="11sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
+                        android:id="@+id/homeManageApplications"
+                        android:layout_width="192dp"
                         android:layout_height="match_parent"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
+                        android:layout_marginEnd="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
                         app:cardBackgroundColor="#FFFBFAF9"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
@@ -166,29 +180,109 @@
                             android:padding="8dp">
 
                             <ImageView
-                                android:layout_width="58dp"
-                                android:layout_height="58dp"
+                                android:layout_width="60dp"
+                                android:layout_height="60dp"
                                 android:contentDescription="@null"
                                 android:src="@drawable/syringe" />
 
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="10dp"
                                 android:gravity="center"
-                                android:maxLines="1"
+                                android:maxLines="2"
                                 android:text="@string/home_manage_applications"
                                 android:textColor="@color/argos_text_primary"
-                                android:textSize="10sp"
+                                android:textSize="11sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/homeManageLots"
+                        android:layout_width="192dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="#FFFBFAF9"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <ImageView
+                                android:layout_width="60dp"
+                                android:layout_height="60dp"
+                                android:contentDescription="@null"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/lotes_management_icon" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:gravity="center"
+                                android:maxLines="2"
+                                android:text="@string/home_manage_lots"
+                                android:textColor="@color/argos_text_primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/homeManageExceptions"
+                        android:layout_width="192dp"
+                        android:layout_height="match_parent"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="#FFFBFAF9"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <ImageView
+                                android:layout_width="70dp"
+                                android:layout_height="58dp"
+                                android:contentDescription="@null"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/exceptions_management_icon" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:gravity="center"
+                                android:maxLines="2"
+                                android:text="@string/home_manage_exceptions"
+                                android:textColor="@color/argos_text_primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </HorizontalScrollView>
 
                 <TextView
                     style="@style/HomeSectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textFontWeight="700"
+                    android:textSize="13sp"
                     android:layout_marginTop="20dp"
                     android:text="@string/home_calendar_section" />
 
@@ -196,11 +290,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#FFE2DBCE"
-                    app:strokeWidth="1dp">
+                    app:strokeWidth="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -216,7 +309,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="3dp"
                             android:textColor="@color/argos_green"
-                            android:textSize="12sp"
+                            android:textSize="13sp"
                             android:textStyle="bold"
                             tools:text="Junho, 2026" />
 
@@ -231,30 +324,39 @@
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="11sp"
                                 android:text="D" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="S" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="T" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="Q" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="Q" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="S" />
 
                             <TextView
                                 style="@style/HomeCalendarWeekday"
+                                android:textSize="11sp"
                                 android:text="S" />
                         </GridLayout>
                     </LinearLayout>
@@ -271,185 +373,27 @@
                     android:textStyle="bold"
                     tools:text="23 de Junho de 2026" />
 
-                <FrameLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/homeEventsRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp">
-
-                    <View
-                        android:layout_width="24dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="start"
-                        android:background="#FFFBFAF9"
-                        android:importantForAccessibility="no" />
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardBackgroundColor="#FFFBFAF9"
-                        app:cardCornerRadius="24dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:paddingStart="12dp"
-                            android:paddingTop="14dp"
-                            android:paddingEnd="12dp"
-                            android:paddingBottom="14dp">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:drawablePadding="7dp"
-                                android:gravity="center_vertical"
-                                android:text="@string/home_vaccine_event"
-                                android:textColor="@color/argos_green"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginTop="6dp"
-                                android:layout_marginBottom="5dp"
-                                android:background="#FFE9E5DC" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="0.85"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/home_vaccine_detail"
-                                    android:textColor="@color/argos_muted"
-                                    android:textSize="9sp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1.15"
-                                    android:ellipsize="end"
-                                    android:gravity="end"
-                                    android:maxLines="1"
-                                    android:text="@string/home_application_date"
-                                    android:textColor="@color/argos_muted"
-                                    android:textSize="9sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <View
-                        android:layout_width="3dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="start"
-                        android:background="@color/argos_green"
-                        android:importantForAccessibility="no"
-                        />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp">
-
-                    <View
-                        android:layout_width="24dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="start"
-                        android:background="#FFFBFAF9"
-                        android:importantForAccessibility="no" />
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardBackgroundColor="#FFFBFAF9"
-                        app:cardCornerRadius="24dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:paddingStart="12dp"
-                            android:paddingTop="14dp"
-                            android:paddingEnd="12dp"
-                            android:paddingBottom="14dp">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:text="@string/home_waiting_period_event"
-                                android:textColor="#FF715849"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginTop="6dp"
-                                android:layout_marginBottom="5dp"
-                                android:background="#FFE9E5DC" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="0.85"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/home_waiting_period_detail"
-                                    android:textColor="@color/argos_muted"
-                                    android:textSize="9sp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1.15"
-                                    android:ellipsize="end"
-                                    android:gravity="end"
-                                    android:maxLines="1"
-                                    android:text="@string/home_application_date"
-                                    android:textColor="@color/argos_muted"
-                                    android:textSize="9sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <View
-                        android:layout_width="3dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="start"
-                        android:background="#FF3F1A08"
-                        android:importantForAccessibility="no"
-                        />
-                </FrameLayout>
+                    android:layout_marginHorizontal="-10dp"
+                    android:layout_marginTop="18dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    tools:listitem="@layout/item_home_event" />
             </LinearLayout>
         </FrameLayout>
 
         <ImageView
-            android:layout_width="365dp"
-            android:layout_height="365dp"
+            android:layout_width="330dp"
+            android:layout_height="330dp"
             android:layout_gravity="top|center_horizontal"
-            android:layout_marginTop="13dp"
+            android:layout_marginTop="23dp"
             android:contentDescription="@string/home_mascot_description"
             android:scaleType="fitCenter"
             android:src="@drawable/tobby_home"
-            android:translationX="-3dp" />
+            android:translationX="-3dp"
+            android:translationY="-2dp" />
     </FrameLayout>
 </androidx.core.widget.NestedScrollView>

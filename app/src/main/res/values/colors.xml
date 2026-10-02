@@ -16,6 +16,7 @@
     <color name="argos_text_primary">#FF201D18</color>
     <color name="argos_text_secondary">#FF68645C</color>
     <color name="argos_calendar_muted">#FF9D9A91</color>
-    <color name="argos_nav_glass">#CCD3C9B5</color>
+    <color name="argos_calendar_ripple">#2606412F</color>
+    <color name="argos_nav_glass">#70D3C9B5</color>
     <color name="argos_nav_selected">#FF779A86</color>
 </resources>
