@@ -510,20 +510,6 @@
                         android:textSize="13sp"
                         android:visibility="gone" />
 
-                    <com.google.android.material.progressindicator.CircularProgressIndicator
-                        android:id="@+id/homeEventsLoading"
-                        style="@style/Widget.Material3.CircularProgressIndicator"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/loading_application_withdrawals"
-                        android:indeterminate="true"
-                        android:visibility="gone"
-                        app:indicatorColor="@color/argos_green"
-                        app:indicatorSize="48dp"
-                        app:trackColor="@color/argos_loading_track"
-                        app:trackCornerRadius="2dp"
-                        app:trackThickness="4dp" />
                 </FrameLayout>
             </LinearLayout>
         </FrameLayout>

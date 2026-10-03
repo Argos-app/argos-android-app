@@ -7,9 +7,11 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
 import com.android.argosapp.databinding.ActivityHomeBinding
+import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
+import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 
 class HomeActivity : FragmentActivity() {
@@ -28,6 +30,10 @@ class HomeActivity : FragmentActivity() {
             source = binding.homeFragmentContainer,
             backdrop = binding.navigationBlurBackdrop,
         )
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+        }
 
         navBarBlurEffect.render()
 
@@ -59,6 +65,13 @@ class HomeActivity : FragmentActivity() {
 
     private fun showDestination(destination: Destination, animateIndicator: Boolean) {
         updateNavigationSelection(destination, animateIndicator)
+
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate(
+                null,
+                androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE,
+            )
+        }
         if (currentDestination == destination &&
             supportFragmentManager.findFragmentByTag(destination.name) != null
 
@@ -79,6 +92,25 @@ class HomeActivity : FragmentActivity() {
             .commitNow()
         currentDestination = destination
         navBarBlurEffect.bindSource()
+    }
+
+    fun showApplicationDetails(application: ApplicationWithdrawal) {
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .setCustomAnimations(
+                R.anim.home_details_enter,
+                R.anim.home_details_exit,
+                R.anim.home_details_pop_enter,
+                R.anim.home_details_pop_exit,
+            )
+            .replace(
+                R.id.homeFragmentContainer,
+                HomeApplicationDetailsFragment.newInstance(application),
+                HomeApplicationDetailsFragment.TAG,
+            )
+            .addToBackStack(HomeApplicationDetailsFragment.TAG)
+            .commit()
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
     private fun updateNavigationSelection(destination: Destination, animateIndicator: Boolean) {

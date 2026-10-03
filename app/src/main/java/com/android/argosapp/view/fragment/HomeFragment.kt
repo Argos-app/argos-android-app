@@ -15,6 +15,7 @@ import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.view.adapter.HomeFragmentApplication
 import com.android.argosapp.view.adapter.HomeFragmentApplicationsAdapter
 import com.android.argosapp.view.componentmanager.CalendarManager
+import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.viewmodel.HomeViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -47,10 +48,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val currentMonth = YearMonth.now()
         selectedDate = savedInstanceState?.getString(STATE_SELECTED_DATE)
             ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-            ?.takeIf { YearMonth.from(it) == currentMonth }
-            ?: LocalDate.now()
+            ?: selectedDate
+        selectedDate = selectedDate.takeIf { YearMonth.from(it) == currentMonth } ?: LocalDate.now()
 
-        applicationsAdapter = HomeFragmentApplicationsAdapter()
+        applicationsAdapter = HomeFragmentApplicationsAdapter(
+            onApplicationClick = ::openApplicationDetails,
+        )
         binding.homeEventsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = applicationsAdapter
@@ -68,7 +71,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             calendar.render(selectedDate)
         }
 
-        binding.homeEventsLoading.visibility = View.VISIBLE
         binding.homeCalendarLoadingOverlay.visibility = View.VISIBLE
         renderCardsForDate(selectedDate)
         viewModel.loadMonthThrough(
@@ -81,9 +83,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        calendarManager?.let { calendar ->
-            outState.putString(STATE_SELECTED_DATE, calendar.selectedDate.toString())
-        }
+        outState.putString(STATE_SELECTED_DATE, selectedDate.toString())
         super.onSaveInstanceState(outState)
     }
 
@@ -98,8 +98,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun setMonthLoading(isLoading: Boolean) {
         isLoadingApplications = isLoading
         if (isLoading) hasApplicationLoadFailed = false
-        val visibility = if (isLoading) View.VISIBLE else View.GONE
-        _binding?.homeEventsLoading?.visibility = visibility
         renderCalendarStatus()
         updateEventsEmptyMessage()
     }
@@ -117,6 +115,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         hasApplicationLoadFailed = true
         renderCalendarStatus()
         updateEventsEmptyMessage()
+    }
+
+    private fun openApplicationDetails(application: ApplicationWithdrawal) {
+        (activity as? HomeActivity)?.showApplicationDetails(application)
     }
 
     private fun loadUserGreeting(userStorage: UserStorage) {
@@ -178,25 +180,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun ApplicationWithdrawal.toCard(isWithdrawal: Boolean): HomeFragmentApplication {
         val unknown = getString(R.string.home_calendar_unknown_value)
-        val lot = lotName ?: unknown
         val endDate = meatWithdrawalEnd ?: selectedDate
         val daysUntilEnd = ChronoUnit.DAYS.between(LocalDate.now(), endDate)
         val title = if (!isWithdrawal) {
-            getString(R.string.home_lot_application_title, lot)
+            getString(R.string.home_application_event_title)
         } else {
             when {
                 daysUntilEnd > 0 -> resources.getQuantityString(
-                    R.plurals.home_lot_withdrawal_days_remaining,
+                    R.plurals.home_withdrawal_days_remaining,
                     daysUntilEnd.toInt(),
                     daysUntilEnd,
-                    lot,
                 )
-                daysUntilEnd == 0L -> getString(R.string.home_lot_withdrawal_ends_today, lot)
+                daysUntilEnd == 0L -> getString(R.string.home_withdrawal_ends_today)
                 else -> resources.getQuantityString(
-                    R.plurals.home_lot_withdrawal_days_elapsed,
+                    R.plurals.home_withdrawal_days_elapsed,
                     daysUntilEnd.absoluteValue.toInt(),
                     daysUntilEnd.absoluteValue,
-                    lot,
                 )
             }
         }
@@ -214,6 +213,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             ),
             titleColor = color,
             accentColor = color,
+            applicationWithdrawal = this,
         )
     }
 

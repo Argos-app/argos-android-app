@@ -46,17 +46,35 @@
     <string name="home_withdrawal_section">Janelas de carência:</string>
     <string name="home_events_empty">Nenhum registro para esta data.</string>
     <string name="home_calendar_load_failed">Não foi possível carregar o calendário.</string>
-    <string name="home_lot_application_title">Aplicação - Lote: %1$s</string>
-    <string name="home_lot_withdrawal_ends_today">Fim do período de carência hoje - Lote: %1$s</string>
+    <string name="navigate_back">Voltar</string>
+    <string name="home_application_details_title">Detalhes da aplicação</string>
+    <string name="home_application_details_application_section">Aplicação</string>
+    <string name="home_application_details_medicine_label">Medicamento</string>
+    <string name="home_application_details_lot_label">Lote</string>
+    <string name="home_application_details_application_date_label">Data da aplicação</string>
+    <string name="home_application_details_withdrawal_section">Período de carência</string>
+    <string name="home_application_details_withdrawal_end_label">Fim previsto</string>
+    <string name="home_application_details_days_remaining_label">Dias restantes</string>
+    <string name="home_application_details_ends_today">Encerra hoje</string>
+    <plurals name="home_application_details_days_remaining">
+        <item quantity="one">1 dia</item>
+        <item quantity="other">%1$d dias</item>
+    </plurals>
+    <plurals name="home_application_details_days_elapsed">
+        <item quantity="one">Encerrado há 1 dia</item>
+        <item quantity="other">Encerrado há %1$d dias</item>
+    </plurals>
+    <string name="home_application_event_title">Aplicação</string>
+    <string name="home_withdrawal_ends_today">Fim do período de carência hoje</string>
     <string name="home_withdrawal_medicine">Medicamento: %1$s</string>
     <string name="home_withdrawal_application_date">Data de aplicação: %1$s</string>
     <string name="home_calendar_unknown_value">—</string>
-    <plurals name="home_lot_withdrawal_days_remaining">
-        <item quantity="one">1 dia para o fim do período de carência - Lote: %2$s</item>
-        <item quantity="other">%1$d dias para o fim do período de carência - Lote: %2$s</item>
+    <plurals name="home_withdrawal_days_remaining">
+        <item quantity="one">1 dia para o fim do período de carência</item>
+        <item quantity="other">%1$d dias para o fim do período de carência</item>
     </plurals>
-    <plurals name="home_lot_withdrawal_days_elapsed">
-        <item quantity="one">Período de carência encerrado há 1 dia - Lote: %2$s</item>
-        <item quantity="other">Período de carência encerrado há %1$d dias - Lote: %2$s</item>
+    <plurals name="home_withdrawal_days_elapsed">
+        <item quantity="one">Período de carência encerrado há 1 dia</item>
+        <item quantity="other">Período de carência encerrado há %1$d dias</item>
     </plurals>
 </resources>
