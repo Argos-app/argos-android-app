@@ -71,7 +71,7 @@ class MockedArgosApiRepository(
         daysAfter: Int,
     ): List<ApplicationWithdrawal> =
         logger.runSuspending("get_application_withdrawal_window") {
-            delay(500)
+            delay(6000)
 
             val windowStart = referenceDate.minusDays(daysBefore.coerceAtLeast(0).toLong())
             val windowEnd = referenceDate.plusDays(daysAfter.coerceAtLeast(0).toLong())
@@ -82,7 +82,7 @@ class MockedArgosApiRepository(
                 ApplicationWithdrawal(
                     applicationId = "mocked-lot-application",
                     userId = "mocked-user",
-                    lotName = "Lote 1",
+                    lotName = "Lote 100% real",
                     medicineName = "Vacina A",
                     applicationDate = monthDay(3),
                     meatWithdrawalEnd = monthDay(7),
@@ -92,7 +92,7 @@ class MockedArgosApiRepository(
                 ApplicationWithdrawal(
                     applicationId = "mocked-animal-application",
                     userId = "mocked-user",
-                    lotName = "Lote 2",
+                    lotName = "Lote 101% real",
                     medicineName = "Vermífugo Y",
                     applicationDate = monthDay(10),
                     meatWithdrawalEnd = monthDay(15),
