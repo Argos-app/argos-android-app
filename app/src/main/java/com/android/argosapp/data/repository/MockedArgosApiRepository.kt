@@ -1,9 +1,13 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 
 /**
  * Implementação local do repositório da API Argos para desenvolvimento e testes.
@@ -58,6 +62,47 @@ class MockedArgosApiRepository(
             }
 
             isFirstAccess = false
+        }
+
+    override suspend fun getApplicationWithdrawalWindow(
+        bearerToken: String,
+        referenceDate: LocalDate,
+        daysBefore: Int,
+        daysAfter: Int,
+    ): List<ApplicationWithdrawal> =
+        logger.runSuspending("get_application_withdrawal_window") {
+            delay(500)
+
+            val windowStart = referenceDate.minusDays(daysBefore.coerceAtLeast(0).toLong())
+            val windowEnd = referenceDate.plusDays(daysAfter.coerceAtLeast(0).toLong())
+            val month = YearMonth.from(referenceDate)
+            fun monthDay(day: Int) = month.atDay(day.coerceAtMost(month.lengthOfMonth()))
+
+            listOf(
+                ApplicationWithdrawal(
+                    applicationId = "mocked-lot-application",
+                    userId = "mocked-user",
+                    lotName = "Lote 1",
+                    medicineName = "Vacina A",
+                    applicationDate = monthDay(3),
+                    meatWithdrawalEnd = monthDay(7),
+                    daysFromReferenceDate = ChronoUnit.DAYS.between(referenceDate, monthDay(3)),
+                    daysUntilSlaughter = ChronoUnit.DAYS.between(referenceDate, monthDay(7)),
+                ),
+                ApplicationWithdrawal(
+                    applicationId = "mocked-animal-application",
+                    userId = "mocked-user",
+                    lotName = "Lote 2",
+                    medicineName = "Vermífugo Y",
+                    applicationDate = monthDay(10),
+                    meatWithdrawalEnd = monthDay(15),
+                    daysFromReferenceDate = ChronoUnit.DAYS.between(referenceDate, monthDay(10)),
+                    daysUntilSlaughter = ChronoUnit.DAYS.between(referenceDate, monthDay(15)),
+                ),
+            ).filter { application ->
+                listOfNotNull(application.applicationDate, application.meatWithdrawalEnd)
+                    .any { date -> date in windowStart..windowEnd }
+            }
         }
 
 }

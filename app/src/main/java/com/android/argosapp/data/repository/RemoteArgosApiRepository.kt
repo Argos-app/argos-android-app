@@ -1,6 +1,8 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.dto.ApplicationWithdrawalDto
+import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import retrofit2.HttpException
@@ -8,10 +10,21 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Header
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 import retrofit2.http.PUT
+import java.time.LocalDate
 
 private interface ArgosApiService {
+    @GET("application/withdrawal-window")
+    suspend fun getApplicationWithdrawalWindow(
+        @Header("Authorization") authorization: String,
+        @Query("referenceDate") referenceDate: String,
+        @Query("daysBefore") daysBefore: Int,
+        @Query("daysAfter") daysAfter: Int,
+    ): Response<List<ApplicationWithdrawalDto>>
+
     @POST("auth/signin")
     suspend fun signIn(
         @Header("Authorization") authorization: String,
@@ -115,6 +128,50 @@ class RemoteArgosApiRepository(
 
         if (!response.isSuccessful) throw HttpException(response)
     }
+
+    override suspend fun getApplicationWithdrawalWindow(
+        bearerToken: String,
+        referenceDate: LocalDate,
+        daysBefore: Int,
+        daysAfter: Int,
+    ): List<ApplicationWithdrawal> =
+        logger.runSuspending(
+            operation = "get_application_withdrawal_window",
+            startFields = arrayOf(
+                "environment" to environment,
+                "method" to "GET",
+                "endpoint" to "application/withdrawal-window",
+                "reference_date" to referenceDate,
+            ),
+            successFields = { applications ->
+                arrayOf("application_count" to applications.size)
+            },
+            failureFields = { error ->
+                arrayOf(
+                    "http_status" to (error as? HttpException)?.code(),
+                    "error_type" to error.javaClass.simpleName,
+                )
+            },
+        ) {
+            val response = api.getApplicationWithdrawalWindow(
+                authorization = "Bearer $bearerToken",
+                referenceDate = referenceDate.toString(),
+                daysBefore = daysBefore,
+                daysAfter = daysAfter,
+            )
+
+            logResponse(
+                "get_application_withdrawal_window",
+                response.code(),
+                response.isSuccessful,
+            )
+
+            if (!response.isSuccessful) throw HttpException(response)
+
+            requireNotNull(response.body()) {
+                "Successful application withdrawal window response contained no body."
+            }.map(ApplicationWithdrawalDto::toModel)
+        }
 
     private fun logResponse(operation: String, statusCode: Int, successful: Boolean) {
         logger.info(
