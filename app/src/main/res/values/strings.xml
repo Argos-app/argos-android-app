@@ -45,7 +45,7 @@
     <string name="home_waiting_period_detail"><b>Medicamento:</b> vermífugo Y.</string>
     <string name="home_withdrawal_section">Janelas de carência:</string>
     <string name="home_events_empty">Nenhum registro para esta data.</string>
-    <string name="home_events_load_failed">Não foi possível carregar os registros.</string>
+    <string name="home_calendar_load_failed">Não foi possível carregar o calendário.</string>
     <string name="home_lot_application_title">Aplicação - Lote: %1$s</string>
     <string name="home_lot_withdrawal_ends_today">Fim do período de carência hoje - Lote: %1$s</string>
     <string name="home_withdrawal_medicine">Medicamento: %1$s</string>

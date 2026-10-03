@@ -100,7 +100,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         if (isLoading) hasApplicationLoadFailed = false
         val visibility = if (isLoading) View.VISIBLE else View.GONE
         _binding?.homeEventsLoading?.visibility = visibility
-        _binding?.homeCalendarLoadingOverlay?.visibility = visibility
+        renderCalendarStatus()
         updateEventsEmptyMessage()
     }
 
@@ -115,6 +115,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun showApplicationLoadError() {
         if (_binding == null) return
         hasApplicationLoadFailed = true
+        renderCalendarStatus()
         updateEventsEmptyMessage()
     }
 
@@ -148,11 +149,31 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun updateEventsEmptyMessage() {
         val binding = _binding ?: return
+
         binding.homeEventsEmptyMessage.visibility =
-            if (!isLoadingApplications && !hasEventsForSelectedDate) View.VISIBLE else View.GONE
-        binding.homeEventsEmptyMessage.setText(
-            if (hasApplicationLoadFailed) R.string.home_events_load_failed else R.string.home_events_empty,
-        )
+            if (!isLoadingApplications && !hasApplicationLoadFailed && !hasEventsForSelectedDate) {
+                View.VISIBLE
+
+            } else {
+                View.GONE
+
+            }
+
+        binding.homeEventsEmptyMessage.setText(R.string.home_events_empty)
+    }
+
+    private fun renderCalendarStatus() {
+        val binding = _binding ?: return
+        val showError = hasApplicationLoadFailed && !isLoadingApplications
+
+        binding.homeCalendarContent.visibility =
+            if (hasApplicationLoadFailed) View.GONE else View.VISIBLE
+
+        binding.homeCalendarError.visibility =
+            if (showError) View.VISIBLE else View.GONE
+
+        binding.homeCalendarLoadingOverlay.visibility =
+            if (isLoadingApplications && !hasApplicationLoadFailed) View.VISIBLE else View.GONE
     }
 
     private fun ApplicationWithdrawal.toCard(isWithdrawal: Boolean): HomeFragmentApplication {
