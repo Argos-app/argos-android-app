@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 
 class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
-    val userName = authManager.getUser()?.userName.orEmpty()
 
     fun changePassword(
         newPassword: String,
