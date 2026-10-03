@@ -32,6 +32,7 @@ class HomeActivity : FragmentActivity() {
         )
 
         supportFragmentManager.addOnBackStackChangedListener {
+            updateNavigationBarVisibility()
             binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
         }
 
@@ -55,6 +56,7 @@ class HomeActivity : FragmentActivity() {
             navBarBlurEffect.bindSource()
 
         }
+        updateNavigationBarVisibility()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -95,6 +97,7 @@ class HomeActivity : FragmentActivity() {
     }
 
     fun showApplicationDetails(application: ApplicationWithdrawal) {
+        setNavigationBarVisible(false)
         supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
             .setCustomAnimations(
@@ -111,6 +114,18 @@ class HomeActivity : FragmentActivity() {
             .addToBackStack(HomeApplicationDetailsFragment.TAG)
             .commit()
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    private fun updateNavigationBarVisibility() {
+        val showingDetails =
+            supportFragmentManager.findFragmentById(R.id.homeFragmentContainer) is HomeApplicationDetailsFragment
+        setNavigationBarVisible(!showingDetails)
+    }
+
+    private fun setNavigationBarVisible(visible: Boolean) {
+        val visibility = if (visible) View.VISIBLE else View.GONE
+        binding.homeBottomNavigation.visibility = visibility
+        binding.navigationBlurBackdrop.visibility = visibility
     }
 
     private fun updateNavigationSelection(destination: Destination, animateIndicator: Boolean) {
