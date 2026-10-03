@@ -7,7 +7,7 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
 import com.android.argosapp.databinding.ActivityHomeBinding
-import com.android.argosapp.util.session.UserSessionStorage
+import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.ProfileFragment
@@ -15,6 +15,7 @@ import com.android.argosapp.view.fragment.ProfileFragment
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
     private var currentDestination: Destination? = null
+    private lateinit var navBarBlurEffect: NavBarBlurEffect
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +23,13 @@ class HomeActivity : FragmentActivity() {
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        navBarBlurEffect = NavBarBlurEffect(
+            source = binding.homeFragmentContainer,
+            backdrop = binding.navigationBlurBackdrop,
+        )
+
+        navBarBlurEffect.render()
 
         binding.navigationHome.setOnClickListener { showDestination(Destination.HOME, animateIndicator = true) }
         binding.navigationChatbot.setOnClickListener { showDestination(Destination.CHATBOT, animateIndicator = true) }
@@ -34,31 +42,35 @@ class HomeActivity : FragmentActivity() {
 
         if (savedInstanceState == null || supportFragmentManager.fragments.isEmpty()) {
             showDestination(destination, animateIndicator = false)
+
         } else {
             currentDestination = destination
             updateNavigationSelection(destination, animateIndicator = false)
+            navBarBlurEffect.bindSource()
+
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         currentDestination?.let { outState.putString(STATE_DESTINATION, it.name) }
         super.onSaveInstanceState(outState)
+
     }
 
     private fun showDestination(destination: Destination, animateIndicator: Boolean) {
         updateNavigationSelection(destination, animateIndicator)
         if (currentDestination == destination &&
             supportFragmentManager.findFragmentByTag(destination.name) != null
+
         ) {
             return
         }
 
         val fragment = when (destination) {
-            Destination.HOME -> HomeFragment.newInstance(
-                UserSessionStorage(applicationContext).getUser()?.userName.orEmpty(),
-            )
+            Destination.HOME -> HomeFragment()
             Destination.CHATBOT -> ChatbotFragment()
             Destination.PROFILE -> ProfileFragment()
+
         }
 
         supportFragmentManager.beginTransaction()
@@ -66,6 +78,7 @@ class HomeActivity : FragmentActivity() {
             .replace(R.id.homeFragmentContainer, fragment, destination.name)
             .commitNow()
         currentDestination = destination
+        navBarBlurEffect.bindSource()
     }
 
     private fun updateNavigationSelection(destination: Destination, animateIndicator: Boolean) {
@@ -79,10 +92,18 @@ class HomeActivity : FragmentActivity() {
                 Destination.CHATBOT -> binding.navigationChatbot
                 Destination.PROFILE -> binding.navigationProfile
             }
+
             val targetCenter = (target.parent as View).left + target.left + target.width / 2f
             val indicator = binding.navigationIndicator
-            val indicatorCenter = indicator.left + indicator.width / 2f
-            val targetTranslation = targetCenter - indicatorCenter
+
+            if (indicator.layoutParams.width != target.width) {
+                indicator.layoutParams = indicator.layoutParams.apply {
+                    width = target.width
+                }
+            }
+
+            val navigationCenter = binding.homeBottomNavigation.width / 2f
+            val targetTranslation = targetCenter - navigationCenter
 
             indicator.animate().cancel()
             if (animateIndicator) {
@@ -91,10 +112,17 @@ class HomeActivity : FragmentActivity() {
                     .setDuration(320L)
                     .setInterpolator(PathInterpolator(0.22f, 1f, 0.36f, 1f))
                     .start()
+
             } else {
                 indicator.translationX = targetTranslation
             }
         }
+    }
+
+    override fun onDestroy() {
+        navBarBlurEffect.clear()
+        super.onDestroy()
+
     }
 
     private enum class Destination {

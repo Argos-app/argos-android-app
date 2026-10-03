@@ -287,6 +287,7 @@
                     android:text="@string/home_calendar_section" />
 
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/homeCalendarCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
@@ -295,23 +296,27 @@
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp">
 
-                    <LinearLayout
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:paddingHorizontal="12dp"
-                        android:paddingTop="14dp"
-                        android:paddingBottom="14dp">
+                        android:layout_height="wrap_content">
 
-                        <TextView
-                            android:id="@+id/homeCalendarMonth"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="3dp"
-                            android:textColor="@color/argos_green"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            tools:text="Junho, 2026" />
+                            android:orientation="vertical"
+                            android:paddingHorizontal="12dp"
+                            android:paddingTop="14dp"
+                            android:paddingBottom="14dp">
+
+                            <TextView
+                                android:id="@+id/homeCalendarMonth"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="3dp"
+                                android:textColor="@color/argos_green"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                tools:text="Junho, 2026" />
 
                         <GridLayout
                             android:id="@+id/homeCalendarGrid"
@@ -358,9 +363,74 @@
                                 style="@style/HomeCalendarWeekday"
                                 android:textSize="11sp"
                                 android:text="S" />
-                        </GridLayout>
-                    </LinearLayout>
+                            </GridLayout>
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/homeCalendarLoadingOverlay"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@color/argos_loading_background"
+                            android:clickable="true"
+                            android:contentDescription="@string/loading_application_withdrawals"
+                            android:focusable="true"
+                            android:visibility="gone">
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:id="@+id/homeCalendarLoading"
+                                style="@style/Widget.Material3.CircularProgressIndicator"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center"
+                                android:indeterminate="true"
+                                app:indicatorColor="@color/argos_green"
+                                app:indicatorSize="48dp"
+                                app:trackColor="@color/argos_loading_track"
+                                app:trackCornerRadius="2dp"
+                                app:trackThickness="4dp" />
+                        </FrameLayout>
+                    </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:accessibilityLiveRegion="none"
+                        android:text="●"
+                        android:textColor="@color/argos_accent"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/home_calendar_normal_notice_legend"
+                        android:textColor="@color/argos_text_secondary"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="●"
+                        android:textColor="@color/argos_notice_important"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/home_calendar_important_notice_legend"
+                        android:textColor="@color/argos_text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/homeSelectedDate"
@@ -373,15 +443,58 @@
                     android:textStyle="bold"
                     tools:text="23 de Junho de 2026" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/homeEventsRecyclerView"
+                <TextView
+                    style="@style/HomeSectionLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/home_withdrawal_section"
+                    android:textFontWeight="700"
+                    android:textSize="13sp" />
+
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="-10dp"
                     android:layout_marginTop="18dp"
-                    android:nestedScrollingEnabled="false"
-                    android:overScrollMode="never"
-                    tools:listitem="@layout/item_home_event" />
+                    android:minHeight="64dp">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/homeEventsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never"
+                        tools:listitem="@layout/item_home_event" />
+
+                    <TextView
+                        android:id="@+id/homeEventsEmptyMessage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="18dp"
+                        android:text="@string/home_events_empty"
+                        android:textColor="@color/argos_text_secondary"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/homeEventsLoading"
+                        style="@style/Widget.Material3.CircularProgressIndicator"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/loading_application_withdrawals"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        app:indicatorColor="@color/argos_green"
+                        app:indicatorSize="48dp"
+                        app:trackColor="@color/argos_loading_track"
+                        app:trackCornerRadius="2dp"
+                        app:trackThickness="4dp" />
+                </FrameLayout>
             </LinearLayout>
         </FrameLayout>
 

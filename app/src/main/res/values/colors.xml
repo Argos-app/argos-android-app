@@ -1,6 +1,7 @@
 <resources>
     <color name="argos_green">#FF06412F</color>
     <color name="argos_accent">#FF62BB4D</color>
+    <color name="argos_notice_important">#FF7F411A</color>
     <color name="argos_icon">#FFD9D3C8</color>
     <color name="argos_eye_slash_background">#FFFAFAFA</color>
     <color name="argos_eye_slash_secondary">#FFDDD6C7</color>

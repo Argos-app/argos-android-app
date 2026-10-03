@@ -13,8 +13,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
-import com.android.argosapp.util.session.UserSessionStorage
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityPasswordResetBinding
 import com.android.argosapp.view.fragment.PasswordChangedFragment
@@ -29,7 +31,9 @@ class PasswordResetActivity : FragmentActivity() {
         AuthManager(
             (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
-            UserSessionStorage(applicationContext),
+            TokenStorage(applicationContext),
+            UserStorage(applicationContext),
+            MonthApplicationsStorage(applicationContext),
         )
     }
     val viewModel by lazy {

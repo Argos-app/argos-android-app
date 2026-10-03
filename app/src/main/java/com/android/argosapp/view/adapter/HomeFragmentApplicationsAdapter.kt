@@ -3,13 +3,17 @@ package com.android.argosapp.view.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
-import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
 import com.android.argosapp.databinding.ItemHomeEventBinding
 
 class HomeFragmentApplicationsAdapter(
-    private val applications: List<HomeFragmentApplication>,
+    private var applications: List<HomeFragmentApplication> = emptyList(),
 ) : RecyclerView.Adapter<HomeFragmentApplicationsAdapter.ApplicationViewHolder>() {
+
+    fun submitList(applications: List<HomeFragmentApplication>) {
+        this.applications = applications
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ApplicationViewHolder {
         val binding = ItemHomeEventBinding.inflate(
@@ -30,19 +34,19 @@ class HomeFragmentApplicationsAdapter(
         private val binding: ItemHomeEventBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(application: HomeFragmentApplication) {
-            binding.eventTitle.setText(application.titleRes)
+            binding.eventTitle.text = application.title
             binding.eventTitle.setTextColor(application.titleColor)
-            binding.eventDetail.setText(application.detailRes)
-            binding.eventApplicationDate.setText(application.applicationDateRes)
+            binding.eventDetail.text = application.detail
+            binding.eventApplicationDate.text = application.dateLabel
             binding.eventAccent.setBackgroundColor(application.accentColor)
         }
     }
 }
 
 data class HomeFragmentApplication(
-    @StringRes val titleRes: Int,
-    @StringRes val detailRes: Int,
-    @StringRes val applicationDateRes: Int,
-    @ColorInt val titleColor: Int,
-    @ColorInt val accentColor: Int,
+    val title: String,
+    val detail: String,
+    val dateLabel: String,
+    val titleColor: Int,
+    val accentColor: Int,
 )
