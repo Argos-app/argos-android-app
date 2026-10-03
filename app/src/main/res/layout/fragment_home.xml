@@ -17,7 +17,7 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="284dp"
+            android:layout_height="330dp"
             android:background="@color/argos_green" />
 
         <ImageView
@@ -32,7 +32,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="268dp">
+            android:layout_marginTop="314dp">
 
             <View
                 android:layout_width="match_parent"
@@ -523,6 +523,6 @@
             android:scaleType="fitCenter"
             android:src="@drawable/tobby_home"
             android:translationX="-3dp"
-            android:translationY="-2dp" />
+            android:translationY="44dp" />
     </FrameLayout>
 </androidx.core.widget.NestedScrollView>
