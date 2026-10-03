@@ -8,7 +8,7 @@ import com.android.argosapp.util.logging.AppLogger
 import timber.log.Timber
 
 class ArgosApplication : Application() {
-    val runMode: ArgosRunMode = ArgosRunMode.RUN_HOMOLOGATION // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
+    val runMode: ArgosRunMode = ArgosRunMode.RUN_MOCKED // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
 
     val argosApiRepository: ArgosApiRepository by lazy {
         when (runMode) {
