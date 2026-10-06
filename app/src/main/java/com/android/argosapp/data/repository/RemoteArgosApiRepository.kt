@@ -43,7 +43,7 @@ class RemoteArgosApiRepository(
 
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
-        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
+        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.onrender.com/api/v1/"
     }
 
     private val logger = RepositoryAppLogger("RemoteArgosApiRepository")
@@ -79,6 +79,8 @@ class RemoteArgosApiRepository(
                 "error_type" to error.javaClass.simpleName,
             )
         },
+
+
     ) {
         val response = api.signIn("Bearer $firebaseIdToken")
 
