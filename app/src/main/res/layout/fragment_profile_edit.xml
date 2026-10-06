@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/argos_background"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    tools:context=".view.fragment.ProfileFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="32dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp">
+
+            <ImageButton
+                android:id="@+id/profileEditBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/screen_back_button_ripple"
+                android:contentDescription="@string/navigate_back"
+                android:padding="14dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/go_back"
+                android:stateListAnimator="@null" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/dm_sans"
+                android:gravity="center"
+                android:text="Editar Perfil"
+                android:textColor="@color/argos_green"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="40dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="Nome"
+            android:textColor="@color/argos_green"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/profileEditName"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/screen_input_surface"
+            android:fontFamily="@font/dm_sans"
+            android:hint="Nome completo"
+            android:inputType="textPersonName|textCapWords"
+            android:paddingHorizontal="21dp"
+            android:singleLine="true"
+            android:textColor="@color/argos_text_primary"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="14sp"
+            tools:text="Vinícius de Oliveira" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="Email"
+            android:textColor="@color/argos_green"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/profileEditEmail"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/screen_input_surface"
+            android:fontFamily="@font/dm_sans"
+            android:hint="seuemail@dominio.com"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="21dp"
+            android:singleLine="true"
+            android:textColor="@color/argos_text_primary"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="14sp"
+            tools:text="tobby.tobias@argos.com" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="CPF"
+            android:textColor="@color/argos_green"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/profileEditCpf"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/screen_input_surface"
+            android:fontFamily="@font/dm_sans"
+            android:hint="000.000.000-00"
+            android:inputType="number"
+            android:paddingHorizontal="21dp"
+            android:singleLine="true"
+            android:textColor="@color/argos_text_primary"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="14sp"
+            tools:text="000.000.000-55" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="Endereço"
+            android:textColor="@color/argos_green"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/profileEditAddress"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/screen_input_surface"
+            android:fontFamily="@font/dm_sans"
+            android:hint="Rua, número, cidade e estado"
+            android:inputType="textPostalAddress|textCapSentences"
+            android:paddingHorizontal="21dp"
+            android:singleLine="true"
+            android:textColor="@color/argos_text_primary"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="14sp"
+            tools:text="Rua Tralala 56, Vila Blablabla, SP" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/profileEditSubmitButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/dm_sans"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="0dp"
+            android:stateListAnimator="@null"
+            android:text="Editar perfil"
+            android:textAllCaps="false"
+            android:textColor="@color/argos_background"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/argos_green"
+            app:cornerRadius="23dp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
