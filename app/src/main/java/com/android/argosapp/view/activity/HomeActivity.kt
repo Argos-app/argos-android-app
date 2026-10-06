@@ -12,6 +12,7 @@ import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
+import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 
 class HomeActivity : FragmentActivity() {
@@ -116,10 +117,20 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showProfileEdit() {
+        setNavigationBarVisible(false)
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .replace(R.id.homeFragmentContainer, ProfileEditFragment(), ProfileEditFragment.TAG)
+            .addToBackStack(ProfileEditFragment.TAG)
+            .commit()
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     private fun updateNavigationBarVisibility() {
-        val showingDetails =
-            supportFragmentManager.findFragmentById(R.id.homeFragmentContainer) is HomeApplicationDetailsFragment
-        setNavigationBarVisible(!showingDetails)
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.homeFragmentContainer)
+        val showingOverlay = currentFragment is HomeApplicationDetailsFragment || currentFragment is ProfileEditFragment
+        setNavigationBarVisible(!showingOverlay)
     }
 
     private fun setNavigationBarVisible(visible: Boolean) {
