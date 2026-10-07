@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="#FFFBFAF9"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#FFE3DCCF"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="20dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+                android:minHeight="22dp">
+
+            <TextView
+                android:id="@+id/applicationMedicineName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginEnd="72dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:maxLines="1"
+                android:textColor="@color/argos_green"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Ivermectina 1%" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/applicationStatusChip"
+                android:layout_width="wrap_content"
+                android:layout_height="18dp"
+                android:layout_gravity="center_vertical|end"
+                app:cardBackgroundColor="@color/argos_accent"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:id="@+id/applicationStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:paddingHorizontal="8dp"
+                    android:textColor="@color/argos_background"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    tools:text="Concluída" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/applicationAnimalCode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:maxLines="1"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Brinco: 075" />
+
+            <TextView
+                android:id="@+id/applicationLotName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1.25"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textColor="@color/argos_green"
+                android:textSize="10sp"
+                tools:text="Lote: Sub Engorda 001" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/applicationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:maxLines="1"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Aplicação em: 25/06/2026" />
+
+            <LinearLayout
+                android:id="@+id/applicationDetailsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/applicationDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dm_sans"
+                    android:text="@string/applications_card_details"
+                    android:textColor="@color/argos_green"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="5dp"
+                    android:layout_height="8dp"
+                    android:layout_marginStart="5dp"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/enter_icon" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
