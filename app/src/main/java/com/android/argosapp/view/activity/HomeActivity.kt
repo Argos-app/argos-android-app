@@ -121,6 +121,12 @@ class HomeActivity : FragmentActivity() {
         setNavigationBarVisible(false)
         supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
+            .setCustomAnimations(
+                R.anim.home_details_enter,
+                R.anim.home_details_exit,
+                R.anim.home_details_pop_enter,
+                R.anim.home_details_pop_exit,
+            )
             .replace(R.id.homeFragmentContainer, ProfileEditFragment(), ProfileEditFragment.TAG)
             .addToBackStack(ProfileEditFragment.TAG)
             .commit()
