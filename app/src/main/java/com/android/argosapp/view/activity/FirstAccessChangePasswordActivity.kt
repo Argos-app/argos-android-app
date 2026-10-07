@@ -7,16 +7,24 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.lifecycleScope
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
-import com.android.argosapp.util.session.UserSessionStorage
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
 import com.android.argosapp.exception.auth.messageRes
 import com.android.argosapp.viewmodel.FirstAccessChangePasswordViewModel
 import com.android.argosapp.util.validation.PasswordPatternValidator
+import com.android.argosapp.util.logging.AppLogger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 class FirstAccessChangePasswordActivity : ComponentActivity() {
     private lateinit var binding: ActivityFirstAccessChangePasswordBinding
@@ -24,10 +32,17 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
         AuthManager(
             (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
-            UserSessionStorage(applicationContext),
+            TokenStorage(applicationContext),
+            UserStorage(applicationContext),
+            MonthApplicationsStorage(applicationContext),
         )
     }
-    private val viewModel by lazy { FirstAccessChangePasswordViewModel(authManager) }
+    private val viewModel by lazy {
+        ViewModelProvider(this, object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = FirstAccessChangePasswordViewModel(authManager) as T
+        })[FirstAccessChangePasswordViewModel::class.java]
+    }
     private val passwordValidator = PasswordPatternValidator()
     private var newPasswordVisible = false
     private var confirmationVisible = false
@@ -41,7 +56,22 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
         binding.passwordConfirmationVisibilityButton.setOnClickListener { toggleConfirmationVisibility() }
         binding.changePasswordButton.setOnClickListener { changePassword() }
         binding.backToLoginLink.setOnClickListener { returnToLogin() }
-        binding.authSubtitle.text = getString(R.string.first_access_welcome, viewModel.userName.substringBefore(" "))
+        binding.authSubtitle.setText(R.string.first_access_welcome_fallback)
+        lifecycleScope.launch {
+            try {
+                val userName = UserStorage(applicationContext).getUser()?.userName.orEmpty()
+                if (userName.isNotBlank()) {
+                    binding.authSubtitle.text = getString(
+                        R.string.first_access_welcome,
+                        userName.substringBefore(" "),
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                AppLogger.error(AppLogger.SESSION_TAG, "first_access_user_read_failed", error)
+            }
+        }
         binding.loadingMessage.text = getString(R.string.loading_changing_password)
         binding.newPasswordInput.doAfterTextChanged { updatePasswordCriteria(it?.toString().orEmpty()) }
         updatePasswordCriteria(binding.newPasswordInput.text?.toString().orEmpty())
@@ -81,10 +111,12 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
     }
 
     private fun returnToLogin() {
-        authManager.clearSession()
-        authManager.signOut()
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
+        lifecycleScope.launch {
+            authManager.clearSession()
+            authManager.signOut()
+            startActivity(Intent(this@FirstAccessChangePasswordActivity, LoginActivity::class.java))
+            finish()
+        }
     }
 
     private fun changePassword() = viewModel.changePassword(

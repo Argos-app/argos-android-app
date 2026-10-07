@@ -5,14 +5,12 @@ import com.android.argosapp.exception.auth.AuthErrorMapper
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.util.validation.PasswordPatternValidator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) {
-    private val scope = CoroutineScope(Dispatchers.Main)
+class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
-    val userName = authManager.getUser()?.userName.orEmpty()
 
     fun changePassword(
         newPassword: String,
@@ -47,7 +45,7 @@ class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) {
                 return onError(AuthErrorCode.SESSION_EXPIRED)
             }
         }
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching {
                 authManager.updatePassword(newPassword)

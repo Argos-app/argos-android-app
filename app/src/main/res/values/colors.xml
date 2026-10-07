@@ -1,6 +1,7 @@
 <resources>
     <color name="argos_green">#FF06412F</color>
     <color name="argos_accent">#FF62BB4D</color>
+    <color name="argos_notice_important">#FF7F411A</color>
     <color name="argos_icon">#FFD9D3C8</color>
     <color name="argos_eye_slash_background">#FFFAFAFA</color>
     <color name="argos_eye_slash_secondary">#FFDDD6C7</color>
@@ -13,4 +14,10 @@
     <color name="argos_loading_track">#FF8AAFA1</color>
     <color name="argos_loading_background">#FFEDEAE5</color>
     <color name="argos_email_circle">#FFC5D6CD</color>
+    <color name="argos_text_primary">#FF201D18</color>
+    <color name="argos_text_secondary">#FF68645C</color>
+    <color name="argos_calendar_muted">#FF9D9A91</color>
+    <color name="argos_calendar_ripple">#2606412F</color>
+    <color name="argos_nav_glass">#70D3C9B5</color>
+    <color name="argos_nav_selected">#FF779A86</color>
 </resources>

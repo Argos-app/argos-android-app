@@ -6,11 +6,13 @@ import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
-import com.android.argosapp.util.session.UserSessionStorage
 import com.android.argosapp.util.logging.AppLogger
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -22,7 +24,9 @@ import kotlinx.coroutines.launch
 class AuthManager(
     private val argosApiRepository: ArgosApiRepository,
     private val firebaseRepository: FirebaseRepository,
-    private val sessionStorage: UserSessionStorage,
+    private val tokenStorage: TokenStorage,
+    private val userStorage: UserStorage,
+    private val monthApplicationsStorage: MonthApplicationsStorage,
 ) {
     init {
         AppLogger.info(
@@ -89,15 +93,14 @@ class AuthManager(
     suspend fun authenticate(firebaseIdToken: String, rememberMe: Boolean): ArgosApiAuthResponse =
         loggedSuspend(AppLogger.AUTH_TAG, "auth_argos") {
             argosApiRepository.authenticate(firebaseIdToken).also { response ->
-                sessionStorage.updateSession(
-                    bearerToken = response.bearerToken,
-                    user = User(
-                        userName = response.user.userName,
-                        userEmail = response.user.userEmail,
-                        farmName = response.user.farmName,
-                    ),
-                    rememberMe = rememberMe,
+                val user = User(
+                    userName = response.user.userName,
+                    userEmail = response.user.userEmail,
+                    farmName = response.user.farmName,
                 )
+                monthApplicationsStorage.clear()
+                userStorage.saveUser(user)
+                tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
                 AppLogger.info(
                     AppLogger.AUTH_TAG,
                     "auth_argos_first_access_result",
@@ -157,28 +160,35 @@ class AuthManager(
 
     fun getBearerToken(): String? =
         loggedSync(AppLogger.SESSION_TAG, "session_bearer_read") {
-            sessionStorage.getBearerToken().also {
+            tokenStorage.getArgosApiToken().also {
                 AppLogger.info(AppLogger.SESSION_TAG, "session_bearer_read_result", "has_bearer" to !it.isNullOrBlank())
             }
         }
 
-    fun getUser(): User? =
-        loggedSync(AppLogger.SESSION_TAG, "session_user_read") {
-            sessionStorage.getUser().also {
+    suspend fun getUser(): User? =
+        loggedSuspend(AppLogger.SESSION_TAG, "session_user_read") {
+            userStorage.getUser().also {
                 AppLogger.info(AppLogger.SESSION_TAG, "session_user_read_result", "has_user" to (it != null))
             }
         }
 
+    fun getFirebaseIdToken(): String? =
+        loggedSync(AppLogger.SESSION_TAG, "session_firebase_token_read") {
+            tokenStorage.getFirebaseIdToken()
+        }
+
     fun isRememberMeEnabled(): Boolean =
         loggedSync(AppLogger.SESSION_TAG, "session_remember_me_read") {
-            sessionStorage.isRememberMeEnabled().also {
+            tokenStorage.isRememberMeEnabled().also {
                 AppLogger.info(AppLogger.SESSION_TAG, "session_remember_me_read_result", "enabled" to it)
             }
         }
 
-    fun clearSession() =
-        loggedSync(AppLogger.SESSION_TAG, "session_clear") {
-            sessionStorage.clearSession()
+    suspend fun clearSession() =
+        loggedSuspend(AppLogger.SESSION_TAG, "session_clear") {
+            tokenStorage.clearTokens()
+            userStorage.clearUser()
+            monthApplicationsStorage.clear()
         }
 
     fun signOut() {
@@ -188,7 +198,7 @@ class AuthManager(
     }
 
     private fun requireBearerToken(): String {
-        return requireNotNull(sessionStorage.getBearerToken()?.takeIf { it.isNotBlank() }) {
+        return requireNotNull(tokenStorage.getArgosApiToken()?.takeIf { it.isNotBlank() }) {
             "A sessão do usuário não possui um bearer token válido."
         }
     }

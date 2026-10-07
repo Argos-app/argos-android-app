@@ -5,20 +5,19 @@ import android.content.Context
 import android.content.Intent
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.validation.PasswordPatternValidator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 class RedefinePasswordViewModel(
     private val authManager: AuthManager,
     private val context: Context,
-) {
-    private val scope = CoroutineScope(Dispatchers.Main)
+) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
 
     fun sendResetEmail(email: String, onLoading: (Boolean) -> Unit, onSent: () -> Unit, onError: (String) -> Unit) {
         if (email.isBlank()) return onError("Informe seu e-mail.")
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching { authManager.redefinePassword(email.trim()) }
                 .onSuccess { onSent() }
@@ -29,7 +28,7 @@ class RedefinePasswordViewModel(
 
     fun verifyResetCode(code: String, onLoading: (Boolean) -> Unit, onValid: (String) -> Unit, onError: (String) -> Unit) {
         if (code.isBlank()) return
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching { authManager.verifyPasswordResetCode(code) }
                 .onSuccess { onValid(code) }
@@ -44,7 +43,7 @@ class RedefinePasswordViewModel(
             !passwordValidator.validatePassword(password).values.all { it } -> return onError("Atenda aos critérios da nova senha.")
             password != confirmation -> return onError("As senhas informadas não coincidem.")
         }
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching { authManager.confirmPasswordReset(code, password) }
                 .onSuccess { onSuccess() }

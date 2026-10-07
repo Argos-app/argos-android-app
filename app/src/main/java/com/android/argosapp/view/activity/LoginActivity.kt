@@ -6,11 +6,15 @@ import android.text.InputType
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.exception.auth.AuthErrorCode
 import com.android.argosapp.util.auth.AuthManager
-import com.android.argosapp.util.session.UserSessionStorage
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityLoginBinding
 import com.android.argosapp.exception.auth.messageRes
@@ -22,10 +26,17 @@ class LoginActivity : ComponentActivity() {
         AuthManager(
             (application as ArgosApplication).argosApiRepository,
             FirebaseRepository(),
-            UserSessionStorage(applicationContext),
+            TokenStorage(applicationContext),
+            UserStorage(applicationContext),
+            MonthApplicationsStorage(applicationContext),
         )
     }
-    private val viewModel by lazy { LoginViewModel(this, authManager) }
+    private val viewModel by lazy {
+        ViewModelProvider(this, object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = LoginViewModel(authManager) as T
+        })[LoginViewModel::class.java]
+    }
     private var passwordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +50,7 @@ class LoginActivity : ComponentActivity() {
         binding.loginButton.setOnClickListener { login() }
         binding.forgotPasswordLink.setOnClickListener { startActivity(Intent(this, PasswordResetActivity::class.java)) }
         binding.googleButton.setOnClickListener {
-            viewModel.startGoogleLogin(getString(R.string.default_web_client_id), binding.rememberMeCheck.isChecked, ::showLoading, ::showError, ::navigateAfterAuthentication)
+            viewModel.startGoogleLogin(this, getString(R.string.default_web_client_id), binding.rememberMeCheck.isChecked, ::showLoading, ::showError, ::navigateAfterAuthentication)
         }
         viewModel.restoreSession(::showLoading) { navigateAfterAuthentication(false) }
     }

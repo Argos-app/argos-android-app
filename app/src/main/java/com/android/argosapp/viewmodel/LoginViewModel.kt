@@ -1,20 +1,18 @@
 package com.android.argosapp.viewmodel
 
 import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.argosapp.exception.auth.AuthErrorCode
 import com.android.argosapp.exception.auth.AuthErrorMapper
 import com.android.argosapp.util.auth.AuthManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val context: Context,
     private val authManager: AuthManager,
-) {
-    private val scope = CoroutineScope(Dispatchers.Main)
+) : ViewModel() {
 
-    fun restoreSession(onLoading: (Boolean) -> Unit, onAuthenticated: () -> Unit) = scope.launch {
+    fun restoreSession(onLoading: (Boolean) -> Unit, onAuthenticated: () -> Unit) = viewModelScope.launch {
         onLoading(true)
         val hasSession = !authManager.getBearerToken().isNullOrBlank() &&
             authManager.getUser() != null && authManager.hasValidSession()
@@ -34,7 +32,7 @@ class LoginViewModel(
         onAuthenticated: (Boolean) -> Unit,
     ) {
         if (email.isBlank() || password.isBlank()) return onError(AuthErrorCode.EMPTY_FIELDS)
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching {
                 val token = authManager.loginWithCredentials(email.trim(), password)
@@ -53,7 +51,7 @@ class LoginViewModel(
         onAuthenticated: (Boolean) -> Unit,
     ) {
         if (idToken.isBlank()) return onError(AuthErrorCode.GOOGLE_CANCELLED)
-        scope.launch {
+        viewModelScope.launch {
             onLoading(true)
             runCatching {
                 val token = authManager.loginWithGoogle(idToken)
@@ -65,6 +63,7 @@ class LoginViewModel(
     }
 
     fun startGoogleLogin(
+        context: Context,
         webClientId: String,
         rememberMe: Boolean,
         onLoading: (Boolean) -> Unit,
@@ -74,7 +73,7 @@ class LoginViewModel(
         authManager.launchGoogleSignIn(
             context = context,
             webClientId = webClientId,
-            scope = scope,
+            scope = viewModelScope,
             onSuccess = { loginWithGoogle(it, rememberMe, onLoading, onError, onAuthenticated) },
             onError = { onError(AuthErrorMapper.from(it)) },
         )
