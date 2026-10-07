@@ -1,7 +1,9 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.dto.ListAllApplicationsDto
 import com.android.argosapp.dto.ApplicationWithdrawalDto
+import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -17,6 +19,11 @@ import retrofit2.http.PUT
 import java.time.LocalDate
 
 private interface ArgosApiService {
+    @GET("application/list-all")
+    suspend fun listAllApplications(
+        @Header("Authorization") authorization: String,
+    ): Response<List<ListAllApplicationsDto>>
+
     @GET("application/withdrawal-window")
     suspend fun getApplicationWithdrawalWindow(
         @Header("Authorization") authorization: String,
@@ -129,6 +136,36 @@ class RemoteArgosApiRepository(
         logResponse("update_user_access_status", response.code(), response.isSuccessful)
 
         if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    override suspend fun listAllApplications(bearerToken: String): List<Application> {
+        return logger.runSuspending(
+            operation = "list_all_applications",
+            startFields = arrayOf(
+                "environment" to environment,
+                "method" to "GET",
+                "endpoint" to "application/list-all",
+            ),
+            successFields = { applications ->
+                arrayOf("application_count" to applications.size)
+            },
+            failureFields = { error ->
+                arrayOf(
+                    "http_status" to (error as? HttpException)?.code(),
+                    "error_type" to error.javaClass.simpleName,
+                )
+            },
+        ) {
+            val response = api.listAllApplications("Bearer $bearerToken")
+
+            logResponse("list_all_applications", response.code(), response.isSuccessful)
+
+            if (!response.isSuccessful) throw HttpException(response)
+
+            requireNotNull(response.body()) {
+                "Successful application list response contained no body."
+            }.map(ListAllApplicationsDto::toModel)
+        }
     }
 
     override suspend fun getApplicationWithdrawalWindow(

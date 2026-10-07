@@ -1,11 +1,15 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
+import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
@@ -63,6 +67,51 @@ class MockedArgosApiRepository(
 
             isFirstAccess = false
         }
+
+    override suspend fun listAllApplications(bearerToken: String): List<Application> {
+        return logger.runSuspending("list_all_applications") {
+            delay(600)
+
+            listOf(
+                Application(
+                    lotName = "Lote 100% real",
+                    lotCode = "L-100",
+                    earCode = null,
+                    medicineName = "Vacina A",
+                    applicationDate = LocalDateTime.now().minusDays(3),
+                    applicationTime = LocalTime.of(9, 30),
+                    dose = BigDecimal("2.5"),
+                    unit = "mL",
+                    route = "intramuscular",
+                    headCountApplied = 12,
+                    headCount = 12,
+                    meatWithdrawalEnd = LocalDate.now().plusDays(4),
+                    status = "Pendente",
+                    goal = "Vacinação preventiva",
+                    notes = null,
+                ),
+                Application(
+                    lotName = "Lote 101% real",
+                    lotCode = "L-101",
+                    earCode = "BR-101",
+                    medicineName = "Vermífugo Y",
+                    applicationDate = LocalDateTime.now().minusDays(8),
+                    applicationTime = LocalTime.of(14, 0),
+                    dose = BigDecimal("5.0"),
+                    unit = "mL",
+                    route = "oral",
+                    headCountApplied = 1,
+                    headCount = 1,
+                    meatWithdrawalEnd = LocalDate.now().minusDays(2),
+                    status = "Concluida",
+                    goal = "Controle de parasitas",
+                    notes = null,
+                ),
+            ).also { applications ->
+                logger.info("list_all_applications_result", "application_count" to applications.size)
+            }
+        }
+    }
 
     override suspend fun getApplicationWithdrawalWindow(
         bearerToken: String,
