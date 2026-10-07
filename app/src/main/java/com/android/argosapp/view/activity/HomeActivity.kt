@@ -7,11 +7,14 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
 import com.android.argosapp.databinding.ActivityHomeBinding
+import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
+import com.android.argosapp.view.fragment.ApplicationsManagementFragment
+import com.android.argosapp.view.fragment.ApplicationsManagementDetailsFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 
@@ -133,9 +136,52 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showApplicationsManagement() {
+        setNavigationBarVisible(false)
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .setCustomAnimations(
+                R.anim.home_details_enter,
+                R.anim.home_details_exit,
+                R.anim.home_details_pop_enter,
+                R.anim.home_details_pop_exit,
+            )
+            .replace(
+                R.id.homeFragmentContainer,
+                ApplicationsManagementFragment(),
+                ApplicationsManagementFragment.TAG,
+            )
+            .addToBackStack(ApplicationsManagementFragment.TAG)
+            .commit()
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showApplicationManagementDetails(application: Application) {
+        setNavigationBarVisible(false)
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .setCustomAnimations(
+                R.anim.home_details_enter,
+                R.anim.home_details_exit,
+                R.anim.home_details_pop_enter,
+                R.anim.home_details_pop_exit,
+            )
+            .replace(
+                R.id.homeFragmentContainer,
+                ApplicationsManagementDetailsFragment.newInstance(application),
+                ApplicationsManagementDetailsFragment.TAG,
+            )
+            .addToBackStack(ApplicationsManagementDetailsFragment.TAG)
+            .commit()
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     private fun updateNavigationBarVisibility() {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.homeFragmentContainer)
-        val showingOverlay = currentFragment is HomeApplicationDetailsFragment || currentFragment is ProfileEditFragment
+        val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
+            currentFragment is ProfileEditFragment ||
+            currentFragment is ApplicationsManagementFragment ||
+            currentFragment is ApplicationsManagementDetailsFragment
         setNavigationBarVisible(!showingOverlay)
     }
 

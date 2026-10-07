@@ -54,6 +54,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         applicationsAdapter = HomeFragmentApplicationsAdapter(
             onApplicationClick = ::openApplicationDetails,
         )
+        binding.btnApplicationsManagement.setOnClickListener {
+            (activity as? HomeActivity)?.showApplicationsManagement()
+        }
         binding.homeEventsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = applicationsAdapter
