@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.exception.auth.AuthErrorCode
@@ -29,6 +30,7 @@ class LoginActivity : ComponentActivity() {
             TokenStorage(applicationContext),
             UserStorage(applicationContext),
             MonthApplicationsStorage(applicationContext),
+            ApplicationsStorage(applicationContext),
         )
     }
     private val viewModel by lazy {

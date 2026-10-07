@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -31,10 +32,13 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
 
         setupApplicationsList()
         setupFilterNavigation()
+        setupSearch()
+        setupPullToRefresh()
         renderLoadingState()
 
         viewModel.render(
-            onLoading = ::setLoading,
+            onFilterLoading = ::setLoading,
+            onRefreshLoading = ::setRefreshing,
             onApplicationsLoaded = ::showApplications,
             onError = { showLoadError() },
         )
@@ -84,23 +88,58 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     private fun setupFilterNavigation() {
         val binding = _binding ?: return
         binding.applicationsFilterAll.setOnClickListener {
-            selectFilter(binding.applicationsFilterAll, animate = true)
+            selectFilter(binding.applicationsFilterAll, status = null, animate = true)
         }
         binding.applicationsFilterPending.setOnClickListener {
-            selectFilter(binding.applicationsFilterPending, animate = true)
+            selectFilter(
+                binding.applicationsFilterPending,
+                status = "Pendente",
+                animate = true,
+            )
         }
         binding.applicationsFilterCompleted.setOnClickListener {
-            selectFilter(binding.applicationsFilterCompleted, animate = true)
+            selectFilter(
+                binding.applicationsFilterCompleted,
+                status = "Concluida",
+                animate = true,
+            )
         }
         binding.applicationsFilterContainer.post {
             if (_binding != null) {
-                selectFilter(binding.applicationsFilterAll, animate = false)
+                selectFilter(binding.applicationsFilterAll, status = null, animate = false)
             }
         }
     }
 
-    private fun selectFilter(target: View, animate: Boolean) {
+    private fun setupSearch() {
         val binding = _binding ?: return
+        binding.applicationsSearchInput.doAfterTextChanged { text ->
+            viewModel.filterApplications(
+                text = text?.toString(),
+                status = selectedStatus,
+                onLoading = ::setLoading,
+                onApplicationsLoaded = ::showApplications,
+            )
+        }
+    }
+
+    private fun setupPullToRefresh() {
+        val binding = _binding ?: return
+        binding.applicationsSwipeRefresh.setColorSchemeResources(R.color.argos_green)
+        binding.applicationsSwipeRefresh.setOnRefreshListener {
+            viewModel.refresh(
+                onRefreshLoading = ::setRefreshing,
+                onApplicationsLoaded = ::showApplications,
+                onError = { showLoadError() },
+            )
+        }
+    }
+
+    private var selectedStatus: String? = null
+
+    private fun selectFilter(target: View, status: String?, animate: Boolean) {
+        val binding = _binding ?: return
+        selectedStatus = status
         val tabs = listOf(
             binding.applicationsFilterAll,
             binding.applicationsFilterPending,
@@ -140,6 +179,13 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 indicator.translationX = targetTranslation
             }
         }
+
+        viewModel.filterApplications(
+            text = binding.applicationsSearchInput.text?.toString(),
+            status = status,
+            onLoading = ::setLoading,
+            onApplicationsLoaded = ::showApplications,
+        )
     }
 
     private fun setLoading(isLoading: Boolean) {
@@ -148,6 +194,10 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             hasApplicationLoadFailed = false
         }
         renderLoadingState()
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        _binding?.applicationsSwipeRefresh?.isRefreshing = isRefreshing
     }
 
     private fun showApplications(applications: List<Application>) {

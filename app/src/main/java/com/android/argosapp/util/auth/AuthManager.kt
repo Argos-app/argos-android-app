@@ -7,6 +7,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
@@ -27,6 +28,7 @@ class AuthManager(
     private val tokenStorage: TokenStorage,
     private val userStorage: UserStorage,
     private val monthApplicationsStorage: MonthApplicationsStorage,
+    private val applicationsStorage: ApplicationsStorage,
 ) {
     init {
         AppLogger.info(
@@ -99,6 +101,7 @@ class AuthManager(
                     farmName = response.user.farmName,
                 )
                 monthApplicationsStorage.clear()
+                applicationsStorage.clear()
                 userStorage.saveUser(user)
                 tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
                 AppLogger.info(
@@ -189,6 +192,7 @@ class AuthManager(
             tokenStorage.clearTokens()
             userStorage.clearUser()
             monthApplicationsStorage.clear()
+            applicationsStorage.clear()
         }
 
     fun signOut() {

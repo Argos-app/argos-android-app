@@ -151,50 +151,56 @@
             </LinearLayout>
         </FrameLayout>
 
-        <FrameLayout
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/applicationsSwipeRefresh"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/applicationsRecyclerView"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:overScrollMode="never"
-                android:paddingTop="0dp"
-                android:paddingBottom="110dp"
-                android:scrollbars="none"
-                tools:listitem="@layout/item_applications_management" />
+                android:layout_height="match_parent">
 
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/applicationsLoadingIndicator"
-                style="@style/Widget.Material3.CircularProgressIndicator"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:contentDescription="@string/applications_loading"
-                android:indeterminate="true"
-                android:visibility="gone"
-                app:indicatorColor="@color/argos_green"
-                app:indicatorSize="48dp"
-                app:trackColor="@color/argos_loading_track"
-                app:trackCornerRadius="2dp"
-                app:trackThickness="4dp" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/applicationsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="110dp"
+                    android:scrollbars="none"
+                    tools:listitem="@layout/item_applications_management" />
 
-            <TextView
-                android:id="@+id/applicationsStateMessage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="@font/dm_sans"
-                android:gravity="center"
-                android:paddingHorizontal="24dp"
-                android:textColor="@color/argos_text_secondary"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:text="Nenhuma aplicação encontrada." />
-        </FrameLayout>
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/applicationsLoadingIndicator"
+                    style="@style/Widget.Material3.CircularProgressIndicator"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/applications_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="48dp"
+                    app:trackColor="@color/argos_loading_track"
+                    app:trackCornerRadius="2dp"
+                    app:trackThickness="4dp" />
+
+                <TextView
+                    android:id="@+id/applicationsStateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dm_sans"
+                    android:gravity="center"
+                    android:paddingHorizontal="24dp"
+                    android:textColor="@color/argos_text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Nenhuma aplicação encontrada." />
+            </FrameLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
