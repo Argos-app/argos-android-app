@@ -20,4 +20,7 @@
     <color name="argos_calendar_ripple">#2606412F</color>
     <color name="argos_nav_glass">#70D3C9B5</color>
     <color name="argos_nav_selected">#FF779A86</color>
+    <color name="stock_filter_selected">#FF789C88</color>
+    <color name="stock_filter_track">#FFD8D0BE</color>
+    <color name="stock_search_foreground">#FFB9AA8B</color>
 </resources>
