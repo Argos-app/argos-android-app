@@ -15,9 +15,13 @@ import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ApplicationsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import com.android.argosapp.util.navigation.FragmentNavHelper
 
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private val fragmentNavHelper by lazy {
+        FragmentNavHelper(supportFragmentManager, R.id.homeFragmentContainer)
+    }
     private var currentDestination: Destination? = null
     private lateinit var navBarBlurEffect: NavBarBlurEffect
 
@@ -70,14 +74,11 @@ class HomeActivity : FragmentActivity() {
     private fun showDestination(destination: Destination, animateIndicator: Boolean) {
         updateNavigationSelection(destination, animateIndicator)
 
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStackImmediate(
-                null,
-                androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE,
-            )
+        if (fragmentNavHelper.hasBackStack()) {
+            fragmentNavHelper.clearBackStack()
         }
         if (currentDestination == destination &&
-            supportFragmentManager.findFragmentByTag(destination.name) != null
+            fragmentNavHelper.findFragmentByTag(destination.name) != null
 
         ) {
             return
@@ -90,72 +91,50 @@ class HomeActivity : FragmentActivity() {
 
         }
 
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.homeFragmentContainer, fragment, destination.name)
-            .commitNow()
+        fragmentNavHelper.navigate(
+            fragment = fragment,
+            tag = destination.name,
+            commitNow = true,
+        )
         currentDestination = destination
         navBarBlurEffect.bindSource()
     }
 
     fun showApplicationDetails(application: ApplicationWithdrawal) {
         setNavigationBarVisible(false)
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .setCustomAnimations(
-                R.anim.home_details_enter,
-                R.anim.home_details_exit,
-                R.anim.home_details_pop_enter,
-                R.anim.home_details_pop_exit,
-            )
-            .replace(
-                R.id.homeFragmentContainer,
-                HomeApplicationDetailsFragment.newInstance(application),
-                HomeApplicationDetailsFragment.TAG,
-            )
-            .addToBackStack(HomeApplicationDetailsFragment.TAG)
-            .commit()
+        fragmentNavHelper.navigate(
+            fragment = HomeApplicationDetailsFragment.newInstance(application),
+            tag = HomeApplicationDetailsFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
     fun showProfileEdit() {
         setNavigationBarVisible(false)
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .setCustomAnimations(
-                R.anim.home_details_enter,
-                R.anim.home_details_exit,
-                R.anim.home_details_pop_enter,
-                R.anim.home_details_pop_exit,
-            )
-            .replace(R.id.homeFragmentContainer, ProfileEditFragment(), ProfileEditFragment.TAG)
-            .addToBackStack(ProfileEditFragment.TAG)
-            .commit()
+        fragmentNavHelper.navigate(
+            fragment = ProfileEditFragment(),
+            tag = ProfileEditFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
     fun showApplicationsManagement() {
         setNavigationBarVisible(false)
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .setCustomAnimations(
-                R.anim.home_details_enter,
-                R.anim.home_details_exit,
-                R.anim.home_details_pop_enter,
-                R.anim.home_details_pop_exit,
-            )
-            .replace(
-                R.id.homeFragmentContainer,
-                ApplicationsManagementFragment(),
-                ApplicationsManagementFragment.TAG,
-            )
-            .addToBackStack(ApplicationsManagementFragment.TAG)
-            .commit()
+        fragmentNavHelper.navigate(
+            fragment = ApplicationsManagementFragment(),
+            tag = ApplicationsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
     private fun updateNavigationBarVisibility() {
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.homeFragmentContainer)
+        val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
             currentFragment is ProfileEditFragment ||
             currentFragment is ApplicationsManagementFragment
@@ -167,6 +146,13 @@ class HomeActivity : FragmentActivity() {
         binding.homeBottomNavigation.visibility = visibility
         binding.navigationBlurBackdrop.visibility = visibility
     }
+
+    private fun overlayAnimations() = FragmentNavHelper.Animations(
+        enter = R.anim.home_details_enter,
+        exit = R.anim.home_details_exit,
+        popEnter = R.anim.home_details_pop_enter,
+        popExit = R.anim.home_details_pop_exit,
+    )
 
     private fun updateNavigationSelection(destination: Destination, animateIndicator: Boolean) {
         binding.navigationHome.isSelected = destination == Destination.HOME

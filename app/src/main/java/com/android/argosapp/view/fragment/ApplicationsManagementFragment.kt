@@ -1,8 +1,13 @@
 package com.android.argosapp.view.fragment
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.PathInterpolator
+import android.widget.EditText
+import android.widget.PopupWindow
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.ViewCompat
@@ -13,13 +18,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentApplicationsManagementBinding
 import com.android.argosapp.model.Application
+import com.android.argosapp.util.validation.ApplicationFormValidator
 import com.android.argosapp.view.adapter.ApplicationsManagementFragmentAdapter
+import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.viewmodel.ApplicationsManagementViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_management) {
     private var _binding: FragmentApplicationsManagementBinding? = null
     private val viewModel: ApplicationsManagementViewModel by viewModels()
+    private val applicationFormValidator = ApplicationFormValidator()
     private var applicationsAdapter: ApplicationsManagementFragmentAdapter? = null
     private var isLoadingApplications = false
     private var hasApplicationLoadFailed = false
@@ -64,7 +74,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     private fun setupBackButton() {
         val binding = _binding ?: return
         binding.applicationsBackButton.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            FragmentNavHelper(parentFragmentManager).popBackStack()
         }
     }
 
@@ -137,17 +147,112 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     private fun setupAddApplicationButton() {
         val binding = _binding ?: return
         binding.applicationsAddButton.setOnClickListener {
-            val dialog = BottomSheetDialog(requireContext())
             val content = layoutInflater.inflate(
-                R.layout.bottom_sheet_register_application,
+                R.layout.dialog_application_type_selector,
                 null,
                 false,
             )
-            content.findViewById<View>(R.id.applicationLaterButton).setOnClickListener {
-                dialog.dismiss()
+            val popupWidth = minOf(
+                (240 * resources.displayMetrics.density).toInt(),
+                resources.displayMetrics.widthPixels -
+                    (32 * resources.displayMetrics.density).toInt(),
+            )
+            val popup = PopupWindow(
+                content,
+                popupWidth,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true,
+            ).apply {
+                setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+                elevation = 12 * resources.displayMetrics.density
+                isOutsideTouchable = true
             }
-            dialog.setContentView(content)
-            dialog.show()
+            content.findViewById<View>(R.id.applicationTypeAnimal).setOnClickListener {
+                popup.dismiss()
+                showAnimalApplicationSheet()
+            }
+            content.findViewById<View>(R.id.applicationTypeLot).setOnClickListener {
+                popup.dismiss()
+                FragmentNavHelper(parentFragmentManager).showBottomSheet(
+                    RegisterLotApplicationBottomSheetFragment(),
+                    RegisterLotApplicationBottomSheetFragment.TAG,
+                )
+            }
+            content.measure(
+                View.MeasureSpec.makeMeasureSpec(popupWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            popup.showAsDropDown(
+                binding.applicationsAddButton,
+                0,
+                -content.measuredHeight - binding.applicationsAddButton.height,
+                android.view.Gravity.END,
+            )
+        }
+    }
+
+    private fun showAnimalApplicationSheet() {
+        val dialog = BottomSheetDialog(requireContext())
+        val content = layoutInflater.inflate(
+            R.layout.bottom_sheet_register_application,
+            null,
+            false,
+        )
+        setupApplicationDatePicker(content)
+
+        val doseField = content.findViewById<EditText>(R.id.applicationDoseField)
+        val earTagField = content.findViewById<EditText>(R.id.applicationEarTagField)
+        setDigitsOnlyFilter(doseField)
+        setDigitsOnlyFilter(earTagField)
+        doseField.doAfterTextChanged { doseField.error = null }
+        earTagField.doAfterTextChanged { earTagField.error = null }
+
+        content.findViewById<View>(R.id.applicationRegisterButton).setOnClickListener {
+            validateAnimalApplication(doseField, earTagField)
+        }
+        content.findViewById<View>(R.id.applicationLaterButton).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.setContentView(content)
+        dialog.show()
+    }
+
+    private fun setupApplicationDatePicker(content: View) {
+        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val dateValue = content.findViewById<TextView>(R.id.applicationDateValue)
+        var selectedDate = LocalDate.now()
+        dateValue.text = selectedDate.format(dateFormatter)
+        content.findViewById<View>(R.id.applicationDateField).setOnClickListener {
+            DatePickerDialog(
+                requireContext(),
+                R.style.Theme_Argosapp_DatePickerDialog,
+                { _, year, month, day ->
+                    selectedDate = LocalDate.of(year, month + 1, day)
+                    dateValue.text = selectedDate.format(dateFormatter)
+                },
+                selectedDate.year,
+                selectedDate.monthValue - 1,
+                selectedDate.dayOfMonth,
+            ).show()
+        }
+    }
+
+    private fun setDigitsOnlyFilter(field: EditText) {
+        field.filters = arrayOf(android.text.InputFilter { source, _, _, _, _, _ ->
+            val digitsOnly = source.filter { it in '0'..'9' }
+            if (digitsOnly.length == source.length) null else digitsOnly
+        })
+    }
+
+    private fun validateAnimalApplication(doseField: EditText, earTagField: EditText) {
+        val validDose = applicationFormValidator.isValidDose(doseField.text.toString())
+        val validEarTag = applicationFormValidator.isValidEarTag(earTagField.text.toString())
+
+        if (!validDose) {
+            doseField.error = getString(R.string.applications_register_dose_invalid)
+        }
+        if (!validEarTag) {
+            earTagField.error = getString(R.string.applications_register_ear_tag_invalid)
         }
     }
 

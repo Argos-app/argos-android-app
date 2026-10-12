@@ -24,10 +24,14 @@ import com.android.argosapp.view.fragment.PasswordChangedFragment
 import com.android.argosapp.view.fragment.ResetChangePasswordFragment
 import com.android.argosapp.view.fragment.ResetEmailSentFragment
 import com.android.argosapp.view.fragment.ResetRequestFragment
+import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.viewmodel.RedefinePasswordViewModel
 
 class PasswordResetActivity : FragmentActivity() {
     private lateinit var binding: ActivityPasswordResetBinding
+    private val fragmentNavHelper by lazy {
+        FragmentNavHelper(supportFragmentManager, R.id.passwordResetContainer)
+    }
     private val authManager by lazy {
         AuthManager(
             (application as ArgosApplication).argosApiRepository,
@@ -69,7 +73,7 @@ class PasswordResetActivity : FragmentActivity() {
         if (savedInstanceState == null) {
             showStep(Step.REQUEST)
         } else {
-            displayedStep = when (supportFragmentManager.findFragmentById(R.id.passwordResetContainer)) {
+            displayedStep = when (fragmentNavHelper.currentFragment()) {
                 is ResetRequestFragment -> Step.REQUEST
                 is ResetEmailSentFragment -> Step.EMAIL_SENT
                 is ResetChangePasswordFragment -> Step.CHANGE_PASSWORD
@@ -103,7 +107,7 @@ class PasswordResetActivity : FragmentActivity() {
             Step.REQUEST, null -> finish()
             Step.SUCCESS -> navigateToLogin()
             else -> {
-                supportFragmentManager.popBackStack()
+                fragmentNavHelper.popBackStack()
                 displayedStep = when (displayedStep) { Step.CHANGE_PASSWORD -> Step.EMAIL_SENT; else -> Step.REQUEST }
                 refreshResendCountdown()
             }
@@ -144,11 +148,13 @@ class PasswordResetActivity : FragmentActivity() {
     }, ::showError)
 
     private fun showStep(step: Step) {
-        val fragment = supportFragmentManager.findFragmentById(R.id.passwordResetContainer)
+        val fragment = fragmentNavHelper.currentFragment()
         if (displayedStep != step || fragment == null) {
-            val transaction = supportFragmentManager.beginTransaction().replace(R.id.passwordResetContainer, fragmentFor(step))
-            if (displayedStep != null && step != Step.REQUEST) transaction.addToBackStack(step.name)
-            transaction.commit()
+            fragmentNavHelper.navigate(
+                fragment = fragmentFor(step),
+                tag = step.name,
+                addToBackStack = displayedStep != null && step != Step.REQUEST,
+            )
             displayedStep = step
         }
     }
@@ -162,7 +168,7 @@ class PasswordResetActivity : FragmentActivity() {
 
         val remainingMillis = (resendAvailableAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
         val remainingSeconds = ((remainingMillis + 999L) / 1_000L).toInt()
-        val emailSentFragment = supportFragmentManager.findFragmentById(R.id.passwordResetContainer) as? ResetEmailSentFragment
+        val emailSentFragment = fragmentNavHelper.currentFragment() as? ResetEmailSentFragment
         if (emailSentFragment != null && emailSentFragment.view != null) {
             emailSentFragment.updateResendCountdown(remainingSeconds)
         }

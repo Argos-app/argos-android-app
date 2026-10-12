@@ -44,6 +44,8 @@
     <string name="applications_filter_pending">Pendentes</string>
     <string name="applications_filter_completed">Concluídas</string>
     <string name="applications_add">Adicionar aplicação</string>
+    <string name="applications_type_lot">Aplicação em lote</string>
+    <string name="applications_type_animal">Aplicação em animal</string>
     <string name="applications_loading">Carregando aplicações…</string>
     <string name="applications_load_error">Não foi possível carregar as aplicações.</string>
     <string name="applications_empty">Nenhum resultado encontrado.</string>
@@ -58,6 +60,10 @@
     <string name="applications_register_ear_tag_hint">Ex: 010</string>
     <string name="applications_register_dose">Dose aplicada</string>
     <string name="applications_register_dose_hint">50 mL</string>
+    <string name="applications_register_lot_name">Nome do Lote</string>
+    <string name="applications_register_average_dose">Média de dose aplicada</string>
+    <string name="applications_register_dose_invalid">Informe uma dose inteira maior que zero.</string>
+    <string name="applications_register_ear_tag_invalid">Informe um número de brinco com pelo menos 2 dígitos.</string>
     <string name="applications_register_submit">Registrar Aplicação</string>
     <string name="applications_register_later">Deixar para depois</string>
     <string name="applications_status_pending">Pendente</string>

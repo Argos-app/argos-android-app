@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentProfileEditBinding
+import com.android.argosapp.util.navigation.FragmentNavHelper
 
 class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private var _binding: FragmentProfileEditBinding? = null
@@ -14,7 +15,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         _binding = FragmentProfileEditBinding.bind(view)
 
         _binding?.profileEditBack?.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            FragmentNavHelper(parentFragmentManager).popBackStack()
         }
     }
 

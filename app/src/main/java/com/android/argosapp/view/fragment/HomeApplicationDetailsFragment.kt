@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentHomeApplicationDetailsBinding
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.util.navigation.FragmentNavHelper
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -21,7 +22,7 @@ class HomeApplicationDetailsFragment : Fragment(R.layout.fragment_home_applicati
         _binding = FragmentHomeApplicationDetailsBinding.bind(view)
 
         binding.homeApplicationDetailsBack.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            FragmentNavHelper(parentFragmentManager).popBackStack()
         }
 
         val arguments = requireArguments()
