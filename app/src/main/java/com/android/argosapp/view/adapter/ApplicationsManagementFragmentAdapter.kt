@@ -13,7 +13,6 @@ import java.util.Locale
 
 class ApplicationsManagementFragmentAdapter(
     private var applications: List<Application> = emptyList(),
-    private val onApplicationClick: (Application) -> Unit,
 ) : RecyclerView.Adapter<ApplicationsManagementFragmentAdapter.ApplicationViewHolder>() {
 
     fun submitList(applications: List<Application>) {
@@ -27,7 +26,7 @@ class ApplicationsManagementFragmentAdapter(
             parent,
             false,
         )
-        return ApplicationViewHolder(binding, onApplicationClick)
+        return ApplicationViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ApplicationViewHolder, position: Int) {
@@ -40,7 +39,6 @@ class ApplicationsManagementFragmentAdapter(
 
     class ApplicationViewHolder(
         private val binding: ItemApplicationsManagementBinding,
-        private val onApplicationClick: (Application) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(application: Application) {
             val context = binding.root.context
@@ -81,9 +79,6 @@ class ApplicationsManagementFragmentAdapter(
             )
             binding.applicationStatusChip.visibility =
                 if (status.isBlank()) View.GONE else View.VISIBLE
-            binding.root.setOnClickListener {
-                onApplicationClick(application)
-            }
         }
 
         companion object {

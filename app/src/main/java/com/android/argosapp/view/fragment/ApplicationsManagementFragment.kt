@@ -12,10 +12,10 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentApplicationsManagementBinding
-import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.model.Application
 import com.android.argosapp.view.adapter.ApplicationsManagementFragmentAdapter
 import com.android.argosapp.viewmodel.ApplicationsManagementViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_management) {
     private var _binding: FragmentApplicationsManagementBinding? = null
@@ -34,6 +34,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         setupFilterNavigation()
         setupSearch()
         setupPullToRefresh()
+        setupAddApplicationButton()
         renderLoadingState()
 
         viewModel.render(
@@ -53,9 +54,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
 
     private fun setupApplicationsList() {
         val binding = _binding ?: return
-        applicationsAdapter = ApplicationsManagementFragmentAdapter(
-            onApplicationClick = ::openApplicationDetails,
-        )
+        applicationsAdapter = ApplicationsManagementFragmentAdapter()
         binding.applicationsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = applicationsAdapter
@@ -135,6 +134,23 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         }
     }
 
+    private fun setupAddApplicationButton() {
+        val binding = _binding ?: return
+        binding.applicationsAddButton.setOnClickListener {
+            val dialog = BottomSheetDialog(requireContext())
+            val content = layoutInflater.inflate(
+                R.layout.bottom_sheet_register_application,
+                null,
+                false,
+            )
+            content.findViewById<View>(R.id.applicationLaterButton).setOnClickListener {
+                dialog.dismiss()
+            }
+            dialog.setContentView(content)
+            dialog.show()
+        }
+    }
+
     private var selectedStatus: String? = null
 
     private fun selectFilter(target: View, status: String?, animate: Boolean) {
@@ -205,10 +221,6 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         hasApplicationLoadFailed = false
         applicationsAdapter?.submitList(applications)
         renderLoadingState()
-    }
-
-    private fun openApplicationDetails(application: Application) {
-        (activity as? HomeActivity)?.showApplicationManagementDetails(application)
     }
 
     private fun showLoadError() {
