@@ -96,14 +96,21 @@ class AuthManager(
         loggedSuspend(AppLogger.AUTH_TAG, "auth_argos") {
             argosApiRepository.authenticate(firebaseIdToken).also { response ->
                 val user = User(
-                    userName = response.user.userName,
-                    userEmail = response.user.userEmail,
-                    farmName = response.user.farmName,
+                    userName = response.userName,
+                    email = response.email,
+                    farmName = response.farmName,
+                    userId = response.userId,
+                    photoUrl = response.photoUrl,
+                    cpf = response.cpf,
+                    address = response.address,
                 )
+
                 monthApplicationsStorage.clear()
                 applicationsStorage.clear()
+
                 userStorage.saveUser(user)
                 tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
+
                 AppLogger.info(
                     AppLogger.AUTH_TAG,
                     "auth_argos_first_access_result",

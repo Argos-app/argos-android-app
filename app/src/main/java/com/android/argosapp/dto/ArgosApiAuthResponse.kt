@@ -1,12 +1,18 @@
 package com.android.argosapp.dto
 
-import com.android.argosapp.model.User
+import java.util.UUID
 
 /**
  * Contrato da resposta de autenticação da API Argos.
  */
 data class ArgosApiAuthResponse(
     val bearerToken: String,
-    val user: User,
+    val userName: String,
+    val email: String,
+    val farmName: String,
     val isFirstAccess: Boolean,
+    val userId: UUID,
+    val photoUrl: String?,
+    val cpf: String?,
+    val address: String?,
 )

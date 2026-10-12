@@ -5,7 +5,6 @@ import com.android.argosapp.dto.ListAllApplicationsDto
 import com.android.argosapp.dto.ApplicationWithdrawalDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
-import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import retrofit2.HttpException
 import retrofit2.Response
@@ -101,12 +100,14 @@ class RemoteArgosApiRepository(
 
         ArgosApiAuthResponse(
             bearerToken = body.bearerToken,
-            user = User(
-                userName = body.user.userName,
-                userEmail = body.user.userEmail,
-                farmName = body.user.farmName,
-            ),
+            userName = body.userName,
+            email = body.email,
+            farmName = body.farmName,
             isFirstAccess = body.isFirstAccess,
+            userId = body.userId,
+            photoUrl = body.photoUrl,
+            cpf = body.cpf,
+            address = body.address,
         ).also {
             logger.info(
                 "authenticate_result_mapped",

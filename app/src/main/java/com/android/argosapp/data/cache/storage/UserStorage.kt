@@ -14,8 +14,12 @@ class UserStorage(context: Context) {
         dao.saveUser(
             UserEntity(
                 userName = user.userName,
-                userEmail = user.userEmail,
+                email = user.email,
                 farmName = user.farmName,
+                userId = user.userId.toString(),
+                photoUrl = user.photoUrl,
+                cpf = user.cpf,
+                address = user.address,
             ),
         )
     }

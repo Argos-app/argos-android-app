@@ -3,7 +3,6 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
-import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
@@ -12,6 +11,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 /**
  * Implementação local do repositório da API Argos para desenvolvimento e testes.
@@ -41,12 +41,14 @@ class MockedArgosApiRepository(
 
             ArgosApiAuthResponse(
                 bearerToken = "mocked-bearer-token",
-                user = User(
-                    userName = "Tobby",
-                    userEmail = "tobby@argos.com",
-                    farmName = "Tobby & CIA"
-                ),
+                userName = "Tobby",
+                email = "tobby@argos.com",
+                farmName = "Tobby & CIA",
                 isFirstAccess = isFirstAccess,
+                userId = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                photoUrl = null,
+                cpf = "49752927858",
+                address = "Rua Casa da Mãe Joana",
             ).also {
                 logger.info(
                     "authenticate_result_mapped",
