@@ -110,18 +110,18 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <EditText
+        <TextView
             android:id="@+id/profileEditCpf"
+            android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/screen_input_surface"
             android:fontFamily="@font/dm_sans"
             android:hint="000.000.000-00"
-            android:inputType="number"
+            android:gravity="center_vertical"
             android:paddingHorizontal="21dp"
-            android:singleLine="true"
-            android:textColor="@color/argos_text_primary"
+            android:textColor="@color/argos_muted"
             android:textColorHint="@color/argos_placeholder"
             android:textSize="14sp"
             tools:text="000.000.000-55" />

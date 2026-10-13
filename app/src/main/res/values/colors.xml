@@ -8,6 +8,7 @@
     <color name="argos_transparent">#00000000</color>
     <color name="argos_background">#FFF4F1EB</color>
     <color name="argos_border">#FFD2D2D2</color>
+    <color name="argos_disabled_surface">#FFE6E6E6</color>
     <color name="argos_divider">#FFCFC6B5</color>
     <color name="argos_placeholder">#FF7A7A7A</color>
     <color name="argos_muted">#FF747474</color>
