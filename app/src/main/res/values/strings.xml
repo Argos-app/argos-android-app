@@ -25,7 +25,7 @@
     <string name="navigation_profile">Perfil</string>
     <string name="profile_edit">Edite o perfil</string>
     <string name="profile_notifications">Notificação</string>
-    <string name="profile_verify_address">Verificar endereço</string>
+    <string name="profile_address_location">Localização do endereço</string>
     <string name="profile_change_password">Mudar senha</string>
     <string name="profile_logout">Sair</string>
     <string name="home_mascot_description">Tobby, o mascote do Argos</string>

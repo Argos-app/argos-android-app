@@ -137,21 +137,41 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/profileEditAddress"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/screen_input_surface"
-            android:fontFamily="@font/dm_sans"
-            android:hint="Rua, número, cidade e estado"
-            android:inputType="textPostalAddress|textCapSentences"
-            android:paddingHorizontal="21dp"
-            android:singleLine="true"
-            android:textColor="@color/argos_text_primary"
-            android:textColorHint="@color/argos_placeholder"
-            android:textSize="14sp"
-            tools:text="Rua Tralala 56, Vila Blablabla, SP" />
+            android:layout_marginTop="6dp">
+
+            <EditText
+                android:id="@+id/profileEditAddress"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/screen_input_surface"
+                android:fontFamily="@font/dm_sans"
+                android:hint="Rua, número, cidade e estado"
+                android:inputType="textPostalAddress|textCapSentences"
+                android:paddingStart="21dp"
+                android:paddingEnd="60dp"
+                android:singleLine="true"
+                android:textColor="@color/argos_text_primary"
+                android:textColorHint="@color/argos_placeholder"
+                android:textSize="14sp"
+                tools:text="Rua Tralala 56, Vila Blablabla, SP" />
+
+            <ImageButton
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/calendar_day_ripple"
+                android:clickable="true"
+                android:contentDescription="@string/profile_address_location"
+                android:focusable="true"
+                android:padding="8dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/address_location_pin_icon"
+                android:stateListAnimator="@null" />
+        </FrameLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/profileEditSubmitButton"
