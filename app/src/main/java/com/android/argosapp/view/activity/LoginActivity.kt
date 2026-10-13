@@ -1,12 +1,14 @@
 package com.android.argosapp.view.activity
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
@@ -49,9 +51,7 @@ class LoginActivity : ComponentActivity() {
         binding.passwordVisibilityButton.setOnClickListener { togglePasswordVisibility() }
         binding.loginButton.setOnClickListener { login() }
         binding.forgotPasswordLink.setOnClickListener { startActivity(Intent(this, PasswordResetActivity::class.java)) }
-        binding.googleButton.setOnClickListener {
-            viewModel.startGoogleLogin(this, getString(R.string.default_web_client_id), binding.rememberMeCheck.isChecked, ::showLoading, ::showError, ::navigateAfterAuthentication)
-        }
+        binding.googleButton.setOnClickListener(::onGoogleButtonClicked)
         viewModel.restoreSession(::showLoading) { navigateAfterAuthentication(false) }
     }
 
@@ -77,6 +77,37 @@ class LoginActivity : ComponentActivity() {
 
     private fun showLoading(loading: Boolean) {
         binding.loadingOverlay.visibility = if (loading) View.VISIBLE else View.GONE
+    }
+
+    private fun showGoogleLoading(loading: Boolean) {
+        binding.googleButton.isEnabled = !loading
+        binding.googleButton.isClickable = !loading
+        binding.googleLoadingIndicator.visibility = if (loading) View.VISIBLE else View.GONE
+        if (loading) {
+            binding.googleButton.text = ""
+            binding.googleButton.icon = null
+            binding.googleButton.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.argos_border),
+            )
+        } else {
+            binding.googleButton.setText(R.string.auth_google_login)
+            binding.googleButton.setIconResource(R.drawable.google_icon)
+            binding.googleButton.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.argos_transparent),
+            )
+        }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun onGoogleButtonClicked(view: View) {
+        viewModel.startGoogleLogin(
+            this,
+            getString(R.string.default_web_client_id),
+            binding.rememberMeCheck.isChecked,
+            ::showGoogleLoading,
+            ::showError,
+            ::navigateAfterAuthentication,
+        )
     }
 
     private fun showError(code: AuthErrorCode) {

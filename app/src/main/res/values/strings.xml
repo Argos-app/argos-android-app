@@ -11,6 +11,7 @@
     <string name="auth_error_reset_invalid">O link de redefinição é inválido ou expirou.</string>
     <string name="auth_error_unknown">Não foi possível concluir a operação.</string>
     <string name="loading_authenticating">Te autenticando...</string>
+    <string name="auth_google_login">Entrar com Google</string>
     <string name="loading_changing_password">Alterando sua senha...</string>
     <string name="loading_application_withdrawals">Carregando carências</string>
     <string name="first_access_welcome">Bem-vindo, %1$s! Redefina sua senha.</string>

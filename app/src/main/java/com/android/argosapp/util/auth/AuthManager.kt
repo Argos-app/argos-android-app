@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
@@ -70,6 +71,9 @@ class AuthManager(
                 } catch (error: CancellationException) {
                     AppLogger.debug(AppLogger.AUTH_TAG, "auth_google_credential_request_cancelled")
                     throw error
+                } catch (error: GetCredentialCancellationException) {
+                    AppLogger.debug(AppLogger.AUTH_TAG, "auth_google_credential_request_cancelled")
+                    onError(error)
                 } catch (error: GetCredentialException) {
                     AppLogger.error(AppLogger.AUTH_TAG, "auth_google_credential_request_failure", error)
                     onError(error)
