@@ -28,6 +28,7 @@
     <string name="profile_address_location">Localização do endereço</string>
     <string name="profile_change_password">Mudar senha</string>
     <string name="profile_logout">Sair</string>
+    <string name="profile_logout_failed">Não foi possível sair. Tente novamente.</string>
     <string name="home_mascot_description">Tobby, o mascote do Argos</string>
     <string name="home_greeting">Olá, %1$s. Que bom te ver!</string>
     <string name="home_greeting_fallback">Olá! Que bom te ver!</string>

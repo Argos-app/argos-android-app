@@ -7,10 +7,11 @@ import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
@@ -42,12 +43,10 @@ class PasswordResetActivity : FragmentActivity() {
             ApplicationsStorage(applicationContext),
         )
     }
-    val viewModel by lazy {
-        ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                RedefinePasswordViewModel(authManager, applicationContext) as T
-        })[RedefinePasswordViewModel::class.java]
+    val viewModel: RedefinePasswordViewModel by viewModels {
+        viewModelFactory {
+            initializer { RedefinePasswordViewModel(authManager, applicationContext) }
+        }
     }
     private var resetCode = ""
     private var resetEmail = ""

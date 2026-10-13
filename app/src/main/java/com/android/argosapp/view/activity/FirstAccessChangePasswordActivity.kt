@@ -7,10 +7,11 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.activity.viewModels
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
@@ -39,11 +40,8 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
             ApplicationsStorage(applicationContext),
         )
     }
-    private val viewModel by lazy {
-        ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = FirstAccessChangePasswordViewModel(authManager) as T
-        })[FirstAccessChangePasswordViewModel::class.java]
+    private val viewModel: FirstAccessChangePasswordViewModel by viewModels {
+        viewModelFactory { initializer { FirstAccessChangePasswordViewModel(authManager) } }
     }
     private val passwordValidator = PasswordPatternValidator()
     private var newPasswordVisible = false

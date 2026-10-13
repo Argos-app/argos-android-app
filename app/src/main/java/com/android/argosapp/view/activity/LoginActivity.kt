@@ -6,8 +6,9 @@ import android.text.InputType
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
@@ -33,11 +34,8 @@ class LoginActivity : ComponentActivity() {
             ApplicationsStorage(applicationContext),
         )
     }
-    private val viewModel by lazy {
-        ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = LoginViewModel(authManager) as T
-        })[LoginViewModel::class.java]
+    private val viewModel: LoginViewModel by viewModels {
+        viewModelFactory { initializer { LoginViewModel(authManager) } }
     }
     private var passwordVisible = false
 
