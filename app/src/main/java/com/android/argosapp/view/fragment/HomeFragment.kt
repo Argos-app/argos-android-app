@@ -57,6 +57,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.btnApplicationsManagement.setOnClickListener {
             (activity as? HomeActivity)?.showApplicationsManagement()
         }
+        binding.homeManageExceptions.setOnClickListener {
+            (activity as? HomeActivity)?.showExceptionsManagement()
+        }
         binding.homeEventsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = applicationsAdapter

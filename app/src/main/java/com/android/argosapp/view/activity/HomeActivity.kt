@@ -13,6 +13,7 @@ import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ApplicationsManagementFragment
+import com.android.argosapp.view.fragment.ExceptionsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 import com.android.argosapp.util.navigation.FragmentNavHelper
@@ -133,11 +134,23 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showExceptionsManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ExceptionsManagementFragment(),
+            tag = ExceptionsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     private fun updateNavigationBarVisibility() {
         val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
             currentFragment is ProfileEditFragment ||
-            currentFragment is ApplicationsManagementFragment
+            currentFragment is ApplicationsManagementFragment ||
+            currentFragment is ExceptionsManagementFragment
         setNavigationBarVisible(!showingOverlay)
     }
 
