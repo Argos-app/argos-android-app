@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.net.Uri
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -104,7 +105,7 @@ class PasswordResetActivity : FragmentActivity() {
     fun goBack() {
         when (displayedStep) {
             Step.REQUEST, null -> finish()
-            Step.SUCCESS -> navigateToLogin()
+            Step.SUCCESS -> finishResetFlow()
             else -> {
                 fragmentNavHelper.popBackStack()
                 displayedStep = when (displayedStep) { Step.CHANGE_PASSWORD -> Step.EMAIL_SENT; else -> Step.REQUEST }
@@ -114,13 +115,26 @@ class PasswordResetActivity : FragmentActivity() {
     }
 
     fun navigateToLogin() {
-        startActivity(Intent(this, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+        startActivity(
+            Intent(this, LoginActivity::class.java).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK,
+            ),
+        )
         finish()
+    }
+
+    fun finishResetFlow() {
+        if (isProfileFlow) {
+            startActivity(HomeActivity.createProfileIntent(this))
+            finish()
+        } else {
+            navigateToLogin()
+        }
     }
 
     fun requestEmail(email: String) {
         resetEmail = email
-        viewModel.sendResetEmail(email, ::showLoading, {
+        viewModel.sendResetEmail(email, isProfileFlow, ::showLoading, {
             startResendCooldown()
             showStep(Step.EMAIL_SENT)
         }, ::showError)
@@ -132,7 +146,7 @@ class PasswordResetActivity : FragmentActivity() {
             return
         }
 
-        viewModel.sendResetEmail(resetEmail, ::showLoading, {
+        viewModel.sendResetEmail(resetEmail, isProfileFlow, ::showLoading, {
             startResendCooldown()
             showStep(Step.EMAIL_SENT)
         }, ::showError)
@@ -191,10 +205,26 @@ class PasswordResetActivity : FragmentActivity() {
         Step.SUCCESS -> PasswordChangedFragment()
     }
 
-    private companion object {
-        const val RESEND_COOLDOWN_MILLIS = 60_000L
-        const val STATE_RESEND_AVAILABLE_AT = "resend_available_at_millis"
-        const val STATE_RESET_EMAIL = "reset_email"
+    val isProfileFlow: Boolean
+        get() = intent.getBooleanExtra(EXTRA_PROFILE_FLOW, false) || intent.data?.let(::isProfileResetLink) == true
+
+    private fun isProfileResetLink(data: Uri): Boolean {
+        val actionLink = data.getQueryParameter("link")?.let(Uri::parse) ?: data
+        val continueUrl = actionLink.getQueryParameter("continueUrl")?.let(Uri::parse) ?: actionLink
+        return continueUrl.getQueryParameter(RESET_SOURCE_PARAMETER) == PROFILE_RESET_SOURCE
+    }
+
+    companion object {
+        private const val EXTRA_PROFILE_FLOW = "profile_flow"
+        private const val RESET_SOURCE_PARAMETER = "source"
+        private const val PROFILE_RESET_SOURCE = "profile"
+        private const val RESEND_COOLDOWN_MILLIS = 60_000L
+        private const val STATE_RESEND_AVAILABLE_AT = "resend_available_at_millis"
+        private const val STATE_RESET_EMAIL = "reset_email"
+
+        fun createProfileIntent(context: android.content.Context): Intent =
+            Intent(context, PasswordResetActivity::class.java)
+                .putExtra(EXTRA_PROFILE_FLOW, true)
     }
 
 }

@@ -148,9 +148,9 @@ class AuthManager(
             argosApiRepository.updateUserAccessStatus(requireBearerToken())
         }
 
-    suspend fun redefinePassword(email: String) =
+    suspend fun redefinePassword(email: String, profileFlow: Boolean = false) =
         loggedSuspend(AppLogger.RESET_TAG, "password_reset_email_send") {
-            firebaseRepository.redefinePassword(email)
+            firebaseRepository.redefinePassword(email, profileFlow)
         }
 
     suspend fun verifyPasswordResetCode(oobCode: String): String =

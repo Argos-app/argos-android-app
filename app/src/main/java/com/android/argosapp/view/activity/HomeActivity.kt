@@ -1,5 +1,7 @@
 package com.android.argosapp.view.activity
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
@@ -49,9 +51,10 @@ class HomeActivity : FragmentActivity() {
         binding.navigationChatbot.setOnClickListener { showDestination(Destination.CHATBOT, animateIndicator = true) }
         binding.navigationProfile.setOnClickListener { showDestination(Destination.PROFILE, animateIndicator = true) }
 
-        val destination = savedInstanceState
-            ?.getString(STATE_DESTINATION)
-            ?.let { runCatching { Destination.valueOf(it) }.getOrNull() }
+        val destinationName = intent.getStringExtra(EXTRA_INITIAL_DESTINATION)
+            ?: savedInstanceState?.getString(STATE_DESTINATION)
+
+        val destination = Destination.values().firstOrNull { it.name == destinationName }
             ?: Destination.HOME
 
         if (savedInstanceState == null || supportFragmentManager.fragments.isEmpty()) {
@@ -110,6 +113,16 @@ class HomeActivity : FragmentActivity() {
             animations = overlayAnimations(),
         )
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        setIntent(intent)
+
+        if (intent.getStringExtra(EXTRA_INITIAL_DESTINATION) == PROFILE_DESTINATION) {
+            showDestination(Destination.PROFILE, animateIndicator = false)
+        }
     }
 
     fun showProfileEdit() {
@@ -217,7 +230,14 @@ class HomeActivity : FragmentActivity() {
         PROFILE,
     }
 
-    private companion object {
-        const val STATE_DESTINATION = "home_destination"
+    companion object {
+        private const val STATE_DESTINATION = "home_destination"
+        private const val EXTRA_INITIAL_DESTINATION = "initial_destination"
+        private const val PROFILE_DESTINATION = "PROFILE"
+
+        fun createProfileIntent(context: Context): Intent =
+            Intent(context, HomeActivity::class.java)
+                .putExtra(EXTRA_INITIAL_DESTINATION, PROFILE_DESTINATION)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
 }

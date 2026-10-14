@@ -21,6 +21,7 @@ import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.view.activity.LoginActivity
+import com.android.argosapp.view.activity.PasswordResetActivity
 import com.android.argosapp.viewmodel.ProfileViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -46,6 +47,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         _binding = FragmentProfileBinding.bind(view)
 
         _binding?.profileEditOption?.setOnClickListener(::onEditOptionClicked)
+
+        _binding?.profileChangePasswordOption?.setOnClickListener {
+            startActivity(PasswordResetActivity.createProfileIntent(requireContext()))
+        }
+
         _binding?.profileLogoutButton?.setOnClickListener(::onLogoutButtonClicked)
 
         loadUserDetails()

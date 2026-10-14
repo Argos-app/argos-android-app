@@ -1,5 +1,6 @@
 package com.android.argosapp.data.repository
 
+import android.net.Uri
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
@@ -64,10 +65,14 @@ class FirebaseRepository(
             currentUser.updatePassword(newPassword).await()
         }
 
-    suspend fun redefinePassword(email: String): Unit =
+    suspend fun redefinePassword(email: String, profileFlow: Boolean = false): Unit =
         logger.runSuspending("send_password_reset_email") {
+            val continueUrl = Uri.parse(PASSWORD_RESET_CONTINUE_URL).buildUpon()
+                .appendQueryParameter("source", if (profileFlow) PROFILE_RESET_SOURCE else LOGIN_RESET_SOURCE)
+                .build()
+
             val settings = ActionCodeSettings.newBuilder()
-                .setUrl(PASSWORD_RESET_CONTINUE_URL)
+                .setUrl(continueUrl.toString())
                 .setHandleCodeInApp(true)
                 .setAndroidPackageName("com.android.argosapp", false, null)
                 .build()
@@ -98,6 +103,8 @@ class FirebaseRepository(
     }
 
     private companion object {
+        const val PROFILE_RESET_SOURCE = "profile"
+        const val LOGIN_RESET_SOURCE = "login"
         const val PASSWORD_RESET_CONTINUE_URL =
             "https://argos-app-a3c63.firebaseapp.com/redefinir-senha"
     }

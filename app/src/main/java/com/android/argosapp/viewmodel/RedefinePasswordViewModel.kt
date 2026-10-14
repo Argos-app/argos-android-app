@@ -3,6 +3,9 @@ package com.android.argosapp.viewmodel
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import com.android.argosapp.exception.auth.AuthErrorCode
+import com.android.argosapp.exception.auth.AuthErrorMapper
+import com.android.argosapp.exception.auth.messageRes
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.validation.PasswordPatternValidator
 import androidx.lifecycle.ViewModel
@@ -15,13 +18,13 @@ class RedefinePasswordViewModel(
 ) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
 
-    fun sendResetEmail(email: String, onLoading: (Boolean) -> Unit, onSent: () -> Unit, onError: (String) -> Unit) {
+    fun sendResetEmail(email: String, profileFlow: Boolean, onLoading: (Boolean) -> Unit, onSent: () -> Unit, onError: (String) -> Unit) {
         if (email.isBlank()) return onError("Informe seu e-mail.")
         viewModelScope.launch {
             onLoading(true)
-            runCatching { authManager.redefinePassword(email.trim()) }
+            runCatching { authManager.redefinePassword(email.trim(), profileFlow) }
                 .onSuccess { onSent() }
-                .onFailure { onError(it.message ?: "Não foi possível enviar o e-mail.") }
+                .onFailure { onError(errorMessage(it)) }
             onLoading(false)
         }
     }
@@ -32,7 +35,7 @@ class RedefinePasswordViewModel(
             onLoading(true)
             runCatching { authManager.verifyPasswordResetCode(code) }
                 .onSuccess { onValid(code) }
-                .onFailure { onError(it.message ?: "O link de redefinição é inválido ou expirou.") }
+                .onFailure { onError(errorMessage(it, AuthErrorCode.PASSWORD_RESET_INVALID)) }
             onLoading(false)
         }
     }
@@ -47,7 +50,7 @@ class RedefinePasswordViewModel(
             onLoading(true)
             runCatching { authManager.confirmPasswordReset(code, password) }
                 .onSuccess { onSuccess() }
-                .onFailure { onError(it.message ?: "Não foi possível alterar a senha.") }
+                .onFailure { onError(errorMessage(it)) }
             onLoading(false)
         }
     }
@@ -58,5 +61,10 @@ class RedefinePasswordViewModel(
         } catch (_: ActivityNotFoundException) {
             onError("Nenhum aplicativo de e-mail está instalado.")
         }
+    }
+
+    private fun errorMessage(error: Throwable, fallback: AuthErrorCode = AuthErrorCode.UNKNOWN): String {
+        val errorCode = AuthErrorMapper.from(error).let { if (it == AuthErrorCode.UNKNOWN) fallback else it }
+        return context.getString(errorCode.messageRes())
     }
 }

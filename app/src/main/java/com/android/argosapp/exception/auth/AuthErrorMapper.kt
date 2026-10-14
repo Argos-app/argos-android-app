@@ -25,6 +25,7 @@ object AuthErrorMapper {
         "ERROR_USER_TOKEN_EXPIRED",
         "ERROR_REQUIRES_RECENT_LOGIN" -> AuthErrorCode.SESSION_EXPIRED
         "ERROR_INVALID_OOB_CODE",
+        "ERROR_INVALID_ACTION_CODE",
         "ERROR_EXPIRED_ACTION_CODE" -> AuthErrorCode.PASSWORD_RESET_INVALID
         else -> AuthErrorCode.UNKNOWN
     }
