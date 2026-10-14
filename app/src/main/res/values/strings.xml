@@ -25,6 +25,15 @@
     <string name="navigation_chatbot">Chatbot</string>
     <string name="navigation_profile">Perfil</string>
     <string name="profile_edit">Edite o perfil</string>
+    <string name="profile_edit_submit">Editar perfil</string>
+    <string name="profile_edit_success">Perfil editado com sucesso.</string>
+    <string name="profile_edit_success_address_not_supported">Perfil atualizado; o endereço não pode ser alterado por esta tela.</string>
+    <string name="profile_edit_failed">Não foi possível editar seu perfil. Tente novamente.</string>
+    <string name="profile_edit_no_changes">Nenhuma alteração para salvar.</string>
+    <string name="profile_edit_address_not_supported">O endereço ainda não pode ser atualizado.</string>
+    <string name="profile_edit_name_invalid">Informe um nome com até 120 caracteres.</string>
+    <string name="profile_edit_email_invalid">Informe um e-mail válido com até 120 caracteres.</string>
+    <string name="profile_edit_address_invalid">Informe um endereço com até 512 caracteres.</string>
     <string name="profile_notifications">Notificação</string>
     <string name="profile_address_location">Localização do endereço</string>
     <string name="profile_change_password">Mudar senha</string>

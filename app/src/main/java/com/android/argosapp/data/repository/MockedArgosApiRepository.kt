@@ -1,6 +1,7 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -68,6 +69,24 @@ class MockedArgosApiRepository(
             }
 
             isFirstAccess = false
+        }
+
+    override suspend fun updateCurrentUser(bearerToken: String, data: UpdateCurrentUserDto): Unit =
+        logger.runSuspending(
+            operation = "update_current_user",
+            startFields = arrayOf(
+                "method" to "PATCH",
+                "endpoint" to "update-perfil",
+                "has_name" to (data.name != null),
+                "has_email" to (data.email != null),
+                "has_photo_url" to (data.photoUrl != null),
+            ),
+        ) {
+            delay(1000)
+
+            if (bearerToken.isBlank()) {
+                throw SecurityException("Bearer token inválido.")
+            }
         }
 
     override suspend fun listAllApplications(bearerToken: String): List<Application> {

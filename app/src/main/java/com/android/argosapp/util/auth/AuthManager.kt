@@ -14,6 +14,7 @@ import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.AppLogger
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -146,6 +147,23 @@ class AuthManager(
     suspend fun updateUserAccessStatus() =
         loggedSuspend(AppLogger.FIRST_ACCESS_TAG, "first_access_status_update") {
             argosApiRepository.updateUserAccessStatus(requireBearerToken())
+        }
+
+    suspend fun updateCurrentUser(data: UpdateCurrentUserDto) =
+        loggedSuspend(AppLogger.SESSION_TAG, "current_user_update") {
+            val currentUser = requireNotNull(userStorage.getUser()) {
+                "O perfil do usuário não está disponível no cache."
+            }
+
+            argosApiRepository.updateCurrentUser(requireBearerToken(), data)
+
+            userStorage.saveUser(
+                currentUser.copy(
+                    userName = data.name ?: currentUser.userName,
+                    email = data.email ?: currentUser.email,
+                    photoUrl = data.photoUrl ?: currentUser.photoUrl,
+                ),
+            )
         }
 
     suspend fun redefinePassword(email: String, profileFlow: Boolean = false) =

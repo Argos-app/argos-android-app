@@ -3,6 +3,7 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.dto.ListAllApplicationsDto
 import com.android.argosapp.dto.ApplicationWithdrawalDto
+import com.android.argosapp.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -11,7 +12,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Header
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.PUT
@@ -39,6 +42,12 @@ private interface ArgosApiService {
     @PUT("auth/first-access")
     suspend fun updateFirstAccess(
         @Header("Authorization") authorization: String,
+    ): Response<Unit>
+
+    @PATCH("update-perfil")
+    suspend fun updateCurrentUser(
+        @Header("Authorization") authorization: String,
+        @Body data: UpdateCurrentUserDto,
     ): Response<Unit>
 }
 
@@ -135,6 +144,30 @@ class RemoteArgosApiRepository(
         val response = api.updateFirstAccess("Bearer $bearerToken")
 
         logResponse("update_user_access_status", response.code(), response.isSuccessful)
+
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    override suspend fun updateCurrentUser(bearerToken: String, data: UpdateCurrentUserDto): Unit = logger.runSuspending(
+        operation = "update_current_user",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "PATCH",
+            "endpoint" to "update-perfil",
+            "has_name" to (data.name != null),
+            "has_email" to (data.email != null),
+            "has_photo_url" to (data.photoUrl != null),
+        ),
+        failureFields = { error ->
+            arrayOf(
+                "http_status" to (error as? HttpException)?.code(),
+                "error_type" to error.javaClass.simpleName,
+            )
+        },
+    ) {
+        val response = api.updateCurrentUser("Bearer $bearerToken", data)
+
+        logResponse("update_current_user", response.code(), response.isSuccessful)
 
         if (!response.isSuccessful) throw HttpException(response)
     }
