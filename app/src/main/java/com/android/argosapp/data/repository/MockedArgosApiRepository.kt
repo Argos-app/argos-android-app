@@ -2,6 +2,9 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.StockCategory
+import com.android.argosapp.model.StockPage
+import com.android.argosapp.model.StockProduct
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
@@ -18,6 +21,7 @@ class MockedArgosApiRepository(
 ) : ArgosApiRepository {
     private val logger = RepositoryAppLogger("MockedArgosApiRepository")
     private var isFirstAccess = firstAccess
+    override val isMedicationStockImplemented = false
 
     init {
         logger.info(
@@ -25,6 +29,21 @@ class MockedArgosApiRepository(
             "not_found_enabled" to notFound,
             "first_access_enabled" to firstAccess,
         )
+    }
+
+    override suspend fun getMedicationStockPage(
+        query: String,
+        category: StockCategory?,
+        cursor: String?,
+        pageSize: Int,
+    ): StockPage {
+        // TODO: implementar dados locais com busca, categoria e paginação; habilitar isMedicationStockImplemented.
+        throw UnsupportedOperationException("Mock de estoque ainda não implementado.")
+    }
+
+    override suspend fun getMedicationProducts(): List<StockProduct> {
+        // TODO: fornecer o catálogo de produtos existentes para seleção e preenchimento do código.
+        throw UnsupportedOperationException("Catálogo mock de medicamentos ainda não implementado.")
     }
 
     override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse =

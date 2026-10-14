@@ -3,6 +3,9 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.dto.ApplicationWithdrawalDto
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.StockCategory
+import com.android.argosapp.model.StockPage
+import com.android.argosapp.model.StockProduct
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import retrofit2.HttpException
@@ -40,6 +43,23 @@ private interface ArgosApiService {
 class RemoteArgosApiRepository(
     homologation: Boolean = false,
 ) : ArgosApiRepository {
+    override val isMedicationStockImplemented = false
+
+    override suspend fun getMedicationStockPage(
+        query: String,
+        category: StockCategory?,
+        cursor: String?,
+        pageSize: Int,
+    ): StockPage {
+        // TODO: definir serviço/DTOs, autenticação e mapeamento da paginação após receber a rota.
+        // Reutilizar baseUrl e habilitar isMedicationStockImplemented ao concluir.
+        throw UnsupportedOperationException("Rota de estoque de medicamentos ainda não definida.")
+    }
+
+    override suspend fun getMedicationProducts(): List<StockProduct> {
+        // TODO: consultar o catálogo existente e mapear os produtos após receber seu contrato.
+        throw UnsupportedOperationException("Rota do catálogo de medicamentos ainda não definida.")
+    }
 
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"

@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MedicationStockViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = (application as ArgosApplication).medicationStockRepository
+    private val repository = (application as ArgosApplication).argosApiRepository
     private val pager = MedicationStockPager()
     private val mutableState = MutableStateFlow(pager.state)
     val state = mutableState.asStateFlow()
-    val integrationPending get() = !repository.isImplemented
+    val integrationPending get() = !repository.isMedicationStockImplemented
     private var pageJob: Job? = null
 
     init { loadNextPage() }
@@ -41,7 +41,7 @@ class MedicationStockViewModel(application: Application) : AndroidViewModel(appl
         pageJob = viewModelScope.launch {
             try {
                 if (debounce) delay(300)
-                pager.complete(request, repository.getPage(request.query.trim(), request.category, request.cursor, PAGE_SIZE))
+                pager.complete(request, repository.getMedicationStockPage(request.query.trim(), request.category, request.cursor, PAGE_SIZE))
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
@@ -51,7 +51,7 @@ class MedicationStockViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    suspend fun getProducts() = if (integrationPending) emptyList() else repository.getProducts()
+    suspend fun getProducts() = if (integrationPending) emptyList() else repository.getMedicationProducts()
 
     companion object { private const val PAGE_SIZE = 20 }
 }
