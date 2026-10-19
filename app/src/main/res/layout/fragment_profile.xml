@@ -9,7 +9,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="330dp"
+        android:layout_height="360dp"
         android:background="@color/argos_green">
 
         <ImageView
@@ -20,11 +20,29 @@
             android:scaleType="fitXY"
             android:src="@drawable/home_tobby_background" />
 
+        <FrameLayout
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="72dp"
+            android:background="@drawable/profile_photo_border"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/profilePhotoImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/profile_photo_placeholder"
+                android:clipToOutline="true"
+                android:contentDescription="@string/profile_photo"
+                android:scaleType="centerCrop" />
+        </FrameLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="45dp"
+            android:layout_marginBottom="70dp"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingHorizontal="24dp">
@@ -253,4 +271,36 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/profilePhotoContainer"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="72dp">
+
+        <ImageButton
+            android:id="@+id/profilePhotoCameraIcon"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="bottom|end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/profile_photo_take_selfie"
+            android:focusable="true"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/foto_icon" />
+
+        <ProgressBar
+            android:id="@+id/profilePhotoUploadProgress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="8dp"
+            android:contentDescription="@string/profile_photo_uploading"
+            android:indeterminateTint="@color/argos_background"
+            android:visibility="gone" />
+    </FrameLayout>
 </FrameLayout>

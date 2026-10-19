@@ -25,6 +25,12 @@
     <string name="navigation_chatbot">Chatbot</string>
     <string name="navigation_profile">Perfil</string>
     <string name="profile_edit">Edite o perfil</string>
+    <string name="profile_photo">Foto de perfil</string>
+    <string name="profile_photo_take_selfie">Tirar selfie</string>
+    <string name="profile_photo_camera_unavailable">Não foi possível abrir a câmera deste aparelho.</string>
+    <string name="profile_photo_uploading">Enviando foto de perfil…</string>
+    <string name="profile_photo_updated">Foto de perfil atualizada.</string>
+    <string name="profile_photo_update_failed">Não foi possível atualizar sua foto. Tente novamente.</string>
     <string name="profile_edit_submit">Editar perfil</string>
     <string name="profile_edit_success">Perfil editado com sucesso.</string>
     <string name="profile_edit_success_address_not_supported">Perfil atualizado; o endereço não pode ser alterado por esta tela.</string>

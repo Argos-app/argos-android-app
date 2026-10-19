@@ -1,6 +1,7 @@
 package com.android.argosapp
 
 import android.app.Application
+import com.cloudinary.android.MediaManager
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.MockedArgosApiRepository
 import com.android.argosapp.data.repository.RemoteArgosApiRepository
@@ -22,6 +23,8 @@ class ArgosApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        MediaManager.init(this, mapOf("cloud_name" to BuildConfig.CLOUDINARY_CLOUD_NAME))
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

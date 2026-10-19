@@ -77,12 +77,12 @@
                     android:importantForAccessibility="yes">
 
                     <ImageView
-                        android:layout_width="21dp"
-                        android:layout_height="25dp"
+                        android:id="@+id/navigationProfileIcon"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:layout_gravity="center"
                         android:contentDescription="@null"
-                        android:scaleX="0.9545"
-                        android:src="@drawable/profile_home_nav_icon" />
+                        android:src="@drawable/profile_home_nav_placeholder" />
                 </FrameLayout>
 
                 <FrameLayout
