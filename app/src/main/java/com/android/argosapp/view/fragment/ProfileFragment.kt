@@ -21,7 +21,7 @@ import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.data.repository.CloudinaryPhotoRepository
 import com.android.argosapp.databinding.FragmentProfileBinding
 import com.android.argosapp.util.auth.AuthManager
-import com.android.argosapp.util.CameraManager
+import com.android.argosapp.util.io.CameraManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.view.activity.LoginActivity
