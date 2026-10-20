@@ -162,6 +162,7 @@ class AuthManager(
                     userName = data.name ?: currentUser.userName,
                     email = data.email ?: currentUser.email,
                     photoUrl = data.photoUrl ?: currentUser.photoUrl,
+                    address = data.address ?: currentUser.address,
                 ),
             )
         }

@@ -1,13 +1,16 @@
 package com.android.argosapp.view.fragment
 
 import android.os.Bundle
+import android.content.pm.PackageManager
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
@@ -23,12 +26,19 @@ import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.util.validation.ProfileEditFormValidator
+import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.viewmodel.ProfileEditViewModel
 
 class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private var _binding: FragmentProfileEditBinding? = null
     private var initialUser: User? = null
+    private var initialUserLoadRequested = false
     private val formValidator = ProfileEditFormValidator()
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        openProfileLocationPicker()
+    }
 
     private val authManager by lazy {
         AuthManager(
@@ -50,13 +60,36 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
 
         _binding?.profileEditBack?.setOnClickListener(::onBackButtonClicked)
         _binding?.profileEditSubmitButton?.setOnClickListener(::onSubmitButtonClicked)
+        _binding?.profileEditAddressLocationButton?.setOnClickListener {
+            if (hasLocationPermission()) {
+                openProfileLocationPicker()
+            } else {
+                locationPermissionRequest.launch(
+                    arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    ),
+                )
+            }
+        }
+        parentFragmentManager.setFragmentResultListener(
+            MapLocationPickerFragment.RESULT_KEY,
+            this,
+        ) { _, result ->
+            result.getString(MapLocationPickerFragment.RESULT_ADDRESS)?.let { address ->
+                _binding?.profileEditAddress?.setText(address)
+            }
+        }
         _binding?.apply {
             profileEditName.doAfterTextChanged { clearAttentionIcon(profileEditName) }
             profileEditEmail.doAfterTextChanged { clearAttentionIcon(profileEditEmail) }
             profileEditAddress.doAfterTextChanged { clearAttentionIcon(profileEditAddress) }
         }
 
-        viewModel.loadCachedUser(::populateFields, ::logUserLoadError)
+        if (!initialUserLoadRequested) {
+            initialUserLoadRequested = true
+            viewModel.loadCachedUser(::populateFields, ::logUserLoadError)
+        }
     }
 
     override fun onDestroyView() {
@@ -126,23 +159,14 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             Toast.makeText(requireContext(), R.string.profile_edit_no_changes, Toast.LENGTH_LONG).show()
             return
         }
-        if (!nameChanged && !emailChanged && addressChanged) {
-            Toast.makeText(requireContext(), R.string.profile_edit_address_not_supported, Toast.LENGTH_LONG).show()
-            return
-        }
-
         viewModel.updateProfile(
             name = name.takeIf { nameChanged },
             email = email.takeIf { emailChanged },
+            address = address.takeIf { addressChanged },
             onLoading = ::showSubmitLoading,
             onSuccess = {
-                initialUser = originalUser.copy(userName = name, email = email)
-                val successMessage = if (addressChanged) {
-                    R.string.profile_edit_success_address_not_supported
-                } else {
-                    R.string.profile_edit_success
-                }
-                Toast.makeText(requireContext(), successMessage, Toast.LENGTH_LONG).show()
+                initialUser = originalUser.copy(userName = name, email = email, address = address)
+                Toast.makeText(requireContext(), R.string.profile_edit_success, Toast.LENGTH_LONG).show()
             },
             onError = ::showUpdateError,
         )
@@ -173,6 +197,23 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private fun showUpdateError(error: Exception) {
         AppLogger.error(AppLogger.SESSION_TAG, "profile_edit_update_failed", error)
         Toast.makeText(requireContext(), R.string.profile_edit_failed, Toast.LENGTH_LONG).show()
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val context = requireContext()
+        return ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun openProfileLocationPicker() {
+        (activity as? HomeActivity)?.showProfileLocationPicker(
+            _binding?.profileEditAddress?.text?.toString().orEmpty(),
+        )
     }
 
     @Suppress("UNUSED_PARAMETER")

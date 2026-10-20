@@ -18,6 +18,7 @@ import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.CloudinaryPhotoRepository
 import com.android.argosapp.databinding.FragmentProfileBinding
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.CameraManager
@@ -44,8 +45,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             ApplicationsStorage(requireContext()),
         )
     }
+    private val cloudinaryPhotoRepository by lazy {
+        CloudinaryPhotoRepository(requireContext().applicationContext)
+    }
     private val viewModel: ProfileViewModel by viewModels {
-        viewModelFactory { initializer { ProfileViewModel(authManager) } }
+        viewModelFactory {
+            initializer { ProfileViewModel(authManager, cloudinaryPhotoRepository) }
+        }
     }
     private val selfieCameraLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),

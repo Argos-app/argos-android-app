@@ -80,6 +80,7 @@ class MockedArgosApiRepository(
                 "has_name" to (data.name != null),
                 "has_email" to (data.email != null),
                 "has_photo_url" to (data.photoUrl != null),
+                "has_address" to (data.address != null),
             ),
         ) {
             delay(1000)
@@ -141,7 +142,7 @@ class MockedArgosApiRepository(
         daysAfter: Int,
     ): List<ApplicationWithdrawal> =
         logger.runSuspending("get_application_withdrawal_window") {
-            delay(6000)
+            delay(1000)
 
             val windowStart = referenceDate.minusDays(daysBefore.coerceAtLeast(0).toLong())
             val windowEnd = referenceDate.plusDays(daysAfter.coerceAtLeast(0).toLong())

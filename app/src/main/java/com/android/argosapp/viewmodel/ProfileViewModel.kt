@@ -11,7 +11,7 @@ import java.io.File
 
 class ProfileViewModel(
     private val authManager: AuthManager,
-    private val cloudinaryPhotoRepository: CloudinaryPhotoRepository = CloudinaryPhotoRepository(),
+    private val cloudinaryPhotoRepository: CloudinaryPhotoRepository,
 ) : ViewModel() {
 
     fun uploadProfilePhoto(
@@ -26,13 +26,17 @@ class ProfileViewModel(
                 val secureUrl = cloudinaryPhotoRepository.uploadProfilePhoto(photoFile)
                 authManager.updateCurrentUser(UpdateCurrentUserDto(photoUrl = secureUrl))
                 onSuccess(secureUrl)
+
             } catch (error: CancellationException) {
                 throw error
+
             } catch (error: Exception) {
                 onError(error)
+
             } finally {
                 photoFile.delete()
                 onLoading(false)
+
             }
         }
     }

@@ -17,14 +17,17 @@ import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ApplicationsManagementFragment
 import com.android.argosapp.view.fragment.ExceptionsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
+import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 import com.android.argosapp.util.navigation.FragmentNavHelper
 
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
+
     private val fragmentNavHelper by lazy {
         FragmentNavHelper(supportFragmentManager, R.id.homeFragmentContainer)
     }
+
     private var currentDestination: Destination? = null
     private lateinit var navBarBlurEffect: NavBarBlurEffect
 
@@ -34,7 +37,6 @@ class HomeActivity : FragmentActivity() {
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         navBarBlurEffect = NavBarBlurEffect(
             source = binding.homeFragmentContainer,
             backdrop = binding.navigationBlurBackdrop,
@@ -136,6 +138,17 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showProfileLocationPicker(currentAddress: String) {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = MapLocationPickerFragment.newInstance(currentAddress),
+            tag = MapLocationPickerFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     fun showApplicationsManagement() {
         setNavigationBarVisible(false)
         fragmentNavHelper.navigate(
@@ -162,6 +175,7 @@ class HomeActivity : FragmentActivity() {
         val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
             currentFragment is ProfileEditFragment ||
+            currentFragment is MapLocationPickerFragment ||
             currentFragment is ApplicationsManagementFragment ||
             currentFragment is ExceptionsManagementFragment
         setNavigationBarVisible(!showingOverlay)

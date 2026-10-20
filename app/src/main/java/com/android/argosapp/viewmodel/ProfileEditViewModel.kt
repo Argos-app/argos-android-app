@@ -27,6 +27,7 @@ class ProfileEditViewModel(
     fun updateProfile(
         name: String?,
         email: String?,
+        address: String?,
         onLoading: (Boolean) -> Unit,
         onSuccess: () -> Unit,
         onError: (Exception) -> Unit,
@@ -38,6 +39,7 @@ class ProfileEditViewModel(
                     UpdateCurrentUserDto(
                         name = name?.trim(),
                         email = email?.trim(),
+                        address = address?.trim(),
                     ),
                 )
                 onSuccess()

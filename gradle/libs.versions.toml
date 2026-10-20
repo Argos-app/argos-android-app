@@ -9,6 +9,9 @@ room3 = "3.0.3"
 sqlite = "2.7.1"
 ksp = "2.3.12"
 room3Common = "3.0.3"
+playServicesMaps = "20.0.0"
+playServicesLocation = "21.4.0"
+places = "5.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -21,6 +24,9 @@ room3-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref 
 room3-compiler = { group = "androidx.room3", name = "room3-compiler", version.ref = "room3" }
 sqlite-framework = { group = "androidx.sqlite", name = "sqlite-framework", version.ref = "sqlite" }
 androidx-room3-common = { group = "androidx.room3", name = "room3-common", version.ref = "room3Common" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+places = { module = "com.google.android.libraries.places:places", version.ref = "places" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
