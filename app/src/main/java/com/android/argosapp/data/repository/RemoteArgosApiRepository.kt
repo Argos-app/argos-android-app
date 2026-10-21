@@ -7,6 +7,7 @@ import com.android.argosapp.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
+import okhttp3.OkHttpClient
 import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -19,6 +20,7 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.PUT
 import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 
 private interface ArgosApiService {
     @GET("application/list-all")
@@ -59,6 +61,7 @@ class RemoteArgosApiRepository(
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
         const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.onrender.com/api/v1/"
+        const val SECONDS_TO_TIMEOUT = 30L
     }
 
     private val logger = RepositoryAppLogger("RemoteArgosApiRepository")
@@ -73,8 +76,17 @@ class RemoteArgosApiRepository(
         )
     }
 
+    private val client by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(SECONDS_TO_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(SECONDS_TO_TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(SECONDS_TO_TIMEOUT, TimeUnit.SECONDS)
+            .build()
+    }
+
     private val api by lazy {
         Retrofit.Builder()
+            .client(client)
             .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
