@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingBottom="24dp">
+        <View android:layout_width="92dp" android:layout_height="4dp" android:layout_gravity="center_horizontal" android:layout_marginTop="12dp" android:layout_marginBottom="20dp" android:background="@color/argos_divider" android:importantForAccessibility="no" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:text="@string/stock_registration_title" android:textColor="@color/argos_green" android:textSize="20sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:text="@string/stock_registration_description" android:textColor="@color/argos_notice_important" android:textSize="12sp" />
+        <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/productInput" android:text="@string/stock_product_label" />
+        <EditText android:id="@+id/productInput" style="@style/StockRegistrationInput" android:hint="@string/stock_product_hint" android:inputType="none" android:focusable="false" android:clickable="true" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="14dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/quantityInput" android:text="@string/stock_quantity_label" />
+                <EditText android:id="@+id/quantityInput" style="@style/StockRegistrationInput" android:hint="@string/stock_quantity_hint" android:inputType="numberDecimal" />
+            </LinearLayout>
+            <Space android:layout_width="16dp" android:layout_height="1dp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/manufactureInput" android:text="@string/stock_manufacture_label" />
+                <EditText android:id="@+id/manufactureInput" style="@style/StockRegistrationInput" android:hint="@string/stock_date_hint" android:inputType="none" android:focusable="false" android:clickable="true" android:drawableStart="@drawable/ic_stock_calendar" android:drawablePadding="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="14dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/registrationCodeInput" android:text="@string/stock_registration_code_label" />
+                <EditText android:id="@+id/registrationCodeInput" style="@style/StockRegistrationInput" android:hint="@string/stock_registration_code_hint" android:inputType="none" android:focusable="false" android:clickable="false" />
+            </LinearLayout>
+            <Space android:layout_width="16dp" android:layout_height="1dp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/expirationInput" android:text="@string/stock_expiration_label" />
+                <EditText android:id="@+id/expirationInput" style="@style/StockRegistrationInput" android:hint="@string/stock_date_hint" android:inputType="none" android:focusable="false" android:clickable="true" android:drawableStart="@drawable/ic_stock_calendar" android:drawablePadding="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="14dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/supplierInput" android:text="@string/stock_supplier_label" />
+                <EditText android:id="@+id/supplierInput" style="@style/StockRegistrationInput" android:hint="@string/stock_supplier_hint" android:inputType="textCapSentences" />
+            </LinearLayout>
+            <Space android:layout_width="16dp" android:layout_height="1dp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/cnpjInput" android:text="@string/stock_cnpj_label" />
+                <EditText android:id="@+id/cnpjInput" style="@style/StockRegistrationInput" android:hint="@string/stock_cnpj_hint" android:inputType="phone" android:maxLength="18" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="14dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/doseInput" android:text="@string/stock_dose_label" />
+                <EditText android:id="@+id/doseInput" style="@style/StockRegistrationInput" android:hint="@string/stock_dose_hint" android:inputType="textCapSentences" />
+            </LinearLayout>
+            <Space android:layout_width="16dp" android:layout_height="1dp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView style="@style/StockRegistrationLabel" android:labelFor="@id/withdrawalInput" android:text="@string/stock_withdrawal_label" />
+                <EditText android:id="@+id/withdrawalInput" style="@style/StockRegistrationInput" android:hint="@string/stock_withdrawal_hint" android:inputType="number" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView style="@style/StockRegistrationLabel" android:layout_marginTop="14dp" android:labelFor="@id/categoryInput" android:text="@string/stock_category_label" />
+        <EditText android:id="@+id/categoryInput" style="@style/StockRegistrationInput" android:hint="@string/stock_category_hint" android:inputType="none" android:focusable="false" android:clickable="true" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/registerButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="24dp" android:insetTop="0dp" android:insetBottom="0dp" android:text="@string/stock_register" android:textAllCaps="false" android:textColor="@color/argos_background" android:textSize="14sp" android:textStyle="bold" app:backgroundTint="@color/argos_green" app:cornerRadius="24dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/discardButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/stock_discard" android:textAllCaps="false" android:textColor="@color/argos_green" android:textSize="12sp" android:textStyle="bold" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
