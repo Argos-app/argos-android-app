@@ -93,9 +93,5 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 onLoading(false)
             }
         }
-
-        fun requestNotificationPermission() {
-
-        }
     }
 }
