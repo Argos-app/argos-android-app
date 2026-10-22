@@ -1,10 +1,14 @@
 package com.android.argosapp.view.activity
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
@@ -27,6 +31,9 @@ class HomeActivity : FragmentActivity() {
     private val fragmentNavHelper by lazy {
         FragmentNavHelper(supportFragmentManager, R.id.homeFragmentContainer)
     }
+
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean -> }
 
     private var currentDestination: Destination? = null
     private lateinit var navBarBlurEffect: NavBarBlurEffect
@@ -69,6 +76,7 @@ class HomeActivity : FragmentActivity() {
 
         }
         updateNavigationBarVisibility()
+        requestNotificationPermissionOnStartup()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -179,6 +187,14 @@ class HomeActivity : FragmentActivity() {
             currentFragment is ApplicationsManagementFragment ||
             currentFragment is ExceptionsManagementFragment
         setNavigationBarVisible(!showingOverlay)
+    }
+
+    private fun requestNotificationPermissionOnStartup() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
     private fun setNavigationBarVisible(visible: Boolean) {

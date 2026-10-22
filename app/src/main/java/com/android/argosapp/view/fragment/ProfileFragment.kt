@@ -75,7 +75,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         _binding?.profileEditOption?.setOnClickListener(::onEditOptionClicked)
         _binding?.profilePhotoCameraIcon?.setOnClickListener { openSelfieCamera() }
-
         _binding?.profileChangePasswordOption?.setOnClickListener {
             startActivity(PasswordResetActivity.createProfileIntent(requireContext()))
         }

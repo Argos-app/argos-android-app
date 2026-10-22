@@ -1,6 +1,7 @@
 package com.android.argosapp.viewmodel
 
 import android.app.Application
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.ArgosApplication
@@ -76,6 +77,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 onApplicationsLoaded(mergedApplications)
             } catch (error: CancellationException) {
                 throw error
+
             } catch (error: Exception) {
                 AppLogger.error(
                     AppLogger.REPOSITORY_TAG,
@@ -85,10 +87,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     "month" to month,
                 )
                 onError(error)
+
             } finally {
                 requestedMonth = null
                 onLoading(false)
             }
+        }
+
+        fun requestNotificationPermission() {
+
         }
     }
 }

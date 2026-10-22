@@ -60,7 +60,7 @@ class RemoteArgosApiRepository(
 
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
-        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.onrender.com/api/v1/"
+        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
         const val SECONDS_TO_TIMEOUT = 30L
     }
 

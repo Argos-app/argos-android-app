@@ -32,7 +32,7 @@ class CloudinaryPhotoRepository(
 
     private suspend fun upload(file: File): String {
 
-        suspendCancellableCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
 
             var requestId: String? = null
             val callback = object : UploadCallback {
