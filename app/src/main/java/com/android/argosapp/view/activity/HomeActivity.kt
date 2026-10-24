@@ -116,6 +116,16 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun setChatbotOnboardingVisible(visible: Boolean) {
+        val visibility = if (visible) View.GONE else View.VISIBLE
+        binding.homeBottomNavigation.visibility = visibility
+        binding.navigationBlurBackdrop.visibility = visibility
+    }
+
+    fun navigateToHome() {
+        showDestination(Destination.HOME, animateIndicator = true)
+    }
+
     private fun updateNavigationBarVisibility() {
         val showingDetails =
             supportFragmentManager.findFragmentById(R.id.homeFragmentContainer) is HomeApplicationDetailsFragment
