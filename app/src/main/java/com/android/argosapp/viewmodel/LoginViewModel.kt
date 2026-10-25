@@ -15,7 +15,9 @@ class LoginViewModel(
 
     fun restoreSession(onLoading: (Boolean) -> Unit, onAuthenticated: () -> Unit) = viewModelScope.launch {
         onLoading(true)
-        val hasSession = !authManager.getBearerToken().isNullOrBlank() &&
+        val hasSession = authManager.isRememberMeEnabled() &&
+            !authManager.getFirebaseIdToken().isNullOrBlank() &&
+            !authManager.getBearerToken().isNullOrBlank() &&
             authManager.getUser() != null && authManager.hasValidSession()
         if (hasSession) onAuthenticated() else {
             authManager.clearSession()
