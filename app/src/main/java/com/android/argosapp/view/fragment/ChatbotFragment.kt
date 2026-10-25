@@ -218,10 +218,11 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         ).apply {
             isClickable = true
             setOnClickListener { viewModel.loadEarlierMessages() }
-        }
+        }.isVisible = state.hasEarlierMessages
 
         val activePromptId = state.messages.lastOrNull()
             ?.takeIf { it.sender == ChatSender.ASSISTANT && !state.isSending }
+            ?.takeIf { it.questionExpiresAt == null || it.questionExpiresAt > System.currentTimeMillis() }
             ?.takeIf { it.kind == ChatMessageKind.SINGLE_CHOICE || it.kind == ChatMessageKind.CONFIRMATION }
             ?.id
         state.messages.forEach { message ->

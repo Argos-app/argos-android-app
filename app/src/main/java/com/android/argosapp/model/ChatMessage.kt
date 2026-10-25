@@ -22,6 +22,13 @@ data class ChatMessage(
     val options: List<String> = emptyList(),
     val responseState: ChatResponseState? = null,
     val createdAt: Long,
+    val apiInteractionId: String? = null,
+    val questionId: String? = null,
+    val inputType: String? = null,
+    val optionIds: List<String> = emptyList(),
+    val degradationReasons: List<String> = emptyList(),
+    val redacted: Boolean = false,
+    val questionExpiresAt: Long? = null,
 )
 
 data class ChatRequest(
