@@ -5,6 +5,7 @@ import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.StockCategory
 import com.android.argosapp.model.StockPage
 import com.android.argosapp.model.StockProduct
+import com.android.argosapp.model.MedicationStockRegistration
 import java.time.LocalDate
 
 /**
@@ -22,6 +23,8 @@ interface ArgosApiRepository {
     ): StockPage
 
     suspend fun getMedicationProducts(): List<StockProduct>
+
+    suspend fun registerMedicationStock(registration: MedicationStockRegistration)
 
     suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse
 

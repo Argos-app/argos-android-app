@@ -6,6 +6,8 @@ import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.StockCategory
 import com.android.argosapp.model.StockPage
 import com.android.argosapp.model.StockProduct
+import com.android.argosapp.model.MedicationStockRegistration
+import com.android.argosapp.model.MedicationStockItem
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import retrofit2.HttpException
@@ -17,9 +19,71 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.PUT
+import retrofit2.http.Body
 import java.time.LocalDate
+import java.math.BigDecimal
+
+private data class MedicinePageDto(
+    val data: List<MedicineListItemDto> = emptyList(),
+    val totalPages: Int = 0,
+)
+
+private data class MedicineListItemDto(
+    val medicineBatchId: String,
+    val medicineName: String,
+    val expiryDate: String,
+    val quantity: BigDecimal,
+    val therapeuticCategory: String? = null,
+) {
+    fun toModel() = MedicationStockItem(
+        id = medicineBatchId,
+        medicationName = medicineName,
+        expirationDate = LocalDate.parse(expiryDate),
+        quantity = quantity.stripTrailingZeros().toPlainString(),
+        category = if (therapeuticCategory.orEmpty().contains("vacina", ignoreCase = true)) {
+            StockCategory.VACCINE
+        } else {
+            StockCategory.MEDICATION
+        },
+    )
+}
+
+private data class MedicineBatchRequestDto(
+    val productRegistration: String,
+    val batchNumber: String,
+    val manufactureDate: String,
+    val expiryDate: String,
+    val quantity: BigDecimal,
+    val supplierName: String,
+    val supplierCnpj: String,
+    val propertyId: String,
+) {
+    constructor(registration: MedicationStockRegistration) : this(
+        productRegistration = registration.productRegistration,
+        batchNumber = registration.batchNumber,
+        manufactureDate = registration.manufactureDate.toString(),
+        expiryDate = registration.expiryDate.toString(),
+        quantity = registration.quantity,
+        supplierName = registration.supplierName,
+        supplierCnpj = registration.supplierCnpj,
+        propertyId = registration.propertyId,
+    )
+}
 
 private interface ArgosApiService {
+    @GET("medicines")
+    suspend fun getMedicines(
+        @Header("Authorization") authorization: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): Response<MedicinePageDto>
+
+    @POST("medicines")
+    suspend fun registerMedicine(
+        @Header("Authorization") authorization: String,
+        @Body registration: MedicineBatchRequestDto,
+    ): Response<Unit>
+
     @GET("application/withdrawal-window")
     suspend fun getApplicationWithdrawalWindow(
         @Header("Authorization") authorization: String,
@@ -42,8 +106,9 @@ private interface ArgosApiService {
 /** Implementação Retrofit da comunicação com a API Argos. */
 class RemoteArgosApiRepository(
     homologation: Boolean = false,
+    private val bearerTokenProvider: () -> String? = { null },
 ) : ArgosApiRepository {
-    override val isMedicationStockImplemented = false
+    override val isMedicationStockImplemented = true
 
     override suspend fun getMedicationStockPage(
         query: String,
@@ -51,19 +116,52 @@ class RemoteArgosApiRepository(
         cursor: String?,
         pageSize: Int,
     ): StockPage {
-        // TODO: definir serviço/DTOs, autenticação e mapeamento da paginação após receber a rota.
-        // Reutilizar baseUrl e habilitar isMedicationStockImplemented ao concluir.
-        throw UnsupportedOperationException("Rota de estoque de medicamentos ainda não definida.")
+        val token = requireApiToken()
+        val requestedPage = cursor?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val effectivePageSize = pageSize.coerceIn(1, 100)
+        val items = mutableListOf<MedicationStockItem>()
+        var page = requestedPage
+        var totalPages = 0
+        do {
+            val response = api.getMedicines("Bearer $token", page, effectivePageSize)
+            if (!response.isSuccessful) throw HttpException(response)
+            val body = requireNotNull(response.body()) { "A API retornou uma página de medicamentos vazia." }
+            totalPages = body.totalPages
+            items += body.data.map(MedicineListItemDto::toModel).filter { item ->
+                (query.isBlank() || item.medicationName.contains(query.trim(), ignoreCase = true)) &&
+                    (category == null || item.category == category)
+            }
+            page++
+        } while ((query.isNotBlank() || category != null) && items.size < effectivePageSize && page < totalPages)
+
+        return StockPage(
+            items = items,
+            nextCursor = page.takeIf { it < totalPages }?.toString(),
+        )
     }
 
     override suspend fun getMedicationProducts(): List<StockProduct> {
-        // TODO: consultar o catálogo existente e mapear os produtos após receber seu contrato.
-        throw UnsupportedOperationException("Rota do catálogo de medicamentos ainda não definida.")
+        // O backend ainda não disponibilizou uma rota de catálogo de produtos/MAPA.
+        return emptyList()
     }
+
+    override suspend fun registerMedicationStock(registration: MedicationStockRegistration) {
+        require(registration.propertyId.isNotBlank()) { "Informe o propertyId antes de registrar o estoque." }
+        val response = api.registerMedicine(
+            authorization = "Bearer ${requireApiToken()}",
+            registration = MedicineBatchRequestDto(registration),
+        )
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    private fun requireApiToken(): String =
+        requireNotNull(bearerTokenProvider()?.takeIf(String::isNotBlank)) {
+            "A sessão não possui bearer token da API Argos. Entre novamente antes de consultar medicamentos."
+        }
 
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
-        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
+        const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.onrender.com/api/v1/"
     }
 
     private val logger = RepositoryAppLogger("RemoteArgosApiRepository")

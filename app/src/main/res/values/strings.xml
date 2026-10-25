@@ -127,5 +127,10 @@
     <string name="stock_invalid_withdrawal">Informe a carência em dias, a partir de zero.</string>
     <string name="stock_invalid_dates">O vencimento deve ser posterior à fabricação.</string>
     <string name="stock_registration_pending">O envio do registro estará disponível após a integração dos dados.</string>
+    <string name="stock_batch_label">Lote</string>
+    <string name="stock_batch_hint">Ex: LOTE-2026-001</string>
+    <string name="stock_mock_registration_success">Estoque registrado no mock.</string>
+    <string name="stock_mock_registration_error">Não foi possível registrar o estoque no mock.</string>
+    <string name="stock_api_registration_pending">O cadastro pela API depende do catálogo de produtos e da propriedade selecionada.</string>
     <string name="stock_cancel">Cancelar</string>
 </resources>

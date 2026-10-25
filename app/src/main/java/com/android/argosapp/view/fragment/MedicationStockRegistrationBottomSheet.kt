@@ -15,6 +15,7 @@ import com.android.argosapp.R
 import com.android.argosapp.databinding.BottomSheetMedicationStockRegistrationBinding
 import com.android.argosapp.model.StockCategory
 import com.android.argosapp.model.StockProduct
+import com.android.argosapp.model.MedicationStockRegistration
 import com.android.argosapp.viewmodel.MedicationStockViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -58,6 +59,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        savedInstanceState?.getString("batchNumber")?.let(binding.batchNumberInput::setText)
         renderSelection()
         binding.productInput.setOnClickListener { selectProduct() }
         binding.categoryInput.setOnClickListener {
@@ -79,7 +81,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         }
         binding.discardButton.setOnClickListener { dismiss() }
         binding.registerButton.setOnClickListener {
-            if (validate()) Snackbar.make(binding.root, R.string.stock_registration_pending, Snackbar.LENGTH_LONG).show()
+            submitRegistration()
         }
         val bottomPadding = binding.root.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, insets ->
@@ -161,6 +163,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         }
         requireField(binding.productInput, selectedProduct != null, R.string.stock_product_required)
         requireField(binding.registrationCodeInput, !selectedProduct?.registrationCode.isNullOrBlank())
+        requireField(binding.batchNumberInput, binding.batchNumberInput.text.isNotBlank())
         val quantity = binding.quantityInput.text.toString().replace(',', '.').toBigDecimalOrNull()
         requireField(binding.quantityInput, quantity != null && quantity.signum() > 0, R.string.stock_positive_quantity)
         requireField(binding.manufactureInput, manufacture != null)
@@ -177,6 +180,47 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         return valid
     }
 
+    private fun submitRegistration() {
+        if (!validate()) return
+        if (!viewModel.isMockedRepository) {
+            Snackbar.make(binding.root, R.string.stock_api_registration_pending, Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        val product = requireNotNull(selectedProduct)
+        val request = MedicationStockRegistration(
+            productRegistration = product.registrationCode,
+            batchNumber = binding.batchNumberInput.text.toString().trim(),
+            manufactureDate = requireNotNull(manufacture),
+            expiryDate = requireNotNull(expiration),
+            quantity = requireNotNull(binding.quantityInput.text.toString().replace(',', '.').toBigDecimalOrNull()),
+            supplierName = binding.supplierInput.text.toString().trim(),
+            supplierCnpj = binding.cnpjInput.text.toString().filter(Char::isDigit),
+            propertyId = MOCK_PROPERTY_ID,
+            category = category,
+        )
+
+        binding.registerButton.isEnabled = false
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                viewModel.registerMedicationStock(request)
+                if (_binding == null) return@launch
+                Snackbar.make(
+                    requireActivity().findViewById(android.R.id.content),
+                    R.string.stock_mock_registration_success,
+                    Snackbar.LENGTH_LONG,
+                ).show()
+                dismiss()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                _binding?.let { Snackbar.make(it.root, R.string.stock_mock_registration_error, Snackbar.LENGTH_LONG).show() }
+            } finally {
+                _binding?.registerButton?.isEnabled = true
+            }
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         selectedProduct?.let {
@@ -187,6 +231,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         outState.putString("category", category?.name)
         outState.putString("manufacture", manufacture?.toString())
         outState.putString("expiration", expiration?.toString())
+        outState.putString("batchNumber", _binding?.batchNumberInput?.text?.toString())
     }
 
     override fun onDestroyView() {
@@ -196,6 +241,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "medication_stock_registration"
+        private const val MOCK_PROPERTY_ID = "mock-property-id"
         private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     }
 }
