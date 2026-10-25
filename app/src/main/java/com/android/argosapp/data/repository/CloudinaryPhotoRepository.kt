@@ -1,6 +1,10 @@
 package com.android.argosapp.data.repository
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import com.android.argosapp.data.config.CloudinaryConfig
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
@@ -11,6 +15,7 @@ import com.cloudinary.android.preprocess.DimensionsValidator
 import com.cloudinary.android.preprocess.ImagePreprocessChain
 import com.cloudinary.android.preprocess.Limit
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -27,7 +32,77 @@ class CloudinaryPhotoRepository(
             throw IOException("The captured profile photo is empty.")
         }
 
-        return upload(file)
+        val uprightFile = normalizeOrientation(file)
+        return try {
+            upload(uprightFile)
+        } finally {
+            if (uprightFile != file) uprightFile.delete()
+        }
+    }
+
+    private fun normalizeOrientation(file: File): File {
+        val orientation = ExifInterface(file.absolutePath).getAttributeInt(
+            ExifInterface.TAG_ORIENTATION,
+            ExifInterface.ORIENTATION_NORMAL,
+        )
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+                matrix.setRotate(180f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                matrix.setRotate(90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                matrix.setRotate(-90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
+            else -> return file
+        }
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        val largestDimension = maxOf(bounds.outWidth, bounds.outHeight)
+        if (largestDimension <= 0) throw IOException("Could not decode the captured profile photo.")
+        var sampleSize = 1
+        while (largestDimension / sampleSize > MAX_SIZE) sampleSize *= 2
+        val bitmap = BitmapFactory.decodeFile(
+            file.absolutePath,
+            BitmapFactory.Options().apply { inSampleSize = sampleSize },
+        ) ?: throw IOException("Could not decode the captured profile photo.")
+        val uprightBitmap = try {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (error: Exception) {
+            bitmap.recycle()
+            throw error
+        }
+        val uprightFile = try {
+            File.createTempFile("profile_photo_upright_", ".jpg", appContext.cacheDir)
+        } catch (error: Exception) {
+            if (uprightBitmap !== bitmap) uprightBitmap.recycle()
+            bitmap.recycle()
+            throw error
+        }
+        try {
+            FileOutputStream(uprightFile).use { output ->
+                if (!uprightBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output)) {
+                    throw IOException("Could not normalize the captured profile photo orientation.")
+                }
+            }
+            return uprightFile
+        } catch (error: Exception) {
+            uprightFile.delete()
+            throw error
+        } finally {
+            if (uprightBitmap !== bitmap) uprightBitmap.recycle()
+            bitmap.recycle()
+        }
     }
 
     private suspend fun upload(file: File): String {
