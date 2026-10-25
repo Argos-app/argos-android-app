@@ -95,9 +95,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="10dp"
-                app:cardBackgroundColor="#FFFBFAF9"
+                app:cardBackgroundColor="@color/argos_background"
                 app:cardCornerRadius="28dp"
-                app:cardElevation="0dp"
+                app:cardElevation="1dp"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
