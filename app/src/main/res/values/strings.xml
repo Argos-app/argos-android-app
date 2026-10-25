@@ -94,6 +94,13 @@
     <string name="applications_register_lot_name">Nome do Lote</string>
     <string name="applications_register_average_dose">Média de dose aplicada</string>
     <string name="applications_register_dose_invalid">Informe uma dose inteira maior que zero.</string>
+    <string name="applications_register_options_error">Erro ao carregar. Toque para tentar novamente.</string>
+    <string name="applications_register_options_loading">Carregando opções…</string>
+    <string name="applications_register_options_empty">Nenhuma opção disponível.</string>
+    <string name="applications_register_cache_refresh_error">Verifique sua conexão; não foi possível atualizar as informações.</string>
+    <string name="applications_register_medicine_page_more">Carregar mais medicamentos</string>
+    <string name="applications_register_medicine_page_loading">Carregando medicamentos…</string>
+    <string name="applications_register_medicine_page_error">Falha ao carregar. Toque para tentar novamente.</string>
     <string name="applications_register_ear_tag_invalid">Informe um número de brinco com pelo menos 2 dígitos.</string>
     <string name="applications_register_submit">Registrar Aplicação</string>
     <string name="applications_register_later">Deixar para depois</string>
@@ -172,4 +179,9 @@
         <item quantity="one">Período de carência encerrado há 1 dia</item>
         <item quantity="other">Período de carência encerrado há %1$d dias</item>
     </plurals>
+    <string name="applications_register_lot_required">Selecione um lote.</string>
+    <string name="applications_register_medicine_required">Selecione um medicamento.</string>
+    <string name="applications_register_submitting">Registrando…</string>
+    <string name="applications_register_success">Aplicação registrada.</string>
+    <string name="applications_register_error">Não foi possível registrar. Tente novamente.</string>
 </resources>

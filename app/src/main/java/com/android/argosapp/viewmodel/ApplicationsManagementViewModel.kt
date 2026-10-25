@@ -4,15 +4,14 @@ import android.app.Application as AndroidApplication
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.ArgosApplication
+import com.android.argosapp.data.cache.CacheDailyRefreshHelper
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.model.Application as ApplicationModel
 import com.android.argosapp.util.logging.AppLogger
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class ApplicationsManagementViewModel(application: AndroidApplication) : AndroidViewModel(application) {
@@ -22,7 +21,16 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
     private var filterJob: Job? = null
     private var textFilter: String? = null
     private var statusFilter: String? = null
-    private var isRefreshing = false
+    private val applicationsCache = CacheDailyRefreshHelper(
+        getCachedData = { applicationsStorage.listAll(textFilter, statusFilter) },
+        getCacheUpdatedAt = { applicationsStorage.getCreatedAt() },
+        updateCache = {
+            val bearerToken = tokenStorage.getArgosApiToken()
+                ?.takeIf(String::isNotBlank)
+                ?: throw SecurityException("Bearer token is unavailable.")
+            applicationsStorage.replaceAll(repository.listAllApplications(bearerToken))
+        },
+    )
 
     fun render(
         onFilterLoading: (Boolean) -> Unit,
@@ -80,63 +88,30 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
         onError: (Exception) -> Unit,
     ) {
         viewModelScope.launch {
-            var cacheCreatedAt: Long? = null
+            var hasLoadedData = false
             onFilterLoading(true)
             try {
-                cacheCreatedAt = applicationsStorage.getCreatedAt()
-                onApplicationsLoaded(applicationsStorage.listAll(textFilter, statusFilter))
+                applicationsCache.getData(forceRefresh).collect { result ->
+                    result.data?.let { applications ->
+                        onApplicationsLoaded(applications)
+                        hasLoadedData = true
+                        onFilterLoading(false)
+                    }
+                    if (!hasLoadedData && result.refreshing) onFilterLoading(true)
+                    onRefreshLoading(result.refreshing && hasLoadedData)
+                    result.error?.let { error ->
+                        reportLoadFailure(error)
+                        if (result.data == null) onError(error)
+                    }
+                    if (!result.refreshing && !hasLoadedData) onFilterLoading(false)
+                }
             } catch (error: CancellationException) {
                 throw error
-            } catch (error: Exception) {
-                reportLoadFailure(error)
-                onError(error)
-                return@launch
             } finally {
                 onFilterLoading(false)
-            }
-
-            if (!forceRefresh && !isCacheStale(cacheCreatedAt)) {
-                return@launch
-            }
-
-            if (isRefreshing) {
-                onRefreshLoading(true)
-                return@launch
-            }
-
-            isRefreshing = true
-            onRefreshLoading(true)
-            try {
-                val bearerToken = tokenStorage.getArgosApiToken()
-                if (bearerToken.isNullOrBlank()) {
-                    throw SecurityException("Bearer token is unavailable.")
-                }
-
-                val applications = repository.listAllApplications(bearerToken)
-                applicationsStorage.replaceAll(applications)
-                onApplicationsLoaded(applicationsStorage.listAll(textFilter, statusFilter))
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                reportLoadFailure(error)
-                if (cacheCreatedAt == null) {
-                    onError(error)
-                }
-            } finally {
-                isRefreshing = false
                 onRefreshLoading(false)
             }
         }
-    }
-
-    private fun isCacheStale(createdAt: Long?): Boolean {
-        if (createdAt == null) {
-            return true
-        }
-        val cacheDate = Instant.ofEpochMilli(createdAt)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-        return cacheDate.isBefore(LocalDate.now())
     }
 
     private fun reportLoadFailure(error: Exception) {

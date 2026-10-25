@@ -2,12 +2,16 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.dto.ListAllApplicationsDto
+import com.android.argosapp.dto.RegisterLotApplicationDto
+import com.android.argosapp.dto.LotDto
+import com.android.argosapp.dto.MedicinePageDto
 import com.android.argosapp.dto.ApplicationWithdrawalDto
 import com.android.argosapp.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import okhttp3.OkHttpClient
+import org.json.JSONObject
 import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -23,6 +27,23 @@ import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
 private interface ArgosApiService {
+    @GET("lot/list-all")
+    suspend fun listLots(@Header("Authorization") authorization: String): Response<List<LotDto>>
+
+    @GET("medicines")
+    suspend fun listMedicines(
+        @Header("Authorization") authorization: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): Response<MedicinePageDto>
+
+    @POST("application")
+    suspend fun registerLotApplication(
+        @Header("Authorization") authorization: String,
+        @Header("userId") userId: String,
+        @Body data: RegisterLotApplicationDto,
+    ): Response<Unit>
+
     @GET("application/list-all")
     suspend fun listAllApplications(
         @Header("Authorization") authorization: String,
@@ -46,7 +67,7 @@ private interface ArgosApiService {
         @Header("Authorization") authorization: String,
     ): Response<Unit>
 
-    @PATCH("update-perfil")
+    @PATCH("users/update-perfil")
     suspend fun updateCurrentUser(
         @Header("Authorization") authorization: String,
         @Body data: UpdateCurrentUserDto,
@@ -93,6 +114,54 @@ class RemoteArgosApiRepository(
             .create(ArgosApiService::class.java)
     }
 
+    override suspend fun registerLotApplication(
+        bearerToken: String,
+        userId: String,
+        data: RegisterLotApplicationDto,
+    ): Unit = logger.runSuspending(
+        operation = "register_lot_application",
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerLotApplication("Bearer $bearerToken", userId, data)
+        logResponse("register_lot_application", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    override suspend fun listLots(bearerToken: String): List<LotDto> = logger.runSuspending(
+        operation = "list_application_lots",
+        startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "lot/list-all"),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.listLots("Bearer $bearerToken")
+
+        logResponse("list_application_lots", response.code(), response.isSuccessful)
+
+        if (!response.isSuccessful) throw HttpException(response)
+
+        requireNotNull(response.body()) { "Successful lot list response contained no body." }
+    }
+
+    override suspend fun getMedicinesPage(
+        bearerToken: String,
+        page: Int,
+        size: Int,
+    ): MedicinePageDto = logger.runSuspending(
+        operation = "get_medicines_page",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "GET",
+            "endpoint" to "medicines",
+            "page" to page,
+            "size" to size,
+        ),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.listMedicines("Bearer $bearerToken", page, size)
+        logResponse("get_medicines_page", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()) { "Successful medicine page response contained no body." }
+    }
+
     override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse = logger.runSuspending(
         operation = "authenticate",
         startFields = arrayOf(
@@ -100,12 +169,7 @@ class RemoteArgosApiRepository(
             "method" to "POST",
             "endpoint" to "auth/signin",
         ),
-        failureFields = { error ->
-            arrayOf(
-                "http_status" to (error as? HttpException)?.code(),
-                "error_type" to error.javaClass.simpleName,
-            )
-        },
+        failureFields = ::httpFailureFields,
 
 
     ) {
@@ -146,12 +210,7 @@ class RemoteArgosApiRepository(
             "method" to "PUT",
             "endpoint" to "auth/first-access",
         ),
-        failureFields = { error ->
-            arrayOf(
-                "http_status" to (error as? HttpException)?.code(),
-                "error_type" to error.javaClass.simpleName,
-            )
-        },
+        failureFields = ::httpFailureFields,
     ) {
         val response = api.updateFirstAccess("Bearer $bearerToken")
 
@@ -165,17 +224,12 @@ class RemoteArgosApiRepository(
         startFields = arrayOf(
             "environment" to environment,
             "method" to "PATCH",
-            "endpoint" to "update-perfil",
+            "endpoint" to "users/update-perfil",
             "has_name" to (data.name != null),
             "has_email" to (data.email != null),
             "has_photo_url" to (data.photoUrl != null),
         ),
-        failureFields = { error ->
-            arrayOf(
-                "http_status" to (error as? HttpException)?.code(),
-                "error_type" to error.javaClass.simpleName,
-            )
-        },
+        failureFields = ::httpFailureFields,
     ) {
         val response = api.updateCurrentUser("Bearer $bearerToken", data)
 
@@ -195,12 +249,7 @@ class RemoteArgosApiRepository(
             successFields = { applications ->
                 arrayOf("application_count" to applications.size)
             },
-            failureFields = { error ->
-                arrayOf(
-                    "http_status" to (error as? HttpException)?.code(),
-                    "error_type" to error.javaClass.simpleName,
-                )
-            },
+            failureFields = ::httpFailureFields,
         ) {
             val response = api.listAllApplications("Bearer $bearerToken")
 
@@ -231,12 +280,7 @@ class RemoteArgosApiRepository(
             successFields = { applications ->
                 arrayOf("application_count" to applications.size)
             },
-            failureFields = { error ->
-                arrayOf(
-                    "http_status" to (error as? HttpException)?.code(),
-                    "error_type" to error.javaClass.simpleName,
-                )
-            },
+            failureFields = ::httpFailureFields,
         ) {
             val response = api.getApplicationWithdrawalWindow(
                 authorization = "Bearer $bearerToken",
@@ -258,6 +302,27 @@ class RemoteArgosApiRepository(
             }.map(ApplicationWithdrawalDto::toModel)
         }
 
+    private fun httpFailureFields(error: Throwable): Array<out Pair<String, Any?>> {
+        val httpError = error as? HttpException
+        val body = httpError?.response()?.errorBody()?.string()
+        val responseMessage = body?.let { responseBody ->
+            runCatching {
+                val json = JSONObject(responseBody)
+                listOf("message", "error", "detail", "title")
+                    .firstNotNullOfOrNull { key -> json.optString(key).takeIf { it.isNotBlank() && it != "null" } }
+            }.getOrNull() ?: responseBody.takeIf {
+                it.isNotBlank() && !it.trimStart().let { body -> body.startsWith("{") || body.startsWith("[") }
+            }
+        }?.replace(Regex("[\\r\\n\\t]+"), " ")
+            ?.take(500)
+
+        return arrayOf(
+            "http_status" to httpError?.code(),
+            "response_message" to responseMessage,
+            "error_type" to error.javaClass.simpleName,
+        )
+    }
+
     private fun logResponse(operation: String, statusCode: Int, successful: Boolean) {
         logger.info(
             "${operation}_response_received",
@@ -265,4 +330,5 @@ class RemoteArgosApiRepository(
             "successful" to successful,
         )
     }
+
 }

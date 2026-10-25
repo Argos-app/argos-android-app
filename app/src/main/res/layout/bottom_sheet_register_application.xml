@@ -52,9 +52,12 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="14dp"
-            android:paddingEnd="12dp">
+            android:paddingEnd="12dp"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
+                android:id="@+id/applicationLotValue"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -63,12 +66,41 @@
                 android:textColor="@color/argos_placeholder"
                 android:textSize="12sp" />
 
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                android:src="@drawable/application_dropdown_icon" />
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/applicationLotLoadingIndicator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/applications_register_options_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="20dp"
+                    app:trackThickness="2dp" />
+
+                <ImageView
+                    android:id="@+id/applicationLotErrorIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/error_icon"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/applicationLotDropdownIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/application_dropdown_icon"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
 
         <TextView
@@ -91,9 +123,12 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="14dp"
-            android:paddingEnd="12dp">
+            android:paddingEnd="12dp"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
+                android:id="@+id/applicationMedicineValue"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -102,12 +137,41 @@
                 android:textColor="@color/argos_placeholder"
                 android:textSize="12sp" />
 
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                android:src="@drawable/application_dropdown_icon" />
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/applicationMedicineLoadingIndicator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/applications_register_options_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="20dp"
+                    app:trackThickness="2dp" />
+
+                <ImageView
+                    android:id="@+id/applicationMedicineErrorIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/error_icon"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/applicationMedicineDropdownIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/application_dropdown_icon"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -159,8 +223,7 @@
                         android:fontFamily="@font/dm_sans"
                         android:text="@string/applications_register_date_hint"
                         android:textColor="#FF000000"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -225,25 +288,41 @@
             android:paddingHorizontal="14dp"
             android:textColor="#FF000000"
             android:textColorHint="@color/argos_placeholder"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textSize="12sp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/applicationRegisterButton"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginHorizontal="42dp"
-            android:layout_marginTop="12dp"
-            android:fontFamily="@font/dm_sans"
-            android:text="@string/applications_register_submit"
-            android:textAllCaps="false"
-            android:textColor="@color/argos_background"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            app:backgroundTint="@color/argos_green"
-            app:cornerRadius="28dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp" />
+            android:layout_marginTop="12dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/applicationRegisterButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/dm_sans"
+                android:text="@string/applications_register_submit"
+                android:textAllCaps="false"
+                android:textColor="@color/argos_background"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                app:backgroundTint="@color/argos_green"
+                app:cornerRadius="28dp" />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/applicationRegisterLoadingIndicator"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/applications_register_submitting"
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorColor="@color/argos_green"
+                app:indicatorSize="20dp"
+                app:trackThickness="2dp" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/applicationLaterButton"
