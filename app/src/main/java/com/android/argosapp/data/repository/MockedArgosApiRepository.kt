@@ -2,6 +2,11 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.StockCategory
+import com.android.argosapp.model.StockPage
+import com.android.argosapp.model.StockProduct
+import com.android.argosapp.model.MedicationStockRegistration
+import com.android.argosapp.model.MedicationStockItem
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
@@ -18,12 +23,88 @@ class MockedArgosApiRepository(
 ) : ArgosApiRepository {
     private val logger = RepositoryAppLogger("MockedArgosApiRepository")
     private var isFirstAccess = firstAccess
+    override val isMedicationStockImplemented = true
+    private val stockItems = mutableListOf<StockRecord>().apply {
+        repeat(60) { index ->
+            val category = if (index % 3 == 0) StockCategory.VACCINE else StockCategory.MEDICATION
+            val name = if (category == StockCategory.VACCINE) {
+                "Vacina contra clostridioses"
+            } else {
+                "Cálcio intravenoso (hipocalcemia)"
+            }
+            add(
+                StockRecord(
+                    item = MedicationStockItem(
+                        id = "mock-stock-$index",
+                        medicationName = name,
+                        expirationDate = LocalDate.of(2028, 6, 23).plusDays(index.toLong()),
+                        quantity = (30 + index).toString(),
+                        category = category,
+                    ),
+                    searchText = name,
+                ),
+            )
+        }
+    }
+    private val products = listOf(
+        StockProduct("mock-product-1", "Cálcio intravenoso (hipocalcemia)", "12345"),
+        StockProduct("mock-product-2", "Vacina contra clostridioses", "23456"),
+        StockProduct("mock-product-3", "Vermífugo bovino", "34567"),
+    )
 
     init {
         logger.info(
             "repository_initialized",
             "not_found_enabled" to notFound,
             "first_access_enabled" to firstAccess,
+        )
+    }
+
+    override suspend fun getMedicationStockPage(
+        query: String,
+        category: StockCategory?,
+        cursor: String?,
+        pageSize: Int,
+    ): StockPage {
+        delay(250)
+        val filtered = stockItems.filter { record ->
+            (category == null || record.item.category == category) &&
+                (query.isBlank() || record.searchText.contains(query.trim(), ignoreCase = true))
+        }
+        val start = cursor?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val end = (start + pageSize.coerceAtLeast(1)).coerceAtMost(filtered.size)
+        return StockPage(
+            items = filtered.subList(start.coerceAtMost(filtered.size), end).map { it.item },
+            nextCursor = end.takeIf { it < filtered.size }?.toString(),
+        )
+    }
+
+    override suspend fun getMedicationProducts(): List<StockProduct> {
+        delay(150)
+        return products
+    }
+
+    override suspend fun registerMedicationStock(registration: MedicationStockRegistration) {
+        delay(200)
+        val product = products.firstOrNull { it.registrationCode == registration.productRegistration }
+            ?: throw NoSuchElementException("Produto não encontrado no catálogo mock.")
+        val category = registration.category ?: if (product.name.contains("vacina", ignoreCase = true)) {
+            StockCategory.VACCINE
+        } else {
+            StockCategory.MEDICATION
+        }
+        stockItems.add(
+            0,
+            StockRecord(
+                item = MedicationStockItem(
+                    id = "mock-stock-${System.nanoTime()}",
+                    medicationName = product.name,
+                    expirationDate = registration.expiryDate,
+                    quantity = registration.quantity.stripTrailingZeros().toPlainString(),
+                    category = category,
+                ),
+                searchText = product.name,
+            ),
         )
     }
 
@@ -104,5 +185,10 @@ class MockedArgosApiRepository(
                     .any { date -> date in windowStart..windowEnd }
             }
         }
+
+    private data class StockRecord(
+        val item: MedicationStockItem,
+        val searchText: String,
+    )
 
 }

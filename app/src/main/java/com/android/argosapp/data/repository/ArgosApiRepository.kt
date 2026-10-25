@@ -2,12 +2,30 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.StockCategory
+import com.android.argosapp.model.StockPage
+import com.android.argosapp.model.StockProduct
+import com.android.argosapp.model.MedicationStockRegistration
 import java.time.LocalDate
 
 /**
  * Contrato compartilhado pelas implementações real e local da API Argos.
  */
 interface ArgosApiRepository {
+    /** Mantém o estoque no estado de integração pendente até implementar suas operações. */
+    val isMedicationStockImplemented: Boolean
+
+    suspend fun getMedicationStockPage(
+        query: String,
+        category: StockCategory?,
+        cursor: String?,
+        pageSize: Int,
+    ): StockPage
+
+    suspend fun getMedicationProducts(): List<StockProduct>
+
+    suspend fun registerMedicationStock(registration: MedicationStockRegistration)
+
     suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse
 
     suspend fun updateUserAccessStatus(bearerToken: String)
