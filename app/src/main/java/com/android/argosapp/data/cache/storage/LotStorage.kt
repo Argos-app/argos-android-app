@@ -6,8 +6,8 @@ import com.android.argosapp.data.cache.db.ArgosCacheDatabase
 import com.android.argosapp.data.cache.entity.LotAnimalExceptionEntity
 import com.android.argosapp.data.cache.entity.LotCacheMetadata
 import com.android.argosapp.data.cache.entity.LotEntity
-import com.android.argosapp.dto.LotAnimalExceptionDto
-import com.android.argosapp.dto.LotDto
+import com.android.argosapp.data.dto.LotAnimalExceptionDto
+import com.android.argosapp.data.dto.LotDto
 
 class LotStorage(context: Context) {
     private val dao: LotDao = ArgosCacheDatabase.getInstance(context).lotDao()

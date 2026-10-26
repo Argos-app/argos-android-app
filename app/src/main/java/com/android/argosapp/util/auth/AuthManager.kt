@@ -9,12 +9,13 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
-import com.android.argosapp.dto.ArgosApiAuthResponse
-import com.android.argosapp.dto.UpdateCurrentUserDto
+import com.android.argosapp.data.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.AppLogger
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -31,6 +32,7 @@ class AuthManager(
     private val userStorage: UserStorage,
     private val monthApplicationsStorage: MonthApplicationsStorage,
     private val applicationsStorage: ApplicationsStorage,
+    private val animalExceptionStorage: AnimalExceptionStorage,
 ) {
     init {
         AppLogger.info(
@@ -112,6 +114,7 @@ class AuthManager(
 
                 monthApplicationsStorage.clear()
                 applicationsStorage.clear()
+                animalExceptionStorage.clear()
 
                 userStorage.saveUser(user)
                 tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
@@ -223,6 +226,7 @@ class AuthManager(
             userStorage.clearUser()
             monthApplicationsStorage.clear()
             applicationsStorage.clear()
+            animalExceptionStorage.clear()
         }
 
     fun signOut() {

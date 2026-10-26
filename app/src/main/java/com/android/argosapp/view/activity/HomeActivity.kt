@@ -20,6 +20,7 @@ import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ApplicationsManagementFragment
 import com.android.argosapp.view.fragment.ExceptionsManagementFragment
+import com.android.argosapp.view.fragment.LotsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
@@ -179,13 +180,25 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showLotsManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = LotsManagementFragment(),
+            tag = LotsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     private fun updateNavigationBarVisibility() {
         val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
             currentFragment is ProfileEditFragment ||
             currentFragment is MapLocationPickerFragment ||
             currentFragment is ApplicationsManagementFragment ||
-            currentFragment is ExceptionsManagementFragment
+            currentFragment is ExceptionsManagementFragment ||
+            currentFragment is LotsManagementFragment
         setNavigationBarVisible(!showingOverlay)
     }
 

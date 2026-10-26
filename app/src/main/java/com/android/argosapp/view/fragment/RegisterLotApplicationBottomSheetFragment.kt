@@ -16,7 +16,7 @@ import android.graphics.drawable.GradientDrawable
 import android.widget.PopupWindow
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
-import com.android.argosapp.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.R
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.util.validation.ApplicationFormValidator

@@ -1,7 +1,7 @@
 package com.android.argosapp.viewmodel
 
-import com.android.argosapp.exception.auth.AuthErrorCode
-import com.android.argosapp.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorMapper
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.util.validation.PasswordPatternValidator

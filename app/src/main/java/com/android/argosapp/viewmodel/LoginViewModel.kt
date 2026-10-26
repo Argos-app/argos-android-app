@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.credentials.exceptions.GetCredentialCancellationException
-import com.android.argosapp.exception.auth.AuthErrorCode
-import com.android.argosapp.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorMapper
 import com.android.argosapp.util.auth.AuthManager
 import kotlinx.coroutines.launch
 

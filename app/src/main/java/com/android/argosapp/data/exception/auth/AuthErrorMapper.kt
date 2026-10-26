@@ -1,4 +1,4 @@
-package com.android.argosapp.exception.auth
+package com.android.argosapp.data.exception.auth
 
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.firebase.auth.FirebaseAuthException

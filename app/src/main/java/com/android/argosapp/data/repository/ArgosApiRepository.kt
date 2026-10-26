@@ -1,12 +1,13 @@
 package com.android.argosapp.data.repository
 
-import com.android.argosapp.dto.ArgosApiAuthResponse
-import com.android.argosapp.dto.UpdateCurrentUserDto
+import com.android.argosapp.data.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
-import com.android.argosapp.dto.RegisterLotApplicationDto
-import com.android.argosapp.dto.LotDto
-import com.android.argosapp.dto.MedicinePageDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.LotDto
+import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import java.time.LocalDate
 
 /**
@@ -33,4 +34,6 @@ interface ArgosApiRepository {
     suspend fun listLots(bearerToken: String): List<LotDto>
 
     suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto
+
+    suspend fun getAnimalExceptionsPage(bearerToken: String, active: Boolean?, page: Int, size: Int): AnimalExceptionPageDto
 }

@@ -8,12 +8,11 @@ import com.android.argosapp.data.cache.CacheDailyRefreshHelper
 import com.android.argosapp.data.cache.storage.LotStorage
 import com.android.argosapp.data.cache.storage.MedicineStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
-import com.android.argosapp.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.cache.storage.UserStorage
-import com.android.argosapp.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicinePageDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.collect
 
 class RegisterLotApplicationBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as ArgosApplication).argosApiRepository

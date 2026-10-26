@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.argosapp.R
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.databinding.FragmentApplicationsManagementBinding
 import com.android.argosapp.model.Application
 import com.android.argosapp.util.validation.ApplicationFormValidator
@@ -245,7 +246,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             val dose = doseField.text.toString().removeSuffix(" ml")
             val applicationDate = LocalDate.parse(dateValue.text.toString(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).toString()
             registrationOptionsViewModel.registerApplication(
-                data = com.android.argosapp.dto.RegisterLotApplicationDto(
+                data = RegisterLotApplicationDto(
                     lotName = lotValue.text.toString(),
                     medicineName = medicineValue.text.toString(),
                     applicationDate = applicationDate,

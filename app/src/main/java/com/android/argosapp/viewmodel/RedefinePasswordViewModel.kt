@@ -3,9 +3,9 @@ package com.android.argosapp.viewmodel
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import com.android.argosapp.exception.auth.AuthErrorCode
-import com.android.argosapp.exception.auth.AuthErrorMapper
-import com.android.argosapp.exception.auth.messageRes
+import com.android.argosapp.data.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.exception.auth.messageRes
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.validation.PasswordPatternValidator
 import androidx.lifecycle.ViewModel

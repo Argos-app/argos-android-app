@@ -1,12 +1,13 @@
 package com.android.argosapp.data.repository
 
-import com.android.argosapp.dto.ArgosApiAuthResponse
-import com.android.argosapp.dto.ListAllApplicationsDto
-import com.android.argosapp.dto.RegisterLotApplicationDto
-import com.android.argosapp.dto.LotDto
-import com.android.argosapp.dto.MedicinePageDto
-import com.android.argosapp.dto.ApplicationWithdrawalDto
-import com.android.argosapp.dto.UpdateCurrentUserDto
+import com.android.argosapp.data.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.ListAllApplicationsDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.LotDto
+import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.AnimalExceptionPageDto
+import com.android.argosapp.data.dto.ApplicationWithdrawalDto
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -36,6 +37,14 @@ private interface ArgosApiService {
         @Query("page") page: Int,
         @Query("size") size: Int,
     ): Response<MedicinePageDto>
+
+    @GET("animal-exceptions")
+    suspend fun listAnimalExceptions(
+        @Header("Authorization") authorization: String,
+        @Query("active") active: Boolean?,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): Response<AnimalExceptionPageDto>
 
     @POST("application")
     suspend fun registerLotApplication(
@@ -162,6 +171,28 @@ class RemoteArgosApiRepository(
         requireNotNull(response.body()) { "Successful medicine page response contained no body." }
     }
 
+    override suspend fun getAnimalExceptionsPage(
+        bearerToken: String,
+        active: Boolean?,
+        page: Int,
+        size: Int,
+    ): AnimalExceptionPageDto = logger.runSuspending(
+        operation = "get_animal_exceptions_page",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "GET",
+            "endpoint" to "animal-exceptions",
+            "active" to active,
+            "page" to page,
+            "size" to size,
+        ),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.listAnimalExceptions("Bearer $bearerToken", active, page, size)
+        logResponse("get_animal_exceptions_page", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()) { "Successful animal exception page response contained no body." }
+    }
     override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse = logger.runSuspending(
         operation = "authenticate",
         startFields = arrayOf(

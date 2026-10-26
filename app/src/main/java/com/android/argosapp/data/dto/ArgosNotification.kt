@@ -1,4 +1,4 @@
-package com.android.argosapp.dto
+package com.android.argosapp.data.dto
 import com.google.firebase.messaging.RemoteMessage
 
 data class ArgosNotification(

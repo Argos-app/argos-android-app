@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
@@ -48,6 +49,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             UserStorage(requireContext()),
             MonthApplicationsStorage(requireContext()),
             ApplicationsStorage(requireContext()),
+            AnimalExceptionStorage(requireContext()),
         )
     }
     private val viewModel: ProfileEditViewModel by viewModels {

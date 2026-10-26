@@ -20,6 +20,9 @@ import com.android.argosapp.data.cache.entity.LotEntity
 import com.android.argosapp.data.cache.entity.LotCacheMetadata
 import com.android.argosapp.data.cache.entity.MedicineCacheMetadata
 import com.android.argosapp.data.cache.entity.LotAnimalExceptionEntity
+import com.android.argosapp.data.cache.dao.AnimalExceptionDao
+import com.android.argosapp.data.cache.entity.AnimalExceptionEntity
+import com.android.argosapp.data.cache.entity.AnimalExceptionCacheMetadata
 
 @Database(
     entities = [
@@ -33,8 +36,10 @@ import com.android.argosapp.data.cache.entity.LotAnimalExceptionEntity
         LotCacheMetadata::class,
         MedicineCacheMetadata::class,
         LotAnimalExceptionEntity::class,
+        AnimalExceptionEntity::class,
+        AnimalExceptionCacheMetadata::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class ArgosCacheDatabase : RoomDatabase() {
@@ -43,6 +48,7 @@ abstract class ArgosCacheDatabase : RoomDatabase() {
     abstract fun applicationsDao(): ApplicationsDao
     abstract fun lotDao(): LotDao
     abstract fun medicineDao(): MedicineDao
+    abstract fun animalExceptionDao(): AnimalExceptionDao
 
     companion object {
         private const val DATABASE_NAME = "argos-cache.db"

@@ -1,6 +1,6 @@
 package com.android.argosapp.data.repository
 
-import com.android.argosapp.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking

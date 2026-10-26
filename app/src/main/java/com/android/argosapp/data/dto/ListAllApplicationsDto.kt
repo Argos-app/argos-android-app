@@ -1,4 +1,4 @@
-package com.android.argosapp.dto
+package com.android.argosapp.data.dto
 
 import com.android.argosapp.model.Application
 import java.math.BigDecimal

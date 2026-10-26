@@ -113,12 +113,18 @@
     <string name="exceptions_filter_all">Tudo</string>
     <string name="exceptions_filter_fit">Aptos</string>
     <string name="exceptions_filter_unfit">Inaptos</string>
+    <string name="exceptions_loading">Carregando exceções.</string>
+    <string name="exceptions_load_error">Não foi possível carregar as exceções.</string>
+    <string name="exceptions_empty">Nenhuma exceção encontrada.</string>
     <string name="exceptions_add">Adicionar exceção</string>
     <string name="exceptions_ear_tag">Brinco: %1$s</string>
     <string name="exceptions_current_lot">Lote atual: %1$s</string>
     <string name="exceptions_status_fit">Apto</string>
     <string name="exceptions_status_unfit">Inapto</string>
     <string name="exceptions_reason">Motivo: %1$s</string>
+    <string name="exceptions_record_date_label">Registro:</string>
+    <string name="exceptions_slaughter_release_label">Liberação para abate:</string>
+    <string name="exceptions_return_fitness">Aptidão para retorno</string>
     <string name="exceptions_progress_percent">%1$d%%</string>
     <string name="exceptions_create_title">Criar Exceção</string>
     <string name="exceptions_origin_lot">Lote de Origem</string>
@@ -184,4 +190,15 @@
     <string name="applications_register_submitting">Registrando…</string>
     <string name="applications_register_success">Aplicação registrada.</string>
     <string name="applications_register_error">Não foi possível registrar. Tente novamente.</string>
+    <string name="lots_title">Lotes</string>
+    <string name="lots_search_hint">Pesquisar lote</string>
+    <string name="lots_search">Pesquisar lotes</string>
+    <string name="lots_filter_all">Todos</string>
+    <string name="lots_filter_engorda">Engorda</string>
+    <string name="lots_filter_recria">Recria</string>
+    <string name="lots_loading">Carregando lotes.</string>
+    <string name="lots_empty">Nenhum lote encontrado.</string>
+    <string name="lots_load_error">N&#227;o foi poss&#237;vel carregar os lotes.</string>
+    <string name="lots_retry">Tentar novamente</string>
+    <string name="lots_add">Adicionar lote</string>
 </resources>

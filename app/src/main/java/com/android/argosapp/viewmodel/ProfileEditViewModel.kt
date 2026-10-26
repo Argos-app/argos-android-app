@@ -2,7 +2,7 @@ package com.android.argosapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.argosapp.dto.UpdateCurrentUserDto
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.User
 import com.android.argosapp.util.auth.AuthManager
 import kotlinx.coroutines.CancellationException

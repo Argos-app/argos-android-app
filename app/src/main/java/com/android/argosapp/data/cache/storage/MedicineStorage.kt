@@ -5,8 +5,8 @@ import com.android.argosapp.data.cache.dao.MedicineDao
 import com.android.argosapp.data.cache.db.ArgosCacheDatabase
 import com.android.argosapp.data.cache.entity.MedicineCacheMetadata
 import com.android.argosapp.data.cache.entity.MedicineEntity
-import com.android.argosapp.dto.MedicineDto
-import com.android.argosapp.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicineDto
+import com.android.argosapp.data.dto.MedicinePageDto
 
 class MedicineStorage(context: Context) {
     private val dao: MedicineDao = ArgosCacheDatabase.getInstance(context).medicineDao()

@@ -15,13 +15,14 @@ import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
-import com.android.argosapp.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorCode
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityLoginBinding
-import com.android.argosapp.exception.auth.messageRes
+import com.android.argosapp.data.exception.auth.messageRes
 import com.android.argosapp.viewmodel.LoginViewModel
 
 class LoginActivity : ComponentActivity() {
@@ -34,6 +35,7 @@ class LoginActivity : ComponentActivity() {
             UserStorage(applicationContext),
             MonthApplicationsStorage(applicationContext),
             ApplicationsStorage(applicationContext),
+            AnimalExceptionStorage(applicationContext),
         )
     }
     private val viewModel: LoginViewModel by viewModels {

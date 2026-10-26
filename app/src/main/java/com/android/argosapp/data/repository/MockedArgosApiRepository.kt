@@ -1,11 +1,13 @@
 package com.android.argosapp.data.repository
 
-import com.android.argosapp.dto.ArgosApiAuthResponse
-import com.android.argosapp.dto.UpdateCurrentUserDto
-import com.android.argosapp.dto.RegisterLotApplicationDto
-import com.android.argosapp.dto.LotDto
-import com.android.argosapp.dto.MedicineDto
-import com.android.argosapp.dto.MedicinePageDto
+import com.android.argosapp.data.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
+import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.LotDto
+import com.android.argosapp.data.dto.MedicineDto
+import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.AnimalExceptionDto
+import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -91,6 +93,53 @@ class MockedArgosApiRepository(
         )
     }
 
+    override suspend fun getAnimalExceptionsPage(
+        bearerToken: String,
+        active: Boolean?,
+        page: Int,
+        size: Int,
+    ): AnimalExceptionPageDto {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        require(page >= 0 && size in 1..100) { "Invalid pagination parameters." }
+        val lots = listOf(
+            "Sub Engorda 001", "Engorda 002", "Recria 001", "Maternidade 001",
+            "Engorda 003", "Recria 002", "Sub Engorda 002", "Engorda 004",
+            "Sub Terminacao 001", "Engorda 001", "Recria 003", "Sub Engorda 003",
+            "Terminacao 002", "Engorda 005", "Recria 004", "Terminacao 003",
+            "Sub Terminacao 002", "Engorda 006",
+        )
+        val tags = listOf("075", "102", "118", "124", "131", "145", "163", "177", "098", "105", "119", "128", "137", "149", "158", "166", "181", "194")
+        val records = lots.mapIndexed { index, lot ->
+            val eligible = index < 8
+            AnimalExceptionDto(
+                id = UUID(0L, index.toLong() + 200).toString(),
+                earTag = tags[index],
+                currentLotCode = lot,
+                originLotCode = lot,
+                exceptionDate = "2026-06-04",
+                slaughterReleaseDate = "2026-08-04",
+                exceptionReason = "Animal com suspeita de febre aftosa.",
+                status = "ATIVO",
+                fitForSlaughter = eligible,
+                eligibleToReturn = eligible,
+                returnFitnessPercentage = if (eligible) 100 else 0,
+                eligibilityTag = if (eligible) "APTO" else "INAPTO",
+                latestMedicine = null,
+                latestMedicineWithdrawalEnd = null,
+            )
+        }.filter { active == null || it.status == (if (active) "ATIVO" else "ENCERRADO") }
+        val fromIndex = (page * size).coerceIn(0, records.size)
+        val toIndex = (fromIndex + size).coerceIn(fromIndex, records.size)
+        return AnimalExceptionPageDto(
+            data = records.subList(fromIndex, toIndex),
+            page = page,
+            size = size,
+            totalElements = records.size.toLong(),
+            totalPages = if (records.isEmpty()) 0 else (records.size + size - 1) / size,
+            first = page == 0,
+            last = toIndex >= records.size,
+        )
+    }
     override suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto {
         val fromIndex = (page * size).coerceAtMost(medicines.size)
         val toIndex = (fromIndex + size).coerceAtMost(medicines.size)

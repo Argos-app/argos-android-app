@@ -1,7 +1,7 @@
 package com.android.argosapp.auth.error
 
-import com.android.argosapp.exception.auth.AuthErrorCode
-import com.android.argosapp.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorMapper
 import com.google.firebase.auth.FirebaseAuthException
 import java.io.IOException
 import java.util.concurrent.CancellationException

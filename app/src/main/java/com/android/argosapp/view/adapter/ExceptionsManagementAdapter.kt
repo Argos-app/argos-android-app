@@ -8,6 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.argosapp.R
 import com.android.argosapp.databinding.ItemExceptionBinding
 import com.android.argosapp.model.AnimalExceptionRecord
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class ExceptionsManagementAdapter :
     RecyclerView.Adapter<ExceptionsManagementAdapter.ExceptionViewHolder>() {
@@ -20,11 +23,7 @@ class ExceptionsManagementAdapter :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExceptionViewHolder {
-        val binding = ItemExceptionBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false,
-        )
+        val binding = ItemExceptionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ExceptionViewHolder(binding)
     }
 
@@ -41,38 +40,41 @@ class ExceptionsManagementAdapter :
             val context = binding.root.context
             val statusColor = ContextCompat.getColor(
                 context,
-                if (exception.isFitForReturn) R.color.argos_accent else R.color.argos_notice_important,
+                if (exception.eligibleToReturn) R.color.argos_accent else R.color.argos_notice_important,
             )
             val statusIcon = ContextCompat.getDrawable(
                 context,
-                if (exception.isFitForReturn) R.drawable.positive_icon else R.drawable.negative_icon,
+                if (exception.eligibleToReturn) R.drawable.positive_icon else R.drawable.negative_icon,
             )
-
-            binding.exceptionEarTag.text = context.getString(
-                R.string.exceptions_ear_tag,
-                exception.earTag,
-            )
+            binding.exceptionEarTag.text = context.getString(R.string.exceptions_ear_tag, exception.earTag)
             binding.exceptionLotName.text = context.getString(
                 R.string.exceptions_current_lot,
-                exception.lotName,
+                exception.currentLotCode ?: exception.originLotCode
+                    ?: context.getString(R.string.home_calendar_unknown_value),
             )
             binding.exceptionStatus.text = context.getString(
-                if (exception.isFitForReturn) R.string.exceptions_status_fit else R.string.exceptions_status_unfit,
+                if (exception.eligibleToReturn) R.string.exceptions_status_fit else R.string.exceptions_status_unfit,
             )
             binding.exceptionStatus.setTextColor(statusColor)
             binding.exceptionStatusIcon.setImageDrawable(statusIcon)
             binding.exceptionStatusIcon.imageTintList = ColorStateList.valueOf(statusColor)
             binding.exceptionReason.text = context.getString(
                 R.string.exceptions_reason,
-                exception.reason,
+                exception.exceptionReason ?: context.getString(R.string.home_calendar_unknown_value),
             )
-            binding.exceptionStartDate.text = exception.startDate
-            binding.exceptionEndDate.text = exception.endDate
+            binding.exceptionStartDate.text = exception.exceptionDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
+            binding.exceptionEndDate.text = exception.slaughterReleaseDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
             binding.exceptionReturnProgressLabel.text = context.getString(
                 R.string.exceptions_progress_percent,
-                exception.returnProgress,
+                exception.returnFitnessPercentage,
             )
-            binding.exceptionReturnProgress.progress = exception.returnProgress
+            binding.exceptionReturnProgress.progress = exception.returnFitnessPercentage.coerceIn(0, 100)
         }
+
+        private fun String?.toDisplayDate(fallback: String): String = this?.let { value ->
+            runCatching {
+                LocalDate.parse(value).format(DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale("pt", "BR")))
+            }.getOrDefault(fallback)
+        } ?: fallback
     }
 }

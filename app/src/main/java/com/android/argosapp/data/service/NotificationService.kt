@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.android.argosapp.R
-import com.android.argosapp.dto.ArgosNotification
+import com.android.argosapp.data.dto.ArgosNotification
 import com.android.argosapp.view.activity.HomeActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage

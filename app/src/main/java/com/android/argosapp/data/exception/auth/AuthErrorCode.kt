@@ -1,4 +1,4 @@
-package com.android.argosapp.exception.auth
+package com.android.argosapp.data.exception.auth
 
 enum class AuthErrorCode {
     EMPTY_FIELDS,

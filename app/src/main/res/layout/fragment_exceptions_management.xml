@@ -14,26 +14,27 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="76dp">
+            android:layout_height="84dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/exceptionsBackButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_gravity="center_vertical|start"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="16dp"
                 android:clickable="true"
                 android:contentDescription="@string/navigate_back"
                 android:focusable="true"
+                android:translationY="8dp"
                 app:cardBackgroundColor="@color/argos_icon"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
                 app:rippleColor="@color/argos_calendar_ripple"
                 app:strokeWidth="0dp">
 
                 <ImageView
-                    android:layout_width="13dp"
-                    android:layout_height="20dp"
+                    android:layout_width="14dp"
+                    android:layout_height="21dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/go_back" />
@@ -48,8 +49,9 @@
                 android:gravity="center"
                 android:text="@string/exceptions_title"
                 android:textColor="@color/argos_green"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:translationY="8dp" />
         </FrameLayout>
 
         <com.google.android.material.card.MaterialCardView
@@ -84,7 +86,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_total"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="9sp" />
+                        android:textSize="10sp" />
 
                     <TextView
                         android:id="@+id/exceptionsTotalCount"
@@ -116,7 +118,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_fit"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="9sp" />
+                        android:textSize="10sp" />
 
                     <TextView
                         android:id="@+id/exceptionsFitCount"
@@ -148,7 +150,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_unfit"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="9sp" />
+                        android:textSize="10sp" />
 
                     <TextView
                         android:id="@+id/exceptionsUnfitCount"
@@ -166,16 +168,16 @@
         <FrameLayout
             android:id="@+id/exceptionsFilterContainer"
             android:layout_width="260dp"
-            android:layout_height="38dp"
+            android:layout_height="44dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="12dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:cardBackgroundColor="@color/argos_icon"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="22dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp" />
 
@@ -183,10 +185,10 @@
                 android:id="@+id/exceptionsFilterIndicator"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|start"
+                android:layout_gravity="center"
                 android:importantForAccessibility="no"
                 app:cardBackgroundColor="@color/argos_nav_selected"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="22dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp" />
 
@@ -199,38 +201,75 @@
                     android:id="@+id/exceptionsFilterAll"
                     style="@style/ApplicationsFilterTab"
                     android:text="@string/exceptions_filter_all"
-                    android:textSize="10sp" />
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
 
                 <TextView
                     android:id="@+id/exceptionsFilterFit"
                     style="@style/ApplicationsFilterTab"
                     android:text="@string/exceptions_filter_fit"
-                    android:textSize="10sp" />
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
 
                 <TextView
                     android:id="@+id/exceptionsFilterUnfit"
                     style="@style/ApplicationsFilterTab"
                     android:text="@string/exceptions_filter_unfit"
-                    android:textSize="10sp" />
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
             </LinearLayout>
         </FrameLayout>
 
-        <FrameLayout
+                <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/exceptionsSwipeRefresh"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/exceptionsRecyclerView"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:overScrollMode="never"
-                android:paddingBottom="100dp"
-                android:scrollbars="none"
-                tools:itemCount="2"
-                tools:listitem="@layout/item_exception" />
-        </FrameLayout>
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/exceptionsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="110dp"
+                    android:scrollbars="none"
+                    tools:itemCount="2"
+                    tools:listitem="@layout/item_exception" />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/exceptionsLoadingIndicator"
+                    style="@style/Widget.Material3.CircularProgressIndicator"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/exceptions_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="32dp"
+                    app:trackColor="@color/argos_loading_track"
+                    app:trackCornerRadius="2dp"
+                    app:trackThickness="4dp" />
+
+                <TextView
+                    android:id="@+id/exceptionsStateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dm_sans"
+                    android:gravity="center"
+                    android:paddingHorizontal="24dp"
+                    android:textColor="@color/argos_text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Nenhuma exceção encontrada." />
+            </FrameLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
@@ -238,8 +277,8 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="14dp"
-        android:layout_marginBottom="42dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="48dp"
         android:clickable="true"
         android:contentDescription="@string/exceptions_add"
         android:focusable="true"
