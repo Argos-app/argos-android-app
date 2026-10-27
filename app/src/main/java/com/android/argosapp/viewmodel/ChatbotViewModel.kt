@@ -16,6 +16,8 @@ import com.android.argosapp.model.ChatMessageKind
 import com.android.argosapp.model.ChatResponseState
 import com.android.argosapp.model.ChatSender
 import com.android.argosapp.model.ChatSession
+import com.android.argosapp.model.latestUnansweredPrompt
+import com.android.argosapp.model.restoreAfterFailedAnswer
 import com.android.argosapp.util.session.ChatbotOnboardingStorage
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CancellationException
@@ -42,6 +44,7 @@ data class ChatbotUiState(
     val composerHint: String = "Peça ao Tobby",
     val isSending: Boolean = false,
     val errorMessage: String? = null,
+    val answerDraftToRestore: String? = null,
     val messagesCursor: String? = null,
     val hasEarlierMessages: Boolean = false,
 )
@@ -222,17 +225,18 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun consumeAnswerDraft() {
+        mutableState.value = mutableState.value.copy(answerDraftToRestore = null)
+    }
+
     fun sendText(text: String) {
         val trimmed = text.trim()
         if (trimmed.isBlank()) return
-        val current = mutableState.value
-        val prompt = current.messages.lastOrNull()?.takeIf { it.sender == ChatSender.ASSISTANT }
+        val prompt = mutableState.value.messages.latestUnansweredPrompt()
         when (prompt?.inputType) {
-            "single_choice" -> mutableState.value = current.copy(errorMessage = "Escolha uma das opções exibidas.")
-            "confirmation" -> mutableState.value = current.copy(errorMessage = "Use os botões para confirmar ou cancelar.")
             "free_text" -> {
                 if (prompt.isExpired()) {
-                    mutableState.value = current.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
+                    mutableState.value = mutableState.value.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
                 } else {
                     send(trimmed, prompt) {
                         AiInteractionInputDto(
@@ -244,6 +248,12 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
             }
+            "single_choice" -> mutableState.value = mutableState.value.copy(
+                errorMessage = "Escolha uma das opções exibidas.",
+            )
+            "confirmation" -> mutableState.value = mutableState.value.copy(
+                errorMessage = "Use os botões para confirmar ou cancelar.",
+            )
             else -> send(trimmed, null) {
                 AiInteractionInputDto(
                     kind = "message",
@@ -254,22 +264,25 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun selectOption(option: String) {
+    fun selectOption(option: String, optionId: String) {
         val current = mutableState.value
-        val prompt = current.messages.lastOrNull()?.takeIf {
-            it.sender == ChatSender.ASSISTANT && it.inputType == "single_choice"
-        } ?: return
+        val prompt = current.messages.latestUnansweredPrompt(includeExpired = true)
+            ?.takeIf { it.inputType == "single_choice" }
+            ?: return
         if (current.isSending) return
         if (prompt.isExpired()) {
             mutableState.value = current.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
             return
         }
-        val index = prompt.options.indexOf(option)
-        val optionId = prompt.optionIds.getOrNull(index)
-        if (optionId.isNullOrBlank()) {
+        if (optionId.isBlank() || optionId !in prompt.optionIds) {
             mutableState.value = current.copy(errorMessage = "Não foi possível identificar essa opção. Reabra a conversa.")
             return
         }
+        mutableState.value = current.copy(
+            messages = current.messages.map { message ->
+                if (message.id == prompt.id) message.copy(selectedOptionId = optionId) else message
+            },
+        )
         send(option, prompt) {
             AiInteractionInputDto(
                 kind = "answer",
@@ -282,15 +295,15 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
 
     fun confirmSend(confirmed: Boolean) {
         val current = mutableState.value
-        val prompt = current.messages.lastOrNull()?.takeIf {
-            it.sender == ChatSender.ASSISTANT && it.inputType == "confirmation"
-        } ?: return
+        val prompt = current.messages.latestUnansweredPrompt(includeExpired = true)
+            ?.takeIf { it.inputType == "confirmation" }
+            ?: return
         if (current.isSending) return
         if (prompt.isExpired()) {
             mutableState.value = current.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
             return
         }
-        send(if (confirmed) "Confirmar envio" else "Não enviar", prompt) {
+        send(if (confirmed) "Confirmar" else "Cancelar", prompt) {
             AiInteractionInputDto(
                 kind = "answer",
                 interactionId = prompt.requireInteractionId(),
@@ -310,6 +323,8 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         requestInFlight = true
         mutableState.value = mutableState.value.copy(isSending = true, errorMessage = null)
         viewModelScope.launch {
+            var pendingAnswerMessageId: String? = null
+            var pendingAnswerSessionId: String? = null
             try {
                 var current = mutableState.value
                 if (current.userKey.isBlank() || current.onboardingVisible) return@launch
@@ -341,6 +356,10 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                     createdAt = now,
                     apiInteractionId = previousPrompt?.apiInteractionId,
                 )
+                if (previousPrompt != null) {
+                    pendingAnswerMessageId = userMessage.id
+                    pendingAnswerSessionId = activeSessionId
+                }
                 current = current.copy(
                     page = ChatbotPage.CONVERSATION,
                     messages = current.messages + userMessage,
@@ -368,9 +387,28 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                 throw error
             } catch (error: Exception) {
                 if (generation != accountGeneration) return@launch
-                mutableState.value = mutableState.value.copy(
+                val current = mutableState.value
+                val answerId = pendingAnswerMessageId
+                val restoreQuestion = previousPrompt != null && answerId != null &&
+                    current.currentSessionId == pendingAnswerSessionId
+                mutableState.value = current.copy(
                     isSending = false,
-                    errorMessage = error.toUserMessage(),
+                    messages = if (restoreQuestion) {
+                        current.messages.restoreAfterFailedAnswer(answerId!!, previousPrompt!!.id)
+                    } else {
+                        current.messages
+                    },
+                    composerHint = if (restoreQuestion) previousPrompt!!.composerHint() else current.composerHint,
+                    answerDraftToRestore = if (restoreQuestion && previousPrompt!!.inputType == "free_text") {
+                        text
+                    } else {
+                        current.answerDraftToRestore
+                    },
+                    errorMessage = when {
+                        !restoreQuestion -> error.toUserMessage()
+                        previousPrompt!!.isExpired() -> "Esta pergunta expirou. Envie uma nova mensagem."
+                        else -> "${error.toUserMessage()} Tente novamente com a mesma resposta ou reabra a conversa."
+                    },
                 )
             } finally {
                 if (generation == accountGeneration) {

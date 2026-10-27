@@ -27,6 +27,7 @@ import com.android.argosapp.model.ChatMessage
 import com.android.argosapp.model.ChatMessageKind
 import com.android.argosapp.model.ChatResponseState
 import com.android.argosapp.model.ChatSender
+import com.android.argosapp.model.latestUnansweredPrompt
 import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.viewmodel.ChatbotPage
 import com.android.argosapp.viewmodel.ChatbotUiState
@@ -95,6 +96,13 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         binding.chatbotError.isVisible = state.errorMessage != null
         binding.chatbotError.text = state.errorMessage.orEmpty()
         binding.chatbotInput.hint = state.composerHint
+        state.answerDraftToRestore?.let { draft ->
+            if (binding.chatbotInput.text.isNullOrEmpty()) {
+                binding.chatbotInput.setText(draft)
+                binding.chatbotInput.setSelection(draft.length)
+            }
+            viewModel.consumeAnswerDraft()
+        }
         binding.chatbotInput.isEnabled = !state.isSending && !state.isLoading
         binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading
         binding.chatbotSend.alpha = if (state.isSending || state.isLoading) 0.45f else 1f
@@ -120,11 +128,14 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             state.page == ChatbotPage.CONVERSATION -> renderConversation(state)
             else -> renderNewSession()
         }
+        val lastMessage = state.messages.lastOrNull()
+        val questionExpired = lastMessage?.questionExpiresAt?.let { it <= System.currentTimeMillis() } == true
         binding.chatbotHelper.text = when (state.page) {
             ChatbotPage.HISTORY -> getString(R.string.chatbot_history_helper)
-            ChatbotPage.CONVERSATION -> when (state.messages.lastOrNull()?.kind) {
-                ChatMessageKind.SINGLE_CHOICE -> getString(R.string.chatbot_choice_helper)
-                ChatMessageKind.CONFIRMATION -> getString(R.string.chatbot_confirmation_helper)
+            ChatbotPage.CONVERSATION -> when {
+                questionExpired -> getString(R.string.chatbot_question_expired)
+                lastMessage?.kind == ChatMessageKind.SINGLE_CHOICE -> getString(R.string.chatbot_choice_helper)
+                lastMessage?.kind == ChatMessageKind.CONFIRMATION -> getString(R.string.chatbot_confirmation_helper)
                 else -> getString(R.string.chatbot_continue_helper)
             }
             ChatbotPage.NEW_SESSION -> getString(R.string.chatbot_new_session_helper)
@@ -220,9 +231,8 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             setOnClickListener { viewModel.loadEarlierMessages() }
         }.isVisible = state.hasEarlierMessages
 
-        val activePromptId = state.messages.lastOrNull()
-            ?.takeIf { it.sender == ChatSender.ASSISTANT && !state.isSending }
-            ?.takeIf { it.questionExpiresAt == null || it.questionExpiresAt > System.currentTimeMillis() }
+        val activePromptId = state.messages.latestUnansweredPrompt()
+            ?.takeIf { !state.isSending }
             ?.takeIf { it.kind == ChatMessageKind.SINGLE_CHOICE || it.kind == ChatMessageKind.CONFIRMATION }
             ?.id
         state.messages.forEach { message ->
@@ -273,41 +283,61 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(15), dp(16), dp(15))
         }
-        val paragraphs = message.text.split("\n\n")
-        paragraphs.forEachIndexed { index, paragraph ->
-            body.addView(
-                textView(
-                    paragraph,
-                    when {
-                        message.kind == ChatMessageKind.CONFIRMATION && index == 0 -> 11f
-                        message.kind == ChatMessageKind.SINGLE_CHOICE && index == 0 -> 11f
-                        message.kind == ChatMessageKind.FREE_TEXT_PROMPT && index == 0 -> 11f
-                        message.kind in setOf(ChatMessageKind.SINGLE_CHOICE, ChatMessageKind.CONFIRMATION, ChatMessageKind.FREE_TEXT_PROMPT) && index == 1 -> 14f
-                        else -> 14f
+        if (message.kind == ChatMessageKind.CONFIRMATION) {
+            body.addView(textView(getString(R.string.chatbot_confirmation_heading), 11f, color(R.color.argos_text_secondary)))
+            body.addView(textView(message.text, 14f, color(R.color.argos_green), bold = true).apply {
+                setPadding(0, dp(10), 0, 0)
+            })
+            if (interactive) {
+                body.addView(textView(getString(R.string.chatbot_confirmation_description), 13f, color(R.color.argos_green)).apply {
+                    setPadding(0, dp(10), 0, 0)
+                })
+            }
+        } else {
+            val paragraphs = message.text.split("\n\n")
+            paragraphs.forEachIndexed { index, paragraph ->
+                val isPromptHeading = message.kind in setOf(ChatMessageKind.SINGLE_CHOICE, ChatMessageKind.FREE_TEXT_PROMPT) && index == 0
+                body.addView(
+                    textView(
+                        paragraph,
+                        if (isPromptHeading) 11f else 14f,
+                        color(if (isPromptHeading) R.color.argos_text_secondary else R.color.argos_green),
+                        bold = message.kind in setOf(ChatMessageKind.SINGLE_CHOICE, ChatMessageKind.FREE_TEXT_PROMPT) && index == 1,
+                    ).apply {
+                        if (index > 0) setPadding(0, dp(10), 0, 0)
                     },
-                    color(if (message.kind in setOf(ChatMessageKind.CONFIRMATION, ChatMessageKind.SINGLE_CHOICE, ChatMessageKind.FREE_TEXT_PROMPT) && index == 0) R.color.argos_text_secondary else R.color.argos_green),
-                    bold = message.kind in setOf(ChatMessageKind.CONFIRMATION, ChatMessageKind.SINGLE_CHOICE, ChatMessageKind.FREE_TEXT_PROMPT) && index == 1,
-                ).apply {
-                    if (index > 0) setPadding(0, dp(10), 0, 0)
-                },
-            )
+                )
+            }
         }
 
         if (message.kind == ChatMessageKind.SINGLE_CHOICE) {
-            message.options.forEach { option ->
+            message.options.forEachIndexed { optionIndex, option ->
+                val optionId = message.optionIds.getOrNull(optionIndex).orEmpty()
+                val canSelect = interactive && optionId.isNotBlank()
+                val isSelected = optionId.isNotBlank() && optionId == message.selectedOptionId
+                val select = { viewModel.selectOption(option, optionId) }
                 val optionCard = MaterialCardView(requireContext()).apply {
                     radius = dp(16).toFloat()
-                    setCardBackgroundColor(color(R.color.argos_background))
+                    setCardBackgroundColor(color(if (isSelected) R.color.argos_green else R.color.argos_background))
                     cardElevation = 0f
-                    strokeColor = color(R.color.argos_divider)
+                    strokeColor = color(if (isSelected) R.color.argos_green else R.color.argos_divider)
                     strokeWidth = dp(1)
-                    isClickable = interactive
-                    isFocusable = interactive
+                    isClickable = canSelect
+                    isFocusable = canSelect
+                    this.isSelected = isSelected
                     layoutParams = columnParams(top = 10)
-                    if (interactive) setOnClickListener { viewModel.selectOption(option) }
+                    if (canSelect) setOnClickListener { select() }
                 }
-                optionCard.addView(textView(option, 13f, color(R.color.argos_green)).apply {
+                optionCard.addView(textView(
+                    option,
+                    13f,
+                    color(if (isSelected) R.color.argos_background else R.color.argos_green),
+                ).apply {
                     setPadding(dp(12), dp(12), dp(12), dp(12))
+                    if (canSelect) {
+                        isClickable = true
+                        setOnClickListener { select() }
+                    }
                 })
                 body.addView(optionCard)
             }
@@ -319,7 +349,7 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         }
 
         if (message.kind == ChatMessageKind.CONFIRMATION && interactive) {
-            addPromptButton(body, getString(R.string.chatbot_confirmation_title), filled = true) { viewModel.confirmSend(true) }
+            addPromptButton(body, getString(R.string.chatbot_confirmation_confirm), filled = true) { viewModel.confirmSend(true) }
             addPromptButton(body, getString(R.string.chatbot_confirmation_cancel), filled = false) { viewModel.confirmSend(false) }
         }
 

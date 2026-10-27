@@ -47,8 +47,11 @@
     <string name="chatbot_open_conversation">Abrir conversa  →</string>
     <string name="chatbot_empty_history">Você ainda não tem conversas salvas.</string>
     <string name="chatbot_choice_expiration">Responda antes de a pergunta expirar.</string>
-    <string name="chatbot_confirmation_title">Confirmar envio</string>
-    <string name="chatbot_confirmation_cancel">Não enviar</string>
+    <string name="chatbot_question_expired">Esta pergunta expirou. Envie uma nova mensagem para continuar.</string>
+    <string name="chatbot_confirmation_heading">Confirme para continuar</string>
+    <string name="chatbot_confirmation_description">A operação só continua após a sua confirmação.</string>
+    <string name="chatbot_confirmation_confirm">Confirmar</string>
+    <string name="chatbot_confirmation_cancel">Cancelar</string>
     <string name="chatbot_partial_answer">Resposta parcial</string>
     <string name="chatbot_partial_unavailable">Algumas informações não estão disponíveis agora. Você pode continuar a conversa.</string>
     <string name="chatbot_onboarding_title">Oi! Pronto para\nconhecer o chatTobby?</string>

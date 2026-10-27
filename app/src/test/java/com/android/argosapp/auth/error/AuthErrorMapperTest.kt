@@ -2,7 +2,6 @@ package com.android.argosapp.auth.error
 
 import com.android.argosapp.exception.auth.AuthErrorCode
 import com.android.argosapp.exception.auth.AuthErrorMapper
-import com.google.firebase.auth.FirebaseAuthException
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import org.junit.Assert.assertEquals
@@ -20,22 +19,18 @@ class AuthErrorMapperTest {
 
     @Test
     fun mapsInvalidCredentials() {
-        val error = FirebaseAuthException(
-            "ERROR_WRONG_PASSWORD",
-            "wrong password",
+        assertEquals(
+            AuthErrorCode.INVALID_CREDENTIALS,
+            AuthErrorMapper.fromFirebaseCode("ERROR_WRONG_PASSWORD"),
         )
-
-        assertEquals(AuthErrorCode.INVALID_CREDENTIALS, AuthErrorMapper.from(error))
     }
 
     @Test
     fun mapsExpiredPasswordResetCode() {
-        val error = FirebaseAuthException(
-            "ERROR_EXPIRED_ACTION_CODE",
-            "expired code",
+        assertEquals(
+            AuthErrorCode.PASSWORD_RESET_INVALID,
+            AuthErrorMapper.fromFirebaseCode("ERROR_EXPIRED_ACTION_CODE"),
         )
-
-        assertEquals(AuthErrorCode.PASSWORD_RESET_INVALID, AuthErrorMapper.from(error))
     }
 
     @Test

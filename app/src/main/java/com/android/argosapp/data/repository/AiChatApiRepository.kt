@@ -1,8 +1,10 @@
 package com.android.argosapp.data.repository
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -14,6 +16,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.time.Instant
+import java.util.concurrent.TimeoutException
 import java.util.UUID
 
 data class AiSessionDto(
@@ -81,6 +84,17 @@ data class AiSessionMessagesPageDto(
 
 data class AiTokenDto(@SerializedName("access_token") val accessToken: String)
 
+data class AiInteractionAcceptedDto(
+    @SerializedName("operation_id") val operationId: String,
+    @SerializedName("poll_after_ms") val pollAfterMs: Long = 1000,
+)
+
+data class AiInteractionOperationDto(
+    @SerializedName("operation_id") val operationId: String,
+    val status: String,
+    val result: AiInteractionResultDto? = null,
+)
+
 data class AiAnswerInputDto(
     val kind: String,
     val text: String? = null,
@@ -117,12 +131,19 @@ private interface AiChatApi {
         @Query("cursor") cursor: String? = null,
     ): Response<AiSessionMessagesPageDto>
 
-    @POST("v1/sessions/{session_id}/interactions")
-    suspend fun interact(
+    @POST("v1/sessions/{session_id}/interactions/async")
+    suspend fun startInteraction(
         @Header("Authorization") authorization: String,
         @Path("session_id") sessionId: String,
         @Body input: AiInteractionInputDto,
-    ): Response<AiInteractionResultDto>
+    ): Response<AiInteractionAcceptedDto>
+
+    @GET("v1/sessions/{session_id}/interactions/{operation_id}")
+    suspend fun getInteractionOperation(
+        @Header("Authorization") authorization: String,
+        @Path("session_id") sessionId: String,
+        @Path("operation_id") operationId: String,
+    ): Response<AiInteractionOperationDto>
 }
 
 /** Cliente isolado da API de IA; o JWT próprio fica somente em memória. */
@@ -147,8 +168,36 @@ class AiChatApiRepository(
     suspend fun getMessages(sessionId: String, cursor: String? = null): AiSessionMessagesPageDto =
         authorized { api.getMessages(it, sessionId, cursor = cursor).requiredBody() }
 
-    suspend fun interact(sessionId: String, input: AiInteractionInputDto): AiInteractionResultDto =
-        authorized { api.interact(it, sessionId, input).requiredBody() }
+    suspend fun interact(sessionId: String, input: AiInteractionInputDto): AiInteractionResultDto {
+        val accepted = authorized { api.startInteraction(it, sessionId, input).requiredBody() }
+        return withTimeoutOrNull(MAX_INTERACTION_WAIT_MS) {
+            var pollDelayMs = accepted.pollAfterMs.coerceIn(MIN_POLL_DELAY_MS, MAX_POLL_DELAY_MS)
+            while (true) {
+                delay(pollDelayMs)
+                val operation = authorized {
+                    api.getInteractionOperation(it, sessionId, accepted.operationId).requiredBody()
+                }
+                when (operation.status) {
+                    "completed", "degraded" -> return@withTimeoutOrNull requireNotNull(operation.result) {
+                        "A API de IA concluiu a interação sem retornar o resultado."
+                    }
+                    "failed" -> {
+                        operation.result?.let { return@withTimeoutOrNull it }
+                        throw IllegalStateException("Não foi possível concluir a interação com a IA.")
+                    }
+                    "interrupted" -> throw IllegalStateException(
+                        "A interação foi interrompida e precisa ser enviada novamente.",
+                    )
+                    "accepted", "running" -> {
+                        pollDelayMs = (pollDelayMs * 2).coerceAtMost(MAX_POLL_DELAY_MS)
+                    }
+                    else -> throw IllegalStateException("Status desconhecido da interação com a IA.")
+                }
+            }
+            @Suppress("UNREACHABLE_CODE")
+            error("unreachable")
+        } ?: throw TimeoutException("A resposta da IA demorou mais que o limite esperado.")
+    }
 
     suspend fun clearCachedToken() = tokenMutex.withLock {
         cachedUid = null
@@ -218,6 +267,10 @@ class AiChatApiRepository(
     }
 
     companion object {
+        private const val MIN_POLL_DELAY_MS = 250L
+        private const val MAX_POLL_DELAY_MS = 5000L
+        private const val MAX_INTERACTION_WAIT_MS = 6 * 60 * 1000L
+
         fun newClient(firebaseRepository: FirebaseRepository): AiChatApiRepository =
             AiChatApiRepository(firebaseRepository, com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL)
 
@@ -227,8 +280,14 @@ class AiChatApiRepository(
 
 fun AiSessionDto.toEpochMillis(): Long = Instant.parse(createdAt).toEpochMilli()
 
-fun AiSessionMessagesPageDto.toMessages(userKey: String): List<com.android.argosapp.model.ChatMessage> =
-    items.map { item ->
+fun AiSessionMessagesPageDto.toMessages(userKey: String): List<com.android.argosapp.model.ChatMessage> {
+    val optionLabelsByQuestion = items.mapNotNull { item ->
+        val response = item.response?.takeIf { it.kind == "question" } ?: return@mapNotNull null
+        val questionId = response.questionId ?: item.questionId ?: return@mapNotNull null
+        questionId to response.options.orEmpty().associate { it.optionId to it.label }
+    }.toMap()
+
+    return items.map { item ->
         val response = item.response
         val inputType = response?.inputType
         val kind = when (inputType) {
@@ -237,13 +296,28 @@ fun AiSessionMessagesPageDto.toMessages(userKey: String): List<com.android.argos
             "free_text" -> com.android.argosapp.model.ChatMessageKind.FREE_TEXT_PROMPT
             else -> com.android.argosapp.model.ChatMessageKind.TEXT
         }
+        val isUserMessage = item.role == "user"
+        val answer = item.answer
+        val answerText = when {
+            answer?.kind == "text" -> answer.text ?: item.content
+            answer?.kind == "choice" -> answer.optionId
+                ?.let { optionId -> item.questionId?.let(optionLabelsByQuestion::get)?.get(optionId) }
+                ?: "Opção selecionada"
+            answer?.kind == "confirmation" -> when (answer.confirm) {
+                true -> "Confirmar"
+                false -> "Cancelar"
+                null -> item.content
+            }
+            else -> item.content
+        }
+
         com.android.argosapp.model.ChatMessage(
             id = item.messageId,
             sessionId = sessionId,
             userKey = userKey,
             position = item.sequence,
-            sender = if (item.role == "user") com.android.argosapp.model.ChatSender.USER else com.android.argosapp.model.ChatSender.ASSISTANT,
-            text = if (response?.kind == "question") response.prompt ?: item.content else item.content,
+            sender = if (isUserMessage) com.android.argosapp.model.ChatSender.USER else com.android.argosapp.model.ChatSender.ASSISTANT,
+            text = if (isUserMessage) answerText else if (response?.kind == "question") response.prompt ?: item.content else item.content,
             kind = kind,
             options = response?.options.orEmpty().map(AiQuestionOptionDto::label),
             responseState = when (item.status) {
@@ -261,3 +335,4 @@ fun AiSessionMessagesPageDto.toMessages(userKey: String): List<com.android.argos
             questionExpiresAt = response?.expiresAt?.let { Instant.parse(it).toEpochMilli() },
         )
     }
+}
