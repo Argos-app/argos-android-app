@@ -44,6 +44,8 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
     private val binding get() = requireNotNull(_binding)
     private val viewModel: ChatbotViewModel by viewModels()
     private val locale = Locale("pt", "BR")
+    private var pendingScrollAnchorId: String? = null
+    private var pendingScrollAnchorOffset = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -89,6 +91,20 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
     }
 
     private fun render(state: ChatbotUiState) {
+        val loadingEarlierMessages = state.isLoading &&
+            state.page == ChatbotPage.CONVERSATION &&
+            state.currentSessionId != null &&
+            state.messages.isNotEmpty() &&
+            state.hasEarlierMessages
+        if (loadingEarlierMessages && pendingScrollAnchorId == null) {
+            captureVisibleMessageAnchor()
+        }
+        val restoreScrollAnchor = !state.isLoading &&
+            state.page == ChatbotPage.CONVERSATION &&
+            pendingScrollAnchorId != null
+        val anchorId = pendingScrollAnchorId
+        val anchorOffset = pendingScrollAnchorOffset
+
         binding.chatbotOnboarding.isVisible = state.onboardingVisible
         binding.chatbotMain.isVisible = !state.onboardingVisible
         (activity as? HomeActivity)?.setChatbotOnboardingVisible(state.onboardingVisible || state.isLoading)
@@ -141,7 +157,37 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             ChatbotPage.NEW_SESSION -> getString(R.string.chatbot_new_session_helper)
         }
         binding.chatbotContentScroll.post {
-            binding.chatbotContentScroll.fullScroll(View.FOCUS_DOWN)
+            val anchor = if (restoreScrollAnchor) {
+                (0 until binding.chatbotContent.childCount)
+                    .asSequence()
+                    .map(binding.chatbotContent::getChildAt)
+                    .firstOrNull { it.tag == anchorId }
+            } else {
+                null
+            }
+            if (anchor != null) {
+                binding.chatbotContentScroll.scrollTo(0, anchor.top - anchorOffset)
+            } else {
+                binding.chatbotContentScroll.fullScroll(View.FOCUS_DOWN)
+            }
+            if (restoreScrollAnchor || (!state.isLoading && state.page != ChatbotPage.CONVERSATION)) {
+                pendingScrollAnchorId = null
+            }
+        }
+    }
+
+    private fun captureVisibleMessageAnchor() {
+        val scrollTop = binding.chatbotContentScroll.scrollY
+        val scrollBottom = scrollTop + binding.chatbotContentScroll.height
+        val firstVisibleMessage = (0 until binding.chatbotContent.childCount)
+            .asSequence()
+            .map(binding.chatbotContent::getChildAt)
+            .firstOrNull { child ->
+                child.tag is String && child.bottom > scrollTop && child.top < scrollBottom
+            }
+        pendingScrollAnchorId = firstVisibleMessage?.tag as? String
+        if (firstVisibleMessage != null) {
+            pendingScrollAnchorOffset = firstVisibleMessage.top - scrollTop
         }
     }
 
@@ -245,6 +291,7 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         val row = LinearLayout(requireContext()).apply {
             gravity = Gravity.END
             layoutParams = columnParams(bottom = 14)
+            tag = message.id
         }
         val bubble = textView(message.text, 13f, color(R.color.argos_background)).apply {
             background = rounded(color(R.color.argos_green), radius = 20f)
@@ -259,6 +306,7 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.BOTTOM
             layoutParams = columnParams(bottom = 14)
+            tag = message.id
         }
         val avatar = FrameLayout(requireContext()).apply {
             background = rounded(color(R.color.argos_divider), radius = 18f)
