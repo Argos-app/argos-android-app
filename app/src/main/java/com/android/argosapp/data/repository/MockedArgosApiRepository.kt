@@ -3,6 +3,7 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.data.dto.ArgosApiAuthResponse
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.data.dto.MedicinePageDto
@@ -31,6 +32,7 @@ class MockedArgosApiRepository(
     private var isFirstAccess = firstAccess
     // shortcut: mock registrations last only for this session; persist them when testing app restarts.
     private val registeredApplications = mutableListOf<Application>()
+    private val registeredLots = mutableListOf<RegisterLotDto>()
 
     override suspend fun registerLotApplication(
         bearerToken: String,
@@ -67,7 +69,27 @@ class MockedArgosApiRepository(
         Unit
     }
 
-    override suspend fun listLots(bearerToken: String): List<LotDto> = listOf(
+    override suspend fun registerLot(bearerToken: String, data: RegisterLotDto): Unit = logger.runSuspending("register_lot") {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        require(data.lotName.isNotBlank()) { "Lot name is required." }
+        require(data.herdName.isNotBlank()) { "Herd name is required." }
+        require(data.category.isNotBlank()) { "Lot category is required." }
+        require(data.headCount > 0) { "Head count must be positive." }
+        LocalDate.parse(data.releaseSlaughterDate)
+        delay(600)
+        registeredLots.add(0, data)
+        Unit
+    }
+
+    override suspend fun listLots(bearerToken: String): List<LotDto> = registeredLots.map { lot ->
+        LotDto(
+            lotName = lot.lotName,
+            openDate = LocalDate.now().toString(),
+            releaseSlaughterDate = lot.releaseSlaughterDate,
+            category = lot.category,
+            animalExceptionOutList = emptyList(),
+        )
+    } + listOf(
         LotDto("Lote 100% real", null, null, "ENGORDA", emptyList()),
         LotDto("Lote 101% real", null, null, "RECRIA", emptyList()),
     ) + List(28) { index ->

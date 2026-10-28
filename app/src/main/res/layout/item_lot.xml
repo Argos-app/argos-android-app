@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="14dp"
+    app:cardBackgroundColor="#FFFBFAF9"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#FFE3DCCF"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="18dp">
+
+        <TextView
+            android:id="@+id/lotName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/dm_sans"
+            android:maxLines="1"
+            android:textColor="@color/argos_green"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Engorda 001" />
+
+        <TextView
+            android:id="@+id/lotCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="@font/dm_sans"
+            android:textColor="@color/argos_text_secondary"
+            android:textSize="11sp"
+            tools:text="Categoria: Engorda" />
+
+        <TextView
+            android:id="@+id/lotSlaughterDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/dm_sans"
+            android:textColor="@color/argos_text_secondary"
+            android:textSize="11sp"
+            tools:text="Abate previsto: 26/10/2026" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

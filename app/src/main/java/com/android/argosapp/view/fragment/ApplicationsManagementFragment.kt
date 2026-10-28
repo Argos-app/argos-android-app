@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.widget.EditText
-import android.widget.ArrayAdapter
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
@@ -24,6 +23,7 @@ import com.android.argosapp.model.Application
 import com.android.argosapp.util.validation.ApplicationFormValidator
 import com.android.argosapp.view.adapter.ApplicationsManagementFragmentAdapter
 import com.android.argosapp.util.navigation.FragmentNavHelper
+import com.android.argosapp.view.componentmanager.SelectManager
 import com.android.argosapp.viewmodel.ApplicationsManagementViewModel
 import com.android.argosapp.viewmodel.RegisterLotApplicationBottomSheetViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -35,6 +35,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     private val viewModel: ApplicationsManagementViewModel by viewModels()
     private val registrationOptionsViewModel: RegisterLotApplicationBottomSheetViewModel by viewModels()
     private val applicationFormValidator = ApplicationFormValidator()
+    private val selectManager = SelectManager()
     private var applicationsAdapter: ApplicationsManagementFragmentAdapter? = null
     private var isLoadingApplications = false
     private var hasApplicationLoadFailed = false
@@ -72,6 +73,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     }
 
     override fun onDestroyView() {
+        selectManager.dismiss()
         _binding?.applicationsRecyclerView?.adapter = null
         applicationsAdapter = null
         _binding = null
@@ -386,12 +388,6 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             val dropdownIcon = anchor.findViewById<View>(
                 if (isMedicine) R.id.applicationMedicineDropdownIcon else R.id.applicationLotDropdownIcon,
             )
-            val list = android.widget.ListView(requireContext()).apply {
-                divider = android.graphics.drawable.ColorDrawable(requireContext().getColor(R.color.argos_border))
-                dividerHeight = dp(1)
-                setPadding(0, dp(8), 0, dp(8))
-                clipToPadding = false
-            }
             val footer = android.widget.LinearLayout(requireContext()).apply {
                 orientation = android.widget.LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
@@ -412,22 +408,20 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             }
             footer.addView(spinner)
             footer.addView(footerLabel)
-            if (isMedicine) list.addFooterView(footer, null, false)
-
-            val adapter = object : ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, options.toMutableList()) {
-                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
-                    (super.getView(position, convertView, parent) as TextView).apply {
-                        typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.dm_sans)
-                        textSize = 14f
-                        setTextColor(requireContext().getColor(R.color.argos_text_primary))
-                        setPadding(dp(16), dp(12), dp(16), dp(12))
-                        minHeight = dp(48)
-                    }
-            }
-            list.adapter = adapter
             var loadingPage = false
             var pageLoadFailed = false
-            lateinit var loadNextPage: () -> Unit
+            val dropdown = selectManager.showOptions(
+                anchor = anchor,
+                options = options,
+                dropdownIcon = dropdownIcon,
+                footer = footer.takeIf { isMedicine && medicineHasMore },
+                onSelected = { selected ->
+                    value.error = null
+                    value.text = selected
+                    value.setTextColor(requireContext().getColor(R.color.argos_text_primary))
+                },
+            )
+            val list = dropdown.list
 
             fun updateFooter() {
                 if (!isMedicine || !medicineHasMore) {
@@ -443,8 +437,8 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 }
             }
 
-            loadNextPage = load@{
-                if (!medicineHasMore || loadingPage) return@load
+            fun loadNextPage() {
+                if (!medicineHasMore || loadingPage) return
                 pageLoadFailed = false
                 loadingPage = true
                 updateFooter()
@@ -455,13 +449,9 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                         updateFooter()
                     },
                     onLoaded = { names, hasMore ->
-                        val first = list.firstVisiblePosition
-                        val top = list.getChildAt(0)?.top ?: 0
                         options.addAll(names)
                         medicineHasMore = hasMore
-                        adapter.clear()
-                        adapter.addAll(options)
-                        list.setSelectionFromTop(first, top)
+                        dropdown.appendOptions(names)
                         pageLoadFailed = false
                         updateFooter()
                     },
@@ -481,40 +471,6 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 }
             })
             updateFooter()
-
-            val popup = android.widget.PopupWindow(
-                list,
-                anchor.width,
-                minOf(dp(options.size * 48 + 16 + if (isMedicine && medicineHasMore) 48 else 0), dp(288), resources.displayMetrics.heightPixels / 2),
-                true,
-            ).apply {
-                setBackgroundDrawable(android.graphics.drawable.GradientDrawable().apply {
-                    setColor(android.graphics.Color.WHITE)
-                    cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), requireContext().getColor(R.color.argos_border))
-                })
-                elevation = dp(8).toFloat()
-                isOutsideTouchable = true
-                inputMethodMode = android.widget.PopupWindow.INPUT_METHOD_NOT_NEEDED
-                setOnDismissListener { dropdownIcon.rotation = 0f }
-            }
-            list.setOnItemClickListener { _, _, position, _ ->
-                if (position < adapter.count) {
-                    value.error = null
-                    value.text = adapter.getItem(position).orEmpty()
-                    value.setTextColor(requireContext().getColor(R.color.argos_text_primary))
-                    popup.dismiss()
-                }
-            }
-            val location = IntArray(2)
-            anchor.getLocationInWindow(location)
-            popup.showAtLocation(
-                anchor,
-                android.view.Gravity.TOP or android.view.Gravity.LEFT,
-                location[0],
-                location[1] + anchor.height + dp(6),
-            )
-            dropdownIcon.rotation = 180f
         }
         lotField.setOnClickListener {
             if (lots.isEmpty()) {

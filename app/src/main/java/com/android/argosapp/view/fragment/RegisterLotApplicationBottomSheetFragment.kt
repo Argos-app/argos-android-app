@@ -7,19 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.ArrayAdapter
 import android.widget.LinearLayout
-import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.Toast
-import android.graphics.drawable.GradientDrawable
-import android.widget.PopupWindow
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.R
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.util.validation.ApplicationFormValidator
+import com.android.argosapp.view.componentmanager.SelectManager
 import com.android.argosapp.viewmodel.RegisterLotApplicationBottomSheetViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -29,13 +25,13 @@ import java.time.format.DateTimeFormatter
 class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     private val applicationFormValidator = ApplicationFormValidator()
+    private val selectManager = SelectManager()
     private val optionsViewModel: RegisterLotApplicationBottomSheetViewModel by viewModels()
     private var lots: List<String> = emptyList()
     private var medicines: List<String> = emptyList()
     private var medicineHasMore = false
     private var selectedLot: String? = null
     private var selectedMedicine: String? = null
-    private var optionsPopup: PopupWindow? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
         BottomSheetDialog(requireContext(), theme)
@@ -203,7 +199,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        optionsPopup?.dismiss()
+        selectManager.dismiss()
         super.onDestroyView()
     }
 
@@ -212,19 +208,12 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         items: List<String>,
         onSelected: (String) -> Unit,
     ) {
-        optionsPopup?.dismiss()
         val context = requireContext()
         fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
         val isMedicine = anchor.id == R.id.applicationMedicineField
         val dropdownIcon = anchor.findViewById<View>(
             if (isMedicine) R.id.applicationMedicineDropdownIcon else R.id.applicationLotDropdownIcon,
         )
-        val listView = ListView(context).apply {
-            divider = android.graphics.drawable.ColorDrawable(context.getColor(R.color.argos_border))
-            dividerHeight = dp(1)
-            setPadding(0, dp(8), 0, dp(8))
-            clipToPadding = false
-        }
         val footer = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
@@ -239,28 +228,21 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         }
         val footerLabel = TextView(context).apply {
             textSize = 13f
-            typeface = ResourcesCompat.getFont(context, R.font.dm_sans)
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.dm_sans)
             setTextColor(context.getColor(R.color.argos_green))
             setPadding(dp(12), 0, 0, 0)
         }
         footer.addView(loadingIndicator)
         footer.addView(footerLabel)
-        if (isMedicine) listView.addFooterView(footer, null, false)
-
-        val adapter = object : ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, items.toMutableList()) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
-                (super.getView(position, convertView, parent) as TextView).apply {
-                    typeface = ResourcesCompat.getFont(context, R.font.dm_sans)
-                    textSize = 14f
-                    setTextColor(context.getColor(R.color.argos_text_primary))
-                    setPadding(dp(16), dp(12), dp(16), dp(12))
-                    minHeight = dp(48)
-                }
-        }
-        listView.adapter = adapter
         var loadingPage = false
         var pageLoadFailed = false
-        lateinit var loadNextPage: () -> Unit
+        val dropdown = selectManager.showOptions(
+            anchor = anchor,
+            options = items,
+            dropdownIcon = dropdownIcon,
+            footer = footer.takeIf { isMedicine && medicineHasMore },
+            onSelected = onSelected,
+        )
 
         fun updateFooter() {
             if (!isMedicine || !medicineHasMore) {
@@ -276,8 +258,8 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
             }
         }
 
-        loadNextPage = loadNext@{
-            if (!medicineHasMore || loadingPage) return@loadNext
+        fun loadNextPage() {
+            if (!medicineHasMore || loadingPage) return
             pageLoadFailed = false
             loadingPage = true
             updateFooter()
@@ -288,13 +270,9 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                     updateFooter()
                 },
                 onLoaded = { names, hasMore ->
-                    val firstVisible = listView.firstVisiblePosition
-                    val topOffset = listView.getChildAt(0)?.top ?: 0
                     medicines = medicines + names
                     medicineHasMore = hasMore
-                    adapter.clear()
-                    adapter.addAll(medicines)
-                    listView.setSelectionFromTop(firstVisible, topOffset)
+                    dropdown.appendOptions(names)
                     pageLoadFailed = false
                     updateFooter()
                 },
@@ -305,7 +283,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
             )
         }
         footer.setOnClickListener { loadNextPage() }
-        listView.setOnScrollListener(object : android.widget.AbsListView.OnScrollListener {
+        dropdown.list.setOnScrollListener(object : android.widget.AbsListView.OnScrollListener {
             override fun onScrollStateChanged(view: android.widget.AbsListView?, scrollState: Int) = Unit
 
             override fun onScroll(
@@ -321,38 +299,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 }
             }
         })
-
         updateFooter()
-        val popupHeight = minOf(
-            dp(items.size * 48 + 16 + if (isMedicine && medicineHasMore) 48 else 0),
-            dp(288),
-            resources.displayMetrics.heightPixels / 2,
-        )
-        val popup = PopupWindow(listView, anchor.width, popupHeight, true).apply {
-            setBackgroundDrawable(GradientDrawable().apply {
-                setColor(android.graphics.Color.WHITE)
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), context.getColor(R.color.argos_border))
-            })
-            elevation = dp(8).toFloat()
-            isOutsideTouchable = true
-            inputMethodMode = PopupWindow.INPUT_METHOD_NOT_NEEDED
-            setOnDismissListener {
-                dropdownIcon.rotation = 0f
-                optionsPopup = null
-            }
-        }
-        listView.setOnItemClickListener { _, _, position, _ ->
-            if (position < adapter.count) {
-                onSelected(adapter.getItem(position).orEmpty())
-                popup.dismiss()
-            }
-        }
-        optionsPopup = popup
-        val anchorLocation = IntArray(2)
-        anchor.getLocationInWindow(anchorLocation)
-        popup.showAtLocation(anchor, android.view.Gravity.TOP or android.view.Gravity.LEFT, anchorLocation[0], anchorLocation[1] + anchor.height + dp(6))
-        dropdownIcon.rotation = 180f
     }
 
     private fun setOptionFieldLoading(

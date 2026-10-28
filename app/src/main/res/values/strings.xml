@@ -201,4 +201,32 @@
     <string name="lots_load_error">N&#227;o foi poss&#237;vel carregar os lotes.</string>
     <string name="lots_retry">Tentar novamente</string>
     <string name="lots_add">Adicionar lote</string>
+    <string name="lots_create_title">Criar lote</string>
+    <string name="lots_create_name_label">Nome do lote</string>
+    <string name="lots_create_name_hint">Ex: Engorda 001</string>
+    <string name="lots_create_category_label">Categoria</string>
+    <string name="lots_create_category_hint">Selecione uma categoria</string>
+    <string name="lots_create_slaughter_date_label">Data prevista para abate</string>
+    <string name="lots_create_slaughter_date_hint">dd/MM/yyyy</string>
+    <string name="lots_create_submit">Criar lote</string>
+    <string name="lots_create_later">Deixar para depois</string>
+    <string name="lots_create_herd_label">Nome do rebanho</string>
+    <string name="lots_create_herd_hint">Ex: Rebanho apto a abate</string>
+    <string name="lots_create_head_count_label">Quantidade de cabeças</string>
+    <string name="lots_create_head_count_hint">Ex: 200</string>
+    <string name="lots_create_name_error">Informe um nome de lote com até 120 caracteres.</string>
+    <string name="lots_create_herd_error">Informe um nome de rebanho com até 120 caracteres.</string>
+    <string name="lots_create_category_error">Selecione uma categoria.</string>
+    <string name="lots_create_head_count_error">Informe uma quantidade de cabeças maior que zero.</string>
+    <string name="lots_create_slaughter_date_error">Selecione uma data válida.</string>
+    <string name="lots_create_success">Lote criado com sucesso.</string>
+    <string name="lots_create_error">Não foi possível criar o lote. Tente novamente.</string>
+    <string name="lots_create_submitting">Criando lote.</string>
+    <string name="lots_card_category">Categoria: %1$s</string>
+    <string name="lots_card_release_date">Abate previsto: %1$s</string>
+    <string-array name="lots_categories">
+        <item>Engorda</item>
+        <item>Recria</item>
+        <item>Cria</item>
+    </string-array>
 </resources>

@@ -3,6 +3,7 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.data.dto.ArgosApiAuthResponse
 import com.android.argosapp.data.dto.ListAllApplicationsDto
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
@@ -12,6 +13,7 @@ import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import okhttp3.OkHttpClient
+import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.HttpException
 import retrofit2.Response
@@ -46,6 +48,11 @@ private interface ArgosApiService {
         @Query("size") size: Int,
     ): Response<AnimalExceptionPageDto>
 
+    @POST("lot")
+    suspend fun registerLot(
+        @Header("Authorization") authorization: String,
+        @Body data: RegisterLotDto,
+    ): Response<Unit>
     @POST("application")
     suspend fun registerLotApplication(
         @Header("Authorization") authorization: String,
@@ -136,6 +143,24 @@ class RemoteArgosApiRepository(
         if (!response.isSuccessful) throw HttpException(response)
     }
 
+    override suspend fun registerLot(bearerToken: String, data: RegisterLotDto): Unit = logger.runSuspending(
+        operation = "register_lot",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "POST",
+            "endpoint" to "lot",
+            "has_lot_name" to data.lotName.isNotBlank(),
+            "has_herd_name" to data.herdName.isNotBlank(),
+            "category" to data.category,
+            "head_count" to data.headCount,
+            "release_slaughter_date" to data.releaseSlaughterDate,
+        ),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerLot("Bearer $bearerToken", data)
+        logResponse("register_lot", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+    }
     override suspend fun listLots(bearerToken: String): List<LotDto> = logger.runSuspending(
         operation = "list_application_lots",
         startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "lot/list-all"),
@@ -335,17 +360,16 @@ class RemoteArgosApiRepository(
 
     private fun httpFailureFields(error: Throwable): Array<out Pair<String, Any?>> {
         val httpError = error as? HttpException
-        val body = httpError?.response()?.errorBody()?.string()
+        val response = httpError?.response()
+        val body = response?.errorBody()?.string()?.trim()?.takeIf(String::isNotEmpty)
         val responseMessage = body?.let { responseBody ->
-            runCatching {
-                val json = JSONObject(responseBody)
-                listOf("message", "error", "detail", "title")
-                    .firstNotNullOfOrNull { key -> json.optString(key).takeIf { it.isNotBlank() && it != "null" } }
-            }.getOrNull() ?: responseBody.takeIf {
-                it.isNotBlank() && !it.trimStart().let { body -> body.startsWith("{") || body.startsWith("[") }
-            }
-        }?.replace(Regex("[\\r\\n\\t]+"), " ")
-            ?.take(500)
+            val parsedMessage = runCatching {
+                extractApiErrorMessage(JSONObject(responseBody))
+            }.getOrNull() ?: runCatching {
+                extractApiErrorMessage(JSONArray(responseBody))
+            }.getOrNull()
+            (parsedMessage ?: responseBody).replace(Regex("[\\r\\n\\t]+"), " ").take(500)
+        } ?: response?.message()?.takeIf(String::isNotBlank)
 
         return arrayOf(
             "http_status" to httpError?.code(),
@@ -354,6 +378,24 @@ class RemoteArgosApiRepository(
         )
     }
 
+    private fun extractApiErrorMessage(value: Any?): String? {
+        if (value is JSONObject) {
+            val keys = value.keys().asSequence().toList()
+            val messageKeys = listOf("message", "error_description", "error", "detail", "title", "description", "msg")
+            for (messageKey in messageKeys) {
+                val actualKey = keys.firstOrNull { it.equals(messageKey, ignoreCase = true) } ?: continue
+                val message = value.opt(actualKey)
+                if (message is String && message.isNotBlank()) return message
+                extractApiErrorMessage(message)?.let { return it }
+            }
+            keys.forEach { key -> extractApiErrorMessage(value.opt(key))?.let { return it } }
+        } else if (value is JSONArray) {
+            for (index in 0 until value.length()) {
+                extractApiErrorMessage(value.opt(index))?.let { return it }
+            }
+        }
+        return null
+    }
     private fun logResponse(operation: String, statusCode: Int, successful: Boolean) {
         logger.info(
             "${operation}_response_received",

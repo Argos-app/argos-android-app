@@ -5,6 +5,7 @@ import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
@@ -30,6 +31,8 @@ interface ArgosApiRepository {
         daysBefore: Int = referenceDate.dayOfMonth - 1,
         daysAfter: Int = referenceDate.lengthOfMonth() - referenceDate.dayOfMonth,
     ): List<ApplicationWithdrawal>
+
+    suspend fun registerLot(bearerToken: String, data: RegisterLotDto)
 
     suspend fun listLots(bearerToken: String): List<LotDto>
 
