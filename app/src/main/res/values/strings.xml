@@ -20,12 +20,12 @@
     <string name="onboarding_title_features">Principais Funções</string>
     <string name="onboarding_description_features">Posso ajudar você a acompanhar o desempenho do rebanho, consultar informações importantes e encontrar rapidamente o que precisa.</string>
     <string name="onboarding_title_ready">Tudo pronto para começar!</string>
-    <string name="onboarding_description_ready">Que tal cadastrar seu primeiro lote? Assim, posso auxiliar você a organizar os dados do rebanho, da planta e aproveitar todos os recursos do Argos.</string>
+    <string name="onboarding_description_ready">Explore o Argos para acompanhar as informações do rebanho e conhecer os recursos disponíveis para a sua operação.</string>
     <string name="onboarding_art_welcome">Tobby acena dando as boas-vindas</string>
     <string name="onboarding_art_features">Tobby pisca e se apoia em um caixote</string>
     <string name="onboarding_art_ready">Tobby está pronto para começar</string>
     <string name="onboarding_next">Avançar</string>
-    <string name="onboarding_register_lot">Cadastrar Lote</string>
+    <string name="onboarding_complete">Concluir</string>
     <string name="onboarding_later">Deixar para depois</string>
     <string name="onboarding_step_selected">Etapa %1$d, atual</string>
     <string name="onboarding_step_unselected">Ir para etapa %1$d</string>

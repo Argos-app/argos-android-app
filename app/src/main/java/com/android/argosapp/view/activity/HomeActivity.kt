@@ -172,7 +172,7 @@ class HomeActivity : FragmentActivity() {
             binding.onboardingOverlayContainer.visibility = View.VISIBLE
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                add(R.id.onboardingOverlayContainer, OnboardingFragment(), ONBOARDING_OVERLAY_TAG)
+                add(R.id.onboardingOverlayContainer, OnboardingFragment.newInstance(email), ONBOARDING_OVERLAY_TAG)
             }
         }
     }
