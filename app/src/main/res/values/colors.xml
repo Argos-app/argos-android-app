@@ -9,6 +9,7 @@
     <color name="argos_background">#FFF4F1EB</color>
     <color name="argos_border">#FFD2D2D2</color>
     <color name="argos_divider">#FFCFC6B5</color>
+    <color name="argos_onboarding_decoration">#3862BB4D</color>
     <color name="argos_placeholder">#FF7A7A7A</color>
     <color name="argos_muted">#FF747474</color>
     <color name="argos_loading_track">#FF8AAFA1</color>

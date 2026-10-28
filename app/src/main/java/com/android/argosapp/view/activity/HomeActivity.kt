@@ -5,14 +5,22 @@ import android.view.View
 import android.view.animation.PathInterpolator
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import com.android.argosapp.R
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.databinding.ActivityHomeBinding
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.util.session.OnboardingOverlayPolicy
+import com.android.argosapp.util.session.OnboardingProgressStorage
 import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
+import com.android.argosapp.view.fragment.OnboardingFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
@@ -57,6 +65,7 @@ class HomeActivity : FragmentActivity() {
 
         }
         updateNavigationBarVisibility()
+        showOnboardingIfPending()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -126,6 +135,48 @@ class HomeActivity : FragmentActivity() {
         showDestination(Destination.HOME, animateIndicator = true)
     }
 
+    fun closeOnboardingOverlay(fragment: OnboardingFragment) {
+        binding.onboardingOverlayContainer.visibility = View.GONE
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .remove(fragment)
+            .commit()
+    }
+
+    private fun showOnboardingIfPending() {
+        lifecycleScope.launch {
+            val email = try {
+                UserStorage(applicationContext).getUser()?.userEmail.orEmpty()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                ""
+            }
+            if (email.isBlank() || isFinishing || isDestroyed || supportFragmentManager.isStateSaved) return@launch
+
+            val existingOverlay = supportFragmentManager.findFragmentByTag(ONBOARDING_OVERLAY_TAG)
+            val isPending = OnboardingProgressStorage(applicationContext).isPending(email)
+            if (existingOverlay != null) {
+                if (isPending) {
+                    binding.onboardingOverlayContainer.visibility = View.VISIBLE
+                } else {
+                    binding.onboardingOverlayContainer.visibility = View.GONE
+                    supportFragmentManager.commit { remove(existingOverlay) }
+                }
+                return@launch
+            }
+            if (!OnboardingOverlayPolicy.shouldAdd(pending = isPending, alreadyAdded = false)) {
+                return@launch
+            }
+
+            binding.onboardingOverlayContainer.visibility = View.VISIBLE
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                add(R.id.onboardingOverlayContainer, OnboardingFragment(), ONBOARDING_OVERLAY_TAG)
+            }
+        }
+    }
+
     private fun updateNavigationBarVisibility() {
         val showingDetails =
             supportFragmentManager.findFragmentById(R.id.homeFragmentContainer) is HomeApplicationDetailsFragment
@@ -190,5 +241,6 @@ class HomeActivity : FragmentActivity() {
 
     private companion object {
         const val STATE_DESTINATION = "home_destination"
+        const val ONBOARDING_OVERLAY_TAG = "first_access_onboarding_overlay"
     }
 }
