@@ -18,6 +18,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val aiBaseUrl = providers.gradleProperty("argosAiBaseUrl")
+            .orElse("http://10.0.2.2:8080/")
+            .get()
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$aiBaseUrl\"")
     }
 
     buildTypes {
@@ -59,6 +66,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     testImplementation(libs.junit)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

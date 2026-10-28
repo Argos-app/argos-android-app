@@ -2,6 +2,9 @@ package com.android.argosapp.data.repository
 
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.ChatReply
+import com.android.argosapp.model.ChatRequest
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
@@ -18,4 +21,6 @@ interface ArgosApiRepository {
         daysBefore: Int = referenceDate.dayOfMonth - 1,
         daysAfter: Int = referenceDate.lengthOfMonth() - referenceDate.dayOfMonth,
     ): List<ApplicationWithdrawal>
+
+    fun sendChatMessage(request: ChatRequest): Flow<ChatReply>
 }

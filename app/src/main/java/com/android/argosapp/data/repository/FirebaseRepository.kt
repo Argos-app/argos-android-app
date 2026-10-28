@@ -10,9 +10,14 @@ import kotlinx.coroutines.tasks.await
 /**
  * Abstrai as operações realizadas diretamente no Firebase Authentication.
  */
+interface FirebaseIdTokenProvider {
+    fun currentFirebaseUid(): String?
+    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String
+}
+
 class FirebaseRepository(
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
-) {
+) : FirebaseIdTokenProvider {
     private val logger = RepositoryAppLogger("FirebaseRepository")
 
     init {
@@ -87,15 +92,17 @@ class FirebaseRepository(
 
     fun signOut(): Unit = logger.runSynchronous("sign_out") { firebaseAuth.signOut() }
 
-    private suspend fun getCurrentIdToken(): String = logger.runSuspending("get_id_token") {
+    override suspend fun getCurrentIdToken(forceRefresh: Boolean): String = logger.runSuspending("get_id_token") {
         val currentUser = requireNotNull(firebaseAuth.currentUser) {
             "O Firebase não possui um usuário autenticado."
         }
 
-        requireNotNull(currentUser.getIdToken(false).await()?.token?.takeIf { it.isNotBlank() }) {
+        requireNotNull(currentUser.getIdToken(forceRefresh).await()?.token?.takeIf { it.isNotBlank() }) {
             "O Firebase não retornou um ID token válido."
         }
     }
+
+    override fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
 
     private companion object {
         const val PASSWORD_RESET_CONTINUE_URL =

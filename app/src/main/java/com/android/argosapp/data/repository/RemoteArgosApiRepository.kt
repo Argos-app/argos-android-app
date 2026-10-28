@@ -3,6 +3,8 @@ package com.android.argosapp.data.repository
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.dto.ApplicationWithdrawalDto
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.ChatReply
+import com.android.argosapp.model.ChatRequest
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import retrofit2.HttpException
@@ -15,6 +17,8 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.PUT
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 private interface ArgosApiService {
     @GET("application/withdrawal-window")
@@ -172,6 +176,10 @@ class RemoteArgosApiRepository(
                 "Successful application withdrawal window response contained no body."
             }.map(ApplicationWithdrawalDto::toModel)
         }
+
+    override fun sendChatMessage(request: ChatRequest): Flow<ChatReply> = flow {
+        throw UnsupportedOperationException("Chat API contract is pending.")
+    }
 
     private fun logResponse(operation: String, statusCode: Int, successful: Boolean) {
         logger.info(

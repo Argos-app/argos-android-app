@@ -12,12 +12,12 @@ object AuthErrorMapper {
         return when (error) {
             is IOException -> AuthErrorCode.NETWORK
             is GetCredentialException -> AuthErrorCode.GOOGLE_CANCELLED
-            is FirebaseAuthException -> mapFirebaseCode(error.errorCode)
+            is FirebaseAuthException -> fromFirebaseCode(error.errorCode)
             else -> AuthErrorCode.UNKNOWN
         }
     }
 
-    private fun mapFirebaseCode(errorCode: String): AuthErrorCode = when (errorCode) {
+    internal fun fromFirebaseCode(errorCode: String): AuthErrorCode = when (errorCode) {
         "ERROR_USER_NOT_FOUND" -> AuthErrorCode.USER_NOT_FOUND
         "ERROR_WRONG_PASSWORD",
         "ERROR_INVALID_CREDENTIAL",
