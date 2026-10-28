@@ -17,6 +17,7 @@ import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
+import com.android.argosapp.util.session.OnboardingProgressStorage
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
 import com.android.argosapp.exception.auth.messageRes
@@ -124,8 +125,18 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
         binding.passwordConfirmationInput.text.toString(),
         ::showLoading,
         { Toast.makeText(this, getString(it.messageRes()), Toast.LENGTH_LONG).show() },
-        { startActivity(Intent(this, HomeActivity::class.java)); finish() },
+        ::navigateToHomeWithOnboardingOverlay,
     )
+
+    private fun navigateToHomeWithOnboardingOverlay() {
+        lifecycleScope.launch {
+            val email = runCatching { UserStorage(applicationContext).getUser()?.userEmail.orEmpty() }
+                .getOrDefault("")
+            if (email.isNotBlank()) OnboardingProgressStorage(applicationContext).markPending(email)
+            startActivity(Intent(this@FirstAccessChangePasswordActivity, HomeActivity::class.java))
+            finish()
+        }
+    }
 
     private fun showLoading(loading: Boolean) {
         binding.loadingOverlay.visibility = if (loading) View.VISIBLE else View.GONE

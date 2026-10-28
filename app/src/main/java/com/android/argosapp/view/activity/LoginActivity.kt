@@ -52,7 +52,10 @@ class LoginActivity : ComponentActivity() {
         binding.googleButton.setOnClickListener {
             viewModel.startGoogleLogin(this, getString(R.string.default_web_client_id), binding.rememberMeCheck.isChecked, ::showLoading, ::showError, ::navigateAfterAuthentication)
         }
-        viewModel.restoreSession(::showLoading) { navigateAfterAuthentication(false) }
+        viewModel.restoreSession(::showLoading) {
+            startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
+            finish()
+        }
     }
 
     private fun togglePasswordVisibility() = with(binding) {
