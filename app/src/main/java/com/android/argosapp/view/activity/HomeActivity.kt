@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
@@ -24,17 +26,20 @@ import com.android.argosapp.view.fragment.LotsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import com.android.argosapp.view.fragment.ProfileNotificationsFragment
 import com.android.argosapp.util.navigation.FragmentNavHelper
+import com.android.argosapp.viewmodel.HomeViewModel
 
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private val viewModel: HomeViewModel by viewModels()
 
     private val fragmentNavHelper by lazy {
         FragmentNavHelper(supportFragmentManager, R.id.homeFragmentContainer)
     }
 
     private val requestNotificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean -> }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     private var currentDestination: Destination? = null
     private lateinit var navBarBlurEffect: NavBarBlurEffect
@@ -84,6 +89,13 @@ class HomeActivity : FragmentActivity() {
         currentDestination?.let { outState.putString(STATE_DESTINATION, it.name) }
         super.onSaveInstanceState(outState)
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            viewModel.registerDevice()
+        }
     }
 
     private fun showDestination(destination: Destination, animateIndicator: Boolean) {
@@ -147,6 +159,18 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showProfileNotifications() {
+        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ProfileNotificationsFragment(),
+            tag = ProfileNotificationsFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     fun showProfileLocationPicker(currentAddress: String) {
         setNavigationBarVisible(false)
         fragmentNavHelper.navigate(
@@ -195,6 +219,7 @@ class HomeActivity : FragmentActivity() {
         val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
             currentFragment is ProfileEditFragment ||
+            currentFragment is ProfileNotificationsFragment ||
             currentFragment is MapLocationPickerFragment ||
             currentFragment is ApplicationsManagementFragment ||
             currentFragment is ExceptionsManagementFragment ||

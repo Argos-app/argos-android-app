@@ -8,6 +8,8 @@ import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.ApplicationWithdrawalDto
+import com.android.argosapp.data.dto.DeviceRegisterDto
+import com.android.argosapp.data.dto.DeviceRegisterResponse
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
@@ -88,6 +90,12 @@ private interface ArgosApiService {
         @Header("Authorization") authorization: String,
         @Body data: UpdateCurrentUserDto,
     ): Response<Unit>
+
+    @POST("devices/sync")
+    suspend fun registerDevice(
+        @Header("Authorization") authorization: String,
+        @Body data: DeviceRegisterDto,
+    ): Response<DeviceRegisterResponse>
 }
 
 /** Implementação Retrofit da comunicação com a API Argos. */
@@ -359,6 +367,19 @@ class RemoteArgosApiRepository(
                 "Successful application withdrawal window response contained no body."
             }.map(ApplicationWithdrawalDto::toModel)
         }
+
+    override suspend fun registerDevice(bearerToken: String, data: DeviceRegisterDto): String = logger.runSuspending(
+        operation = "register_device",
+        startFields = arrayOf("environment" to environment, "method" to "POST", "endpoint" to "devices/sync"),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerDevice("Bearer $bearerToken", data)
+        logResponse("register_device", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()?.deviceId?.takeIf { it.isNotBlank() }) {
+            "Successful device sync response contained no device ID."
+        }
+    }
 
     private fun httpFailureFields(error: Throwable): Array<out Pair<String, Any?>> {
         val httpError = error as? HttpException

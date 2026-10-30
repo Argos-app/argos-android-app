@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import androidx.room3.migration.Migration
+import androidx.sqlite.execSQL
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.android.argosapp.data.cache.entity.CachedMonthEntity
 import com.android.argosapp.data.cache.entity.MonthApplicationEntity
@@ -23,6 +25,10 @@ import com.android.argosapp.data.cache.entity.LotAnimalExceptionEntity
 import com.android.argosapp.data.cache.dao.AnimalExceptionDao
 import com.android.argosapp.data.cache.entity.AnimalExceptionEntity
 import com.android.argosapp.data.cache.entity.AnimalExceptionCacheMetadata
+import com.android.argosapp.data.cache.dao.NotificationDao
+import com.android.argosapp.data.cache.entity.NotificationEntity
+import com.android.argosapp.data.cache.dao.DeviceDao
+import com.android.argosapp.data.cache.entity.DeviceEntity
 
 @Database(
     entities = [
@@ -38,8 +44,10 @@ import com.android.argosapp.data.cache.entity.AnimalExceptionCacheMetadata
         LotAnimalExceptionEntity::class,
         AnimalExceptionEntity::class,
         AnimalExceptionCacheMetadata::class,
+        NotificationEntity::class,
+        DeviceEntity::class,
     ],
-    version = 7,
+    version = 1,
     exportSchema = false,
 )
 abstract class ArgosCacheDatabase : RoomDatabase() {
@@ -49,6 +57,8 @@ abstract class ArgosCacheDatabase : RoomDatabase() {
     abstract fun lotDao(): LotDao
     abstract fun medicineDao(): MedicineDao
     abstract fun animalExceptionDao(): AnimalExceptionDao
+    abstract fun notificationDao(): NotificationDao
+    abstract fun deviceDao(): DeviceDao
 
     companion object {
         private const val DATABASE_NAME = "argos-cache.db"
@@ -62,7 +72,6 @@ abstract class ArgosCacheDatabase : RoomDatabase() {
                 DATABASE_NAME,
             )
                 .setDriver(AndroidSQLiteDriver())
-                .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
                 .also { instance = it }
         }

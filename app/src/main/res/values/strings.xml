@@ -229,4 +229,10 @@
         <item>Recria</item>
         <item>Cria</item>
     </string-array>
+    <string name="profile_notifications_empty">Nenhuma notificação nos últimos 30 dias.</string>
+    <string name="profile_notifications_load_error">Não foi possível carregar as notificações.</string>
+    <string name="profile_notification_untitled">Notificação</string>
+    <string name="profile_notifications_permission_required">Ative as notificações para acessar esta tela.</string>
+    <string name="profile_notifications_settings">Abrir configurações</string>
+    <string name="profile_notifications_later">Talvez depois</string>
 </resources>

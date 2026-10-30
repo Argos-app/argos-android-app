@@ -9,6 +9,7 @@ import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
+import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.RepositoryAppLogger
@@ -33,6 +34,23 @@ class MockedArgosApiRepository(
     // shortcut: mock registrations last only for this session; persist them when testing app restarts.
     private val registeredApplications = mutableListOf<Application>()
     private val registeredLots = mutableListOf<RegisterLotDto>()
+    private val registeredDevices = mutableMapOf<String, String>()
+
+    override suspend fun registerDevice(bearerToken: String, data: DeviceRegisterDto): String {
+        return logger.runSuspending("register_device") {
+            require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+            require(!data.pushToken.isNullOrBlank()) { "Push token is required." }
+            require(!data.platform.isNullOrBlank()) { "Platform is required." }
+
+            val existingDeviceId = registeredDevices.entries
+                .firstOrNull { it.value == data.pushToken }
+                ?.key
+            val deviceId = data.deviceId ?: existingDeviceId ?: UUID.randomUUID().toString()
+
+            registeredDevices[deviceId] = data.pushToken
+            deviceId
+        }
+    }
 
     override suspend fun registerLotApplication(
         bearerToken: String,

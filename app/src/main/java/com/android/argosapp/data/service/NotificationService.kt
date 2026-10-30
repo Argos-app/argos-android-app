@@ -12,14 +12,28 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.android.argosapp.R
 import com.android.argosapp.data.dto.ArgosNotification
+import com.android.argosapp.data.cache.storage.NotificationStorage
+import com.android.argosapp.data.cache.storage.UserStorage
+import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.view.activity.HomeActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class NotificationService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         val argosNotification = ArgosNotification.fromRemoteMessage(message)
+
+        try {
+            runBlocking(Dispatchers.IO) {
+                val user = UserStorage(applicationContext).getUser()
+                if (user != null) NotificationStorage(applicationContext).save(user.userId.toString(), argosNotification)
+            }
+        } catch (error: Exception) {
+            AppLogger.error(AppLogger.REPOSITORY_TAG, "notification_cache_save_failed", error)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(

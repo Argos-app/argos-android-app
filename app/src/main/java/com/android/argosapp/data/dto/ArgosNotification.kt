@@ -9,9 +9,9 @@ data class ArgosNotification(
     companion object {
         fun fromRemoteMessage(message: RemoteMessage): ArgosNotification{
             return ArgosNotification(
-                title = message.notification?.title,
+                title = message.notification?.title ?: message.data["title"],
                 type = message.data["type"].orEmpty(),
-                body = message.notification?.body
+                body = message.notification?.body ?: message.data["body"]
             )
         }
 

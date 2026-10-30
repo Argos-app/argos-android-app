@@ -1,12 +1,16 @@
 package com.android.argosapp.viewmodel
 
 import android.app.Application
-import androidx.activity.result.contract.ActivityResultContracts
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.DeviceStorage
+import com.android.argosapp.data.cache.storage.UserStorage
+import com.android.argosapp.data.dto.DeviceRegisterDto
+import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.util.logging.AppLogger
 import kotlinx.coroutines.CancellationException
@@ -18,7 +22,10 @@ import java.time.temporal.ChronoUnit
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val monthApplicationsStorage = MonthApplicationsStorage(application)
     private val tokenStorage = TokenStorage(application)
+    private val deviceStorage = DeviceStorage(application)
+    private val userStorage = UserStorage(application)
     private val repository = (application as ArgosApplication).argosApiRepository
+    private val firebase = FirebaseRepository()
 
     private var requestedMonth: YearMonth? = null
 
@@ -91,6 +98,33 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             } finally {
                 requestedMonth = null
                 onLoading(false)
+            }
+        }
+
+    }
+
+    fun registerDevice() {
+        viewModelScope.launch {
+            try {
+                val bearerToken = requireNotNull(tokenStorage.getArgosApiToken()?.takeIf { it.isNotBlank() }) {
+                    "Bearer token is unavailable."
+                }
+                val pushToken = firebase.getMessagingToken()
+                val userId = requireNotNull(userStorage.getUser()?.userId) { "User is unavailable." }.toString()
+                val deviceId = repository.registerDevice(
+                    bearerToken = bearerToken,
+                    data = DeviceRegisterDto(
+                        deviceId = deviceStorage.getDeviceId(userId),
+                        pushToken = pushToken,
+                        platform = "ANDROID",
+                        model = Build.MODEL.take(60),
+                    ),
+                )
+                deviceStorage.saveDeviceId(userId, deviceId)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                AppLogger.error(AppLogger.REPOSITORY_TAG, "home_device_registration_failed", error)
             }
         }
     }

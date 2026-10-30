@@ -9,6 +9,7 @@ import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
+import com.android.argosapp.data.dto.DeviceRegisterDto
 import java.time.LocalDate
 
 /**
@@ -39,4 +40,6 @@ interface ArgosApiRepository {
     suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto
 
     suspend fun getAnimalExceptionsPage(bearerToken: String, active: Boolean?, page: Int, size: Int): AnimalExceptionPageDto
+
+    suspend fun registerDevice(bearerToken: String, data: DeviceRegisterDto): String
 }

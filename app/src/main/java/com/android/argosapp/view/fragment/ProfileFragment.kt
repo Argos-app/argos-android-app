@@ -1,11 +1,19 @@
 package com.android.argosapp.view.fragment
 
 import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +29,7 @@ import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.data.repository.CloudinaryPhotoRepository
 import com.android.argosapp.databinding.FragmentProfileBinding
+import com.android.argosapp.databinding.DialogNotificationPermissionBinding
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.io.CameraManager
 import com.android.argosapp.util.logging.AppLogger
@@ -29,6 +38,7 @@ import com.android.argosapp.view.activity.LoginActivity
 import com.android.argosapp.view.activity.PasswordResetActivity
 import com.android.argosapp.viewmodel.ProfileViewModel
 import com.bumptech.glide.Glide
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.io.File
@@ -36,6 +46,16 @@ import java.io.File
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private var _binding: FragmentProfileBinding? = null
     private var pendingSelfieFile: File? = null
+    private val notificationSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        openNotificationsIfAllowed()
+    }
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) openNotificationsIfAllowed() else showNotificationSettings()
+    }
     private val authManager by lazy {
         AuthManager(
             (requireActivity().application as ArgosApplication).argosApiRepository,
@@ -76,6 +96,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         _binding = FragmentProfileBinding.bind(view)
 
         _binding?.profileEditOption?.setOnClickListener(::onEditOptionClicked)
+        _binding?.profileNotificationsOption?.setOnClickListener { openNotifications() }
         _binding?.profilePhotoCameraIcon?.setOnClickListener { openSelfieCamera() }
         _binding?.profileChangePasswordOption?.setOnClickListener {
             startActivity(PasswordResetActivity.createProfileIntent(requireContext()))
@@ -192,6 +213,42 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private fun onEditOptionClicked(view: View) {
         (activity as? HomeActivity)?.showProfileEdit()
+    }
+
+    private fun openNotifications() {
+        if (NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()) {
+            openNotificationsIfAllowed()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            showNotificationSettings()
+        }
+    }
+
+    private fun openNotificationsIfAllowed() {
+        if (context != null && NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()) {
+            (activity as? HomeActivity)?.showProfileNotifications()
+        }
+    }
+
+    private fun showNotificationSettings() {
+        if (!isAdded) return
+        val binding = DialogNotificationPermissionBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setBackground(ColorDrawable(Color.TRANSPARENT))
+            .setView(binding.root)
+            .create()
+        binding.notificationPermissionCancel.setOnClickListener { dialog.dismiss() }
+        binding.notificationPermissionSettings.setOnClickListener {
+            dialog.dismiss()
+            notificationSettingsLauncher.launch(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName),
+            )
+        }
+        dialog.show()
     }
 
     private fun onLogoutButtonClicked(view: View) {

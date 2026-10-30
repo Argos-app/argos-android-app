@@ -5,6 +5,7 @@ import com.android.argosapp.util.logging.RepositoryAppLogger
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
@@ -18,6 +19,11 @@ class FirebaseRepository(
 
     init {
         logger.info("repository_initialized")
+    }
+
+    suspend fun getMessagingToken(): String = logger.runSuspending("get_messaging_token") {
+        FirebaseMessaging.getInstance().token.await().takeIf { it.isNotBlank() }
+            ?: error("O Firebase não retornou um token de notificações válido.")
     }
 
     suspend fun loginWithCredentials(email: String, password: String): String =
