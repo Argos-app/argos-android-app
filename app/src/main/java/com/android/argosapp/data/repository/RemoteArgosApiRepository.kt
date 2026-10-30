@@ -83,7 +83,7 @@ private interface ArgosApiService {
         @Header("Authorization") authorization: String,
     ): Response<Unit>
 
-    @PATCH("users/update-perfil")
+    @PATCH("users/update-profile")
     suspend fun updateCurrentUser(
         @Header("Authorization") authorization: String,
         @Body data: UpdateCurrentUserDto,
@@ -249,6 +249,7 @@ class RemoteArgosApiRepository(
             photoUrl = body.photoUrl,
             cpf = body.cpf,
             address = body.address,
+            role = body.role
         ).also {
             logger.info(
                 "authenticate_result_mapped",
@@ -280,10 +281,11 @@ class RemoteArgosApiRepository(
         startFields = arrayOf(
             "environment" to environment,
             "method" to "PATCH",
-            "endpoint" to "users/update-perfil",
+            "endpoint" to "users/update-profile",
             "has_name" to (data.name != null),
             "has_email" to (data.email != null),
             "has_photo_url" to (data.photoUrl != null),
+            "has_address" to  (data.address != null)
         ),
         failureFields = ::httpFailureFields,
     ) {

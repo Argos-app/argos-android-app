@@ -15,6 +15,7 @@ data class UserEntity(
     val photoUrl: String?,
     val cpf: String?,
     val address: String?,
+    val role: String?
 ) {
     fun toModel() = User(
         userName = userName,
@@ -24,6 +25,7 @@ data class UserEntity(
         photoUrl = photoUrl,
         cpf = cpf,
         address = address,
+        role = role
     )
 
     companion object {

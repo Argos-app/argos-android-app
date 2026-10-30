@@ -2,6 +2,8 @@ package com.android.argosapp.view.fragment
 
 import android.os.Bundle
 import android.content.pm.PackageManager
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -10,7 +12,6 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
@@ -33,7 +34,7 @@ import com.android.argosapp.viewmodel.ProfileEditViewModel
 class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private var _binding: FragmentProfileEditBinding? = null
     private var initialUser: User? = null
-    private var initialUserLoadRequested = false
+    private var selectedAddress: String? = null
     private val formValidator = ProfileEditFormValidator()
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -59,10 +60,14 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentProfileEditBinding.bind(view)
+        _binding?.profileEditAddressLocationButton?.colorFilter = ColorMatrixColorFilter(
+            ColorMatrix().apply { setSaturation(0f) },
+        )
 
         _binding?.profileEditBack?.setOnClickListener(::onBackButtonClicked)
         _binding?.profileEditSubmitButton?.setOnClickListener(::onSubmitButtonClicked)
         _binding?.profileEditAddressLocationButton?.setOnClickListener {
+            if (initialUser?.role != "ADMIN") return@setOnClickListener
             if (hasLocationPermission()) {
                 openProfileLocationPicker()
             } else {
@@ -74,11 +79,13 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                 )
             }
         }
+        _binding?.profileEditAddressLocationButton?.isClickable = false
         parentFragmentManager.setFragmentResultListener(
             MapLocationPickerFragment.RESULT_KEY,
-            this,
+            viewLifecycleOwner,
         ) { _, result ->
             result.getString(MapLocationPickerFragment.RESULT_ADDRESS)?.let { address ->
+                selectedAddress = address
                 _binding?.profileEditAddress?.setText(address)
             }
         }
@@ -88,15 +95,20 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             profileEditAddress.doAfterTextChanged { clearAttentionIcon(profileEditAddress) }
         }
 
-        if (!initialUserLoadRequested) {
-            initialUserLoadRequested = true
-            viewModel.loadCachedUser(::populateFields, ::logUserLoadError)
-        }
+        viewModel.loadCachedUser(::populateFields, ::logUserLoadError)
     }
 
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        _binding?.profileEditAddressLocationButton?.apply {
+            isEnabled = initialUser?.role == "ADMIN"
+            isClickable = isEnabled
+        }
     }
 
     private fun populateFields(user: User?) {
@@ -105,7 +117,28 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             profileEditName.setText(user?.userName.orEmpty())
             profileEditEmail.setText(user?.email.orEmpty())
             profileEditCpf.text = formatCpf(user?.cpf)
-            profileEditAddress.setText(user?.address.orEmpty())
+            profileEditAddress.setText(selectedAddress ?: user?.address.orEmpty())
+
+            val textColor = ContextCompat.getColor(requireContext(), R.color.argos_text_primary)
+
+            if (user?.role   == "ADMIN") {
+                profileEditName.isEnabled = true
+                profileEditEmail.isEnabled = true
+                profileEditAddress.isEnabled = true
+                profileEditName.setTextColor(textColor)
+                profileEditEmail.setTextColor(textColor)
+                profileEditAddress.setTextColor(textColor)
+                profileEditAddressLocationButton.isEnabled = true
+                profileEditAddressLocationButton.isClickable = true
+                profileEditAddressLocationButton.clearColorFilter()
+                profileEditSubmitButton.isEnabled = true
+            }
+            else {
+                profileEditName.isEnabled = true
+                profileEditEmail.isEnabled = true
+                profileEditName.setTextColor(textColor)
+                profileEditEmail.setTextColor(textColor)
+            }
         }
     }
 
@@ -213,6 +246,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     }
 
     private fun openProfileLocationPicker() {
+        if (initialUser?.role != "ADMIN") return
         (activity as? HomeActivity)?.showProfileLocationPicker(
             _binding?.profileEditAddress?.text?.toString().orEmpty(),
         )

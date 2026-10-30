@@ -15,4 +15,5 @@ data class ArgosApiAuthResponse(
     val photoUrl: String?,
     val cpf: String?,
     val address: String?,
+    val role: String?
 )

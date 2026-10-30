@@ -20,6 +20,7 @@ class UserStorage(context: Context) {
                 photoUrl = user.photoUrl,
                 cpf = user.cpf,
                 address = user.address,
+                role = user.role
             ),
         )
     }

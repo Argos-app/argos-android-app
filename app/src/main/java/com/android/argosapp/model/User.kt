@@ -13,4 +13,5 @@ data class User (
     val photoUrl: String?,
     val cpf: String?,
     val address: String?,
+    val role: String?
 )

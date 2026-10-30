@@ -202,6 +202,7 @@ class MockedArgosApiRepository(
                 photoUrl = null,
                 cpf = "49752927858",
                 address = "Rua Casa da Mãe Joana",
+                role = "_SET"
             ).also {
                 logger.info(
                     "authenticate_result_mapped",

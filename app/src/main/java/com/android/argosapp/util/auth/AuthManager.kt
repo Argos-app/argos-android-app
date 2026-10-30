@@ -110,6 +110,7 @@ class AuthManager(
                     photoUrl = response.photoUrl,
                     cpf = response.cpf,
                     address = response.address,
+                    role = response.role
                 )
 
                 monthApplicationsStorage.clear()

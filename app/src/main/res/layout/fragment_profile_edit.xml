@@ -58,6 +58,7 @@
 
         <EditText
             android:id="@+id/profileEditName"
+            android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
@@ -67,7 +68,7 @@
             android:inputType="textPersonName|textCapWords"
             android:paddingHorizontal="21dp"
             android:singleLine="true"
-            android:textColor="@color/argos_text_primary"
+            android:textColor="@color/argos_muted"
             android:textColorHint="@color/argos_placeholder"
             android:textSize="14sp"
             tools:text="Vinícius de Oliveira" />
@@ -85,6 +86,7 @@
 
         <EditText
             android:id="@+id/profileEditEmail"
+            android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
@@ -94,7 +96,7 @@
             android:inputType="textEmailAddress"
             android:paddingHorizontal="21dp"
             android:singleLine="true"
-            android:textColor="@color/argos_text_primary"
+            android:textColor="@color/argos_muted"
             android:textColorHint="@color/argos_placeholder"
             android:textSize="14sp"
             tools:text="tobby.tobias@argos.com" />
@@ -144,6 +146,7 @@
 
             <EditText
                 android:id="@+id/profileEditAddress"
+                android:enabled="false"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/screen_input_surface"
@@ -153,13 +156,14 @@
                 android:paddingStart="21dp"
                 android:paddingEnd="60dp"
                 android:singleLine="true"
-                android:textColor="@color/argos_text_primary"
+                android:textColor="@color/argos_muted"
                 android:textColorHint="@color/argos_placeholder"
                 android:textSize="14sp"
                 tools:text="Rua Tralala 56, Vila Blablabla, SP" />
 
             <ImageButton
                 android:id="@+id/profileEditAddressLocationButton"
+                android:enabled="false"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_gravity="center_vertical|end"
@@ -181,6 +185,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/profileEditSubmitButton"
+                android:enabled="false"
                 style="@style/Widget.Material3.Button"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
