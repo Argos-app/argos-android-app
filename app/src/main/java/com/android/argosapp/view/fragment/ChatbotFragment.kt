@@ -7,7 +7,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
     private var _binding: FragmentChatbotBinding? = null
     private val binding get() = requireNotNull(_binding)
-    private val viewModel: ChatbotViewModel by viewModels()
+    private val viewModel: ChatbotViewModel by activityViewModels()
     private val conversationBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = viewModel.startNewConversation()
     }
@@ -62,7 +62,13 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         binding.chatbotLoading.isVisible = state.isLoading
         binding.chatbotErrorCard.isVisible = state.errorMessage != null
         binding.chatbotError.text = state.errorMessage.orEmpty()
-        binding.chatbotRetry.setText(if (history || state.userKey.isBlank()) R.string.chatbot_retry else R.string.chatbot_dismiss_error)
+        binding.chatbotRetry.setText(
+            when {
+                state.canContinueAfterInterruption -> R.string.chatbot_continue_after_interruption
+                history || state.userKey.isBlank() -> R.string.chatbot_retry
+                else -> R.string.chatbot_dismiss_error
+            },
+        )
         styleTab(binding.chatbotNewTab, binding.chatbotNewTabLabel, state.page == ChatbotPage.NEW_SESSION)
         styleTab(binding.chatbotHistoryTab, binding.chatbotHistoryTabLabel, history)
         val existing = childFragmentManager.findFragmentById(R.id.chatbotPageContainer)

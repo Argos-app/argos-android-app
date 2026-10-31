@@ -329,6 +329,8 @@
     <string name="chatbot_session_date_today">Hoje • %1$s</string>
     <string name="chatbot_session_date_yesterday">Ontem • %1$s</string>
     <string name="chatbot_retry">Tentar novamente</string>
+    <string name="chatbot_continue_after_interruption">Entendi, continuar</string>
+    <string name="chatbot_interruption_warning">O resultado da interação é incerto. Consulte o histórico antes de continuar.</string>
     <string name="chatbot_dismiss_error">Entendi</string>
     <string name="chatbot_question_heading">Tobby precisa de uma informação</string>
     <string name="chatbot_choice_description">Escolha uma das opções abaixo.</string>

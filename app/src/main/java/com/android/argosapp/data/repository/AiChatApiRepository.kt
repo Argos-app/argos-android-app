@@ -59,11 +59,15 @@ private interface AiChatApi {
     ): Response<AiInteractionOperationDto>
 }
 
+interface FirebaseIdTokenProvider {
+    fun currentFirebaseUid(): String?
+    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String
+}
 
 class AiChatApiRepository(
-    private val firebaseRepository: FirebaseRepository,
+    private val firebaseRepository: FirebaseIdTokenProvider,
     baseUrl: String,
-    private val tokenStorage: TokenStorage,
+    private val tokenStorage: TokenStorage? = null,
 ) {
     private val api = Retrofit.Builder()
         .baseUrl(baseUrl.ensureTrailingSlash())
@@ -73,6 +77,8 @@ class AiChatApiRepository(
 
     private val logger = RepositoryAppLogger("AiChatApiRepository")
     private val tokenMutex = Mutex()
+    private var memoryTokenUid: String? = null
+    private var memoryToken: String? = null
 
     suspend fun createSession(): AiSessionDto = logger.runSuspending(
         operation = "ai_create_session",
@@ -95,13 +101,23 @@ class AiChatApiRepository(
             failureFields = ::httpFailureFields,
         ) { authorized { api.getMessages(it, sessionId, cursor = cursor).requiredBody() } }
 
-    suspend fun interact(sessionId: String, input: AiInteractionInputDto): AiInteractionResultDto = logger.runSuspending(
+    suspend fun interact(
+        sessionId: String,
+        input: AiInteractionInputDto,
+        operationId: String? = null,
+        pollAfterMs: Long = 1000,
+        onAccepted: suspend (AiInteractionAcceptedDto) -> Unit = {},
+    ): AiInteractionResultDto = logger.runSuspending(
         operation = "ai_interact",
         startFields = arrayOf("method" to "POST", "endpoint" to "v1/sessions/{session_id}/interactions/async", "kind" to input.kind),
         successFields = { arrayOf("status" to it.status) },
         failureFields = ::httpFailureFields,
     ) {
-        val accepted = authorized { api.startInteraction(it, sessionId, input).requiredBody() }
+        val accepted = if (operationId == null) {
+            authorized { api.startInteraction(it, sessionId, input).requiredBody() }.also { onAccepted(it) }
+        } else {
+            AiInteractionAcceptedDto(operationId, pollAfterMs)
+        }
         withTimeoutOrNull(MAX_INTERACTION_WAIT_MS) {
             var pollDelayMs = accepted.pollAfterMs.coerceIn(MIN_POLL_DELAY_MS, MAX_POLL_DELAY_MS)
             while (true) {
@@ -115,11 +131,9 @@ class AiChatApiRepository(
                     }
                     "failed" -> {
                         operation.result?.let { return@withTimeoutOrNull it }
-                        throw IllegalStateException("Não foi possível concluir a interação com a IA.")
+                        throw FailedInteractionException()
                     }
-                    "interrupted" -> throw IllegalStateException(
-                        "A interação foi interrompida e precisa ser enviada novamente.",
-                    )
+                    "interrupted" -> throw InterruptedInteractionException()
                     "accepted", "running" -> {
                         pollDelayMs = (pollDelayMs * 2).coerceAtMost(MAX_POLL_DELAY_MS)
                     }
@@ -132,7 +146,9 @@ class AiChatApiRepository(
     }
 
     suspend fun clearCachedToken() = tokenMutex.withLock {
-        tokenStorage.clearAiToken()
+        tokenStorage?.clearAiToken()
+        memoryTokenUid = null
+        memoryToken = null
     }
 
     private suspend fun <T> authorized(request: suspend (String) -> T): T {
@@ -170,10 +186,14 @@ class AiChatApiRepository(
         forceRefresh: Boolean,
         rejectedToken: String? = null,
     ): String = tokenMutex.withLock {
-        val cached = tokenStorage.getAiToken(uid)
+        val cached = tokenStorage?.getAiToken(uid) ?: memoryToken?.takeIf { memoryTokenUid == uid }
         if (forceRefresh && cached != null && cached != rejectedToken) return@withLock cached
         if (!forceRefresh && cached != null) return@withLock cached
-        if (forceRefresh) tokenStorage.clearAiToken()
+        if (forceRefresh) {
+            tokenStorage?.clearAiToken()
+            memoryTokenUid = null
+            memoryToken = null
+        }
 
         val firebaseIdToken = firebaseRepository.getCurrentIdToken(forceRefresh)
         val response = logger.runSuspending(
@@ -185,7 +205,11 @@ class AiChatApiRepository(
             "A conta Firebase foi alterada durante a autenticação da IA."
         }
         response.accessToken.also {
-            tokenStorage.saveAiToken(uid, it)
+            if (tokenStorage != null) tokenStorage.saveAiToken(uid, it)
+            else {
+                memoryTokenUid = uid
+                memoryToken = it
+            }
         }
     }
 

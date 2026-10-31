@@ -14,7 +14,7 @@ import kotlinx.coroutines.tasks.await
  */
 class FirebaseRepository(
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
-) {
+) : FirebaseIdTokenProvider {
     private val logger = RepositoryAppLogger("FirebaseRepository")
 
     init {
@@ -98,7 +98,7 @@ class FirebaseRepository(
 
     fun signOut(): Unit = logger.runSynchronous("sign_out") { firebaseAuth.signOut() }
 
-    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String = logger.runSuspending("get_id_token") {
+    override suspend fun getCurrentIdToken(forceRefresh: Boolean): String = logger.runSuspending("get_id_token") {
         val currentUser = requireNotNull(firebaseAuth.currentUser) {
             "O Firebase não possui um usuário autenticado."
         }
@@ -108,7 +108,7 @@ class FirebaseRepository(
         }
     }
 
-    fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
+    override fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
 
     private companion object {
         const val PROFILE_RESET_SOURCE = "profile"

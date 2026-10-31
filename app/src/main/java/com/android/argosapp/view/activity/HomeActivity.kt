@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import com.android.argosapp.R
 import com.android.argosapp.databinding.ActivityHomeBinding
 import com.android.argosapp.model.ApplicationWithdrawal
@@ -27,6 +28,7 @@ import com.android.argosapp.view.fragment.LotsManagementFragment
 import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import com.android.argosapp.viewmodel.ChatbotViewModel
 import com.android.argosapp.view.fragment.ProfileNotificationsFragment
 import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.viewmodel.HomeViewModel
@@ -47,6 +49,7 @@ class HomeActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ViewModelProvider(this)[ChatbotViewModel::class.java]
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         binding = ActivityHomeBinding.inflate(layoutInflater)

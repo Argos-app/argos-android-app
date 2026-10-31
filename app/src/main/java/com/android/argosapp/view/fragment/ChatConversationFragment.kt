@@ -9,7 +9,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -32,11 +32,12 @@ import java.util.Locale
 class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
     private var _binding: FragmentChatConversationBinding? = null
     private val binding get() = requireNotNull(_binding)
-    private val viewModel: ChatbotViewModel by viewModels({ requireParentFragment() })
+    private val viewModel: ChatbotViewModel by activityViewModels()
     private val messageAdapter by lazy { ChatMessageAdapter(viewModel::selectOption, viewModel::confirmSend) }
     private var anchorId: String? = null
     private var anchorOffset = 0
     private var displayedSessionId: String? = null
+    private var composerKey: Pair<String, String?>? = null
     private val locale = Locale("pt", "BR")
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -46,7 +47,11 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
         binding.chatbotMessages.adapter = messageAdapter
         binding.chatbotInput.setText(viewModel.draft)
         binding.chatbotInput.setSelection(binding.chatbotInput.length())
-        binding.chatbotInput.doAfterTextChanged { viewModel.draft = it?.toString().orEmpty() }
+        binding.chatbotInput.doAfterTextChanged {
+            val text = it?.toString().orEmpty()
+            viewModel.draft = text
+            composerKey?.let { (userKey, sessionId) -> viewModel.rememberComposerDraft(userKey, sessionId, text) }
+        }
         binding.chatbotSend.setOnClickListener { sendComposerMessage() }
         binding.chatbotLoadEarlier.setOnClickListener {
             val manager = binding.chatbotMessages.layoutManager as LinearLayoutManager
@@ -86,14 +91,22 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
         val conversation = state.page == ChatbotPage.CONVERSATION
         binding.chatbotSending.isVisible = state.isSending
         binding.chatbotInput.hint = state.composerHint
-        state.answerDraftToRestore?.let { draft ->
-            if (binding.chatbotInput.text.isNullOrEmpty()) {
-                binding.chatbotInput.setText(draft)
-                binding.chatbotInput.setSelection(draft.length)
+        state.answerDraftToRestore?.let { restored ->
+            if (restored.sessionId == state.currentSessionId && binding.chatbotInput.text.isNullOrEmpty()) {
+                binding.chatbotInput.setText(restored.text)
+                binding.chatbotInput.setSelection(restored.text.length)
             }
+            viewModel.rememberComposerDraft(state.userKey, restored.sessionId, restored.text)
             viewModel.consumeAnswerDraft()
         }
         binding.chatbotInput.isEnabled = true
+        val activeComposerKey = state.userKey to state.currentSessionId
+        if (composerKey != activeComposerKey) {
+            composerKey = activeComposerKey
+            val restored = viewModel.composerDraft(state.userKey, state.currentSessionId)
+            if (binding.chatbotInput.text?.toString() != restored) binding.chatbotInput.setText(restored)
+            binding.chatbotInput.setSelection(binding.chatbotInput.length())
+        }
         binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading && state.userKey.isNotBlank()
         binding.chatbotSend.alpha = if (binding.chatbotSend.isEnabled) 1f else 0.45f
         binding.chatbotLoadEarlier.isVisible = state.hasEarlierMessages

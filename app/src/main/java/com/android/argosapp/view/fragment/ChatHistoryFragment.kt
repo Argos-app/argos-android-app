@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -23,7 +23,7 @@ import java.util.Locale
 class ChatHistoryFragment : Fragment(R.layout.fragment_chat_history) {
     private var _binding: FragmentChatHistoryBinding? = null
     private val binding get() = requireNotNull(_binding)
-    private val viewModel: ChatbotViewModel by viewModels({ requireParentFragment() })
+    private val viewModel: ChatbotViewModel by activityViewModels()
     private val sessionAdapter by lazy { ChatSessionAdapter(::sessionDate, viewModel::openSession) }
     private val locale = Locale("pt", "BR")
 
