@@ -29,6 +29,7 @@ import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.data.repository.CloudinaryPhotoRepository
 import com.android.argosapp.databinding.FragmentProfileBinding
 import com.android.argosapp.databinding.DialogNotificationPermissionBinding
@@ -69,6 +70,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             AnimalExceptionStorage(requireContext()),
             HerdStorage(requireContext()),
             ChatCacheStorage(requireContext()),
+            EncryptedPendingInteractionStore(requireContext()),
         )
     }
     private val cloudinaryPhotoRepository by lazy {

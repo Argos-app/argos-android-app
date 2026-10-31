@@ -24,6 +24,7 @@ import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.databinding.ActivityPasswordResetBinding
 import com.android.argosapp.view.fragment.PasswordChangedFragment
 import com.android.argosapp.view.fragment.ResetChangePasswordFragment
@@ -48,6 +49,7 @@ class PasswordResetActivity : FragmentActivity() {
             AnimalExceptionStorage(applicationContext),
             HerdStorage(applicationContext),
             ChatCacheStorage(applicationContext),
+            EncryptedPendingInteractionStore(applicationContext),
         )
     }
     val viewModel: RedefinePasswordViewModel by viewModels {
