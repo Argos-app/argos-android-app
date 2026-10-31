@@ -6,8 +6,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="user_session.xml" />
+        <exclude domain="sharedpref" path="chatbot_pending_interactions.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="user_session.xml" />
+        <exclude domain="sharedpref" path="chatbot_pending_interactions.xml" />
     </device-transfer>
 </data-extraction-rules>

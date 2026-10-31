@@ -7,9 +7,50 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
+import retrofit2.HttpException
 import org.junit.Test
 
 class AiChatApiRepositoryTest {
+    @Test
+    fun resumesPollingSavedOperationWithoutPostingAgain() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(jsonResponse("""{"access_token":"ai-jwt"}"""))
+            server.enqueue(jsonResponse("""{"operation_id":"op-1","status":"accepted","poll_after_ms":250}""", 202))
+            server.enqueue(jsonResponse("{}", 503))
+            server.enqueue(jsonResponse("""{"operation_id":"op-1","status":"completed","result":{"schema_version":"1","status":"completed","session_id":"session-1","interaction_id":"op-1","public_request_id":"request-1","response":{"kind":"answer","text":"OK"}}}"""))
+            val repository = AiChatApiRepository(FakeFirebaseTokens(), server.url("/").toString())
+            val input = AiInteractionInputDto(kind = "message", clientMessageId = "message-1", message = "Olá")
+            var accepted: AiInteractionAcceptedDto? = null
+            try {
+                repository.interact("session-1", input, onAccepted = { accepted = it })
+            } catch (_: HttpException) { }
+            assertEquals("op-1", accepted?.operationId)
+            assertEquals("OK", repository.interact("session-1", input, accepted!!.operationId, 250).response.text)
+            assertEquals("/v1/auth/firebase", server.takeRequest().path)
+            assertEquals("POST", server.takeRequest().method)
+            assertEquals("GET", server.takeRequest().method)
+            assertEquals("GET", server.takeRequest().method)
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun interruptedOperationIsReportedWithoutAnotherPost() {
+        MockWebServer().use { server ->
+            server.enqueue(jsonResponse("""{"access_token":"ai-jwt"}"""))
+            server.enqueue(jsonResponse("""{"operation_id":"op-1","status":"interrupted"}"""))
+            val repository = AiChatApiRepository(FakeFirebaseTokens(), server.url("/").toString())
+            val input = AiInteractionInputDto(kind = "answer", interactionId = "i", questionId = "q", answer = AiAnswerInputDto("confirmation", confirm = true))
+            assertThrows(InterruptedInteractionException::class.java) {
+                runBlocking { repository.interact("session-1", input, "op-1", 250) }
+            }
+            assertEquals("/v1/auth/firebase", server.takeRequest().path)
+            assertEquals("GET", server.takeRequest().method)
+            assertEquals(2, server.requestCount)
+        }
+    }
+
     @Test
     fun submitsInteractionAndPollsWithoutChangingStructuredResult() = runBlocking {
         MockWebServer().use { server ->

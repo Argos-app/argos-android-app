@@ -7,6 +7,7 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.databinding.ActivityHomeBinding
@@ -19,6 +20,7 @@ import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.OnboardingFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import com.android.argosapp.viewmodel.ChatbotViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -29,6 +31,7 @@ class HomeActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ViewModelProvider(this)[ChatbotViewModel::class.java]
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         binding = ActivityHomeBinding.inflate(layoutInflater)

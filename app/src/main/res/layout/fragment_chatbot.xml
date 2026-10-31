@@ -146,6 +146,18 @@
             android:textSize="12sp"
             android:visibility="gone" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chatbotContinueAfterInterruption"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:minHeight="48dp"
+            android:text="@string/chatbot_continue_after_interruption"
+            android:textAllCaps="false"
+            android:textColor="@color/argos_green"
+            android:visibility="gone" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="54dp"
