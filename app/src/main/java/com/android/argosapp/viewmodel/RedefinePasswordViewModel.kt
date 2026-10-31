@@ -18,6 +18,11 @@ class RedefinePasswordViewModel(
 ) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
 
+    suspend fun getCurrentUserEmail(): String =
+        requireNotNull(authManager.getUser()?.email?.takeIf { it.isNotBlank() }) {
+            "O e-mail do usuário não está disponível."
+        }
+
     fun sendResetEmail(email: String, profileFlow: Boolean, onLoading: (Boolean) -> Unit, onSent: () -> Unit, onError: (String) -> Unit) {
         if (email.isBlank()) return onError("Informe seu e-mail.")
         viewModelScope.launch {
