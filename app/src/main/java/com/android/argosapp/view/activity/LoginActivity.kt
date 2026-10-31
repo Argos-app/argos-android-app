@@ -16,6 +16,7 @@ import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.exception.auth.AuthErrorCode
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.databinding.ActivityLoginBinding
 import com.android.argosapp.exception.auth.messageRes
 import com.android.argosapp.viewmodel.LoginViewModel
@@ -29,6 +30,7 @@ class LoginActivity : ComponentActivity() {
             TokenStorage(applicationContext),
             UserStorage(applicationContext),
             MonthApplicationsStorage(applicationContext),
+            EncryptedPendingInteractionStore(applicationContext),
         )
     }
     private val viewModel by lazy {

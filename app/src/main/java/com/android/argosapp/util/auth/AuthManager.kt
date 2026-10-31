@@ -11,6 +11,7 @@ import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.PendingInteractionStore
 import com.android.argosapp.dto.ArgosApiAuthResponse
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.AppLogger
@@ -19,6 +20,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /** Coordena autenticação no Firebase, na API Argos e a sessão local do usuário. */
 class AuthManager(
@@ -27,6 +30,7 @@ class AuthManager(
     private val tokenStorage: TokenStorage,
     private val userStorage: UserStorage,
     private val monthApplicationsStorage: MonthApplicationsStorage,
+    private val pendingInteractionStore: PendingInteractionStore,
 ) {
     init {
         AppLogger.info(
@@ -191,9 +195,13 @@ class AuthManager(
             monthApplicationsStorage.clear()
         }
 
-    fun signOut() {
-        loggedSync(AppLogger.SESSION_TAG, "session_sign_out") {
+    suspend fun signOut() {
+        loggedSuspend(AppLogger.SESSION_TAG, "session_sign_out") {
+            val uid = firebaseRepository.currentFirebaseUid()
             firebaseRepository.signOut()
+            withContext(NonCancellable) {
+                if (uid != null) pendingInteractionStore.clear(uid)
+            }
         }
     }
 

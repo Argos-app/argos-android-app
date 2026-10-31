@@ -17,7 +17,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.time.Instant
 import java.util.concurrent.TimeoutException
-import java.util.UUID
 
 data class AiSessionDto(
     @SerializedName("session_id") val sessionId: String,
@@ -95,6 +94,9 @@ data class AiInteractionOperationDto(
     val result: AiInteractionResultDto? = null,
 )
 
+class InterruptedInteractionException : IllegalStateException()
+class FailedInteractionException : IllegalStateException()
+
 data class AiAnswerInputDto(
     val kind: String,
     val text: String? = null,
@@ -168,8 +170,16 @@ class AiChatApiRepository(
     suspend fun getMessages(sessionId: String, cursor: String? = null): AiSessionMessagesPageDto =
         authorized { api.getMessages(it, sessionId, cursor = cursor).requiredBody() }
 
-    suspend fun interact(sessionId: String, input: AiInteractionInputDto): AiInteractionResultDto {
-        val accepted = authorized { api.startInteraction(it, sessionId, input).requiredBody() }
+    suspend fun interact(
+        sessionId: String,
+        input: AiInteractionInputDto,
+        operationId: String? = null,
+        pollAfterMs: Long = 1000,
+        onAccepted: suspend (AiInteractionAcceptedDto) -> Unit = {},
+    ): AiInteractionResultDto {
+        val accepted = if (operationId == null) {
+            authorized { api.startInteraction(it, sessionId, input).requiredBody() }.also { onAccepted(it) }
+        } else AiInteractionAcceptedDto(operationId, pollAfterMs)
         return withTimeoutOrNull(MAX_INTERACTION_WAIT_MS) {
             var pollDelayMs = accepted.pollAfterMs.coerceIn(MIN_POLL_DELAY_MS, MAX_POLL_DELAY_MS)
             while (true) {
@@ -183,11 +193,9 @@ class AiChatApiRepository(
                     }
                     "failed" -> {
                         operation.result?.let { return@withTimeoutOrNull it }
-                        throw IllegalStateException("Não foi possível concluir a interação com a IA.")
+                        throw FailedInteractionException()
                     }
-                    "interrupted" -> throw IllegalStateException(
-                        "A interação foi interrompida e precisa ser enviada novamente.",
-                    )
+                    "interrupted" -> throw InterruptedInteractionException()
                     "accepted", "running" -> {
                         pollDelayMs = (pollDelayMs * 2).coerceAtMost(MAX_POLL_DELAY_MS)
                     }
@@ -273,8 +281,6 @@ class AiChatApiRepository(
 
         fun newClient(firebaseRepository: FirebaseRepository): AiChatApiRepository =
             AiChatApiRepository(firebaseRepository, com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL)
-
-        fun newClientMessageId(): String = UUID.randomUUID().toString()
     }
 }
 

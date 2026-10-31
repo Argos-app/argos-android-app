@@ -74,6 +74,9 @@
     <string name="chatbot_error_no_user">Não foi possível identificar sua conta.</string>
     <string name="chatbot_error_load">Não foi possível carregar o ChatTobby.</string>
     <string name="chatbot_error_send">Não foi possível enviar sua mensagem. Tente novamente.</string>
+    <string name="chatbot_interruption_warning">O resultado da interação é incerto, inclusive para ações como envio de e-mail. Consulte o histórico, se estiver disponível, antes de continuar.</string>
+    <string name="chatbot_rejected_other_conversation">A mensagem não foi enviada. Abra a conversa original no histórico para revisá-la.</string>
+    <string name="chatbot_continue_after_interruption">Entendi, continuar</string>
     <string name="chatbot_suggested_option">%1$s</string>
     <string name="chatbot_session_date_today">Hoje • %1$s</string>
     <string name="chatbot_session_date_yesterday">Ontem • %1$s</string>

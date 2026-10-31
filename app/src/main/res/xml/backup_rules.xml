@@ -7,4 +7,5 @@
 -->
 <full-backup-content>
     <exclude domain="sharedpref" path="user_session.xml" />
+    <exclude domain="sharedpref" path="chatbot_pending_interactions.xml" />
 </full-backup-content>
