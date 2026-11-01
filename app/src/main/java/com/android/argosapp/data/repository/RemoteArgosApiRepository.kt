@@ -47,6 +47,24 @@ private data class StockMedicinePageDto(
     val totalPages: Int = 0,
 )
 
+private data class MedicineCatalogPageDto(
+    val data: List<MedicineCatalogItemDto> = emptyList(),
+    val totalPages: Int = 0,
+) {
+    fun toModel() = MedicineCatalogPage(
+        products = data.map(MedicineCatalogItemDto::toModel),
+        totalPages = totalPages,
+    )
+}
+
+private data class MedicineCatalogItemDto(
+    val medicineId: String,
+    val medicineName: String,
+    val productRegistration: String,
+) {
+    fun toModel() = mapMedicineCatalogItem(medicineId, medicineName, productRegistration)
+}
+
 private data class StockMedicineListItemDto(
     val medicineBatchId: String,
     val medicineName: String,
@@ -109,6 +127,13 @@ private interface ArgosApiService {
         @Query("page") page: Int,
         @Query("size") size: Int,
     ): Response<StockMedicinePageDto>
+
+    @GET("medicines/catalog")
+    suspend fun getMedicineCatalog(
+        @Header("Authorization") authorization: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): Response<MedicineCatalogPageDto>
 
     @POST("medicines")
     suspend fun registerMedicineStock(
@@ -222,8 +247,14 @@ class RemoteArgosApiRepository(
     }
 
     override suspend fun getMedicationProducts(): List<StockProduct> {
-        // O backend ainda não disponibilizou uma rota de catálogo de produtos/MAPA.
-        return emptyList()
+        val token = requireApiToken()
+        return fetchAllMedicineCatalogProducts { page, size ->
+            val response = api.getMedicineCatalog("Bearer $token", page, size)
+            if (!response.isSuccessful) throw HttpException(response)
+            requireNotNull(response.body()) {
+                "A API retornou uma página de catálogo de medicamentos vazia."
+            }.toModel()
+        }
     }
 
     override suspend fun registerMedicationStock(registration: MedicationStockRegistration) {

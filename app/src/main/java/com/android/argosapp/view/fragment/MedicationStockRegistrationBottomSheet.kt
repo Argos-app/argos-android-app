@@ -182,6 +182,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     private fun submitRegistration() {
         if (!validate()) return
+
         val product = requireNotNull(selectedProduct)
         val request = MedicationStockRegistration(
             productRegistration = product.registrationCode,

@@ -30,7 +30,7 @@
         <item name="backgroundTint">@color/argos_background</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Argos.StockRegistration</item>
     </style>
-    <style name="ShapeAppearance.Argos.StockRegistration">
+    <style name="ShapeAppearance.Argos.StockRegistration" parent="ShapeAppearance.Material3.MediumComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSizeTopLeft">40dp</item>
         <item name="cornerSizeTopRight">40dp</item>
