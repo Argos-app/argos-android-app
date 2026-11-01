@@ -9,12 +9,40 @@ class TokenStorage(context: Context) {
     private val cipher = SharedPreferencesCipher(KEY_ALIAS)
 
     init {
+        synchronized(aiTokenLock) {
+            if (inMemoryAiToken == null) {
+                val uid = cipher.readSecureValue(preferences, AI_UID_KEY)
+                val token = cipher.readSecureValue(preferences, AI_TOKEN_KEY)
+                if (uid != null && token != null) inMemoryAiToken = uid to token
+            }
+        }
         if (inMemoryFirebaseIdToken == null) {
             inMemoryFirebaseIdToken = cipher.readSecureValue(preferences, FIREBASE_TOKEN_KEY)
         }
         if (inMemoryArgosApiToken == null) {
             inMemoryArgosApiToken = cipher.readSecureValue(preferences, ARGOS_TOKEN_KEY)
         }
+    }
+
+    fun getAiToken(uid: String): String? =
+        inMemoryAiToken?.takeIf { it.first == uid }?.second
+
+    fun saveAiToken(uid: String, token: String) = synchronized(aiTokenLock) {
+        inMemoryAiToken = uid to token
+        preferences.edit {
+            if (isRememberMeEnabled()) {
+                putString(AI_TOKEN_KEY, cipher.encrypt(token))
+                putString(AI_UID_KEY, cipher.encrypt(uid))
+            } else {
+                remove(AI_TOKEN_KEY)
+                remove(AI_UID_KEY)
+            }
+        }
+    }
+
+    fun clearAiToken() = synchronized(aiTokenLock) {
+        inMemoryAiToken = null
+        preferences.edit { remove(AI_TOKEN_KEY); remove(AI_UID_KEY) }
     }
 
     fun getFirebaseIdToken(): String? = inMemoryFirebaseIdToken
@@ -24,6 +52,7 @@ class TokenStorage(context: Context) {
     fun isRememberMeEnabled(): Boolean = preferences.getBoolean(REMEMBER_ME_KEY, false)
 
     fun saveTokens(firebaseIdToken: String, argosApiToken: String, rememberMe: Boolean) {
+        clearAiToken()
         inMemoryFirebaseIdToken = firebaseIdToken
         inMemoryArgosApiToken = argosApiToken
 
@@ -40,6 +69,7 @@ class TokenStorage(context: Context) {
     }
 
     fun clearTokens() {
+        clearAiToken()
         inMemoryFirebaseIdToken = null
         inMemoryArgosApiToken = null
         preferences.edit {
@@ -53,8 +83,15 @@ class TokenStorage(context: Context) {
         const val PREFERENCES_NAME = "auth_tokens"
         const val FIREBASE_TOKEN_KEY = "firebaseIdToken"
         const val ARGOS_TOKEN_KEY = "argosApiToken"
+        const val AI_TOKEN_KEY = "aiApiToken"
+        const val AI_UID_KEY = "aiTokenUid"
         const val REMEMBER_ME_KEY = "rememberMe"
         const val KEY_ALIAS = "argos_session_encryption_key"
+
+        val aiTokenLock = Any()
+
+        @Volatile
+        var inMemoryAiToken: Pair<String, String>? = null
 
         @Volatile
         var inMemoryFirebaseIdToken: String? = null

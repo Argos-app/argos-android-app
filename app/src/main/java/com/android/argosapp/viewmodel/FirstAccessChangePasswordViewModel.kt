@@ -1,7 +1,8 @@
 package com.android.argosapp.viewmodel
 
-import com.android.argosapp.exception.auth.AuthErrorCode
-import com.android.argosapp.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.exception.auth.AuthErrorCode
+import com.android.argosapp.data.exception.auth.AuthErrorMapper
+import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.util.logging.AppLogger
 import com.android.argosapp.util.validation.PasswordPatternValidator
@@ -9,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) : ViewModel() {
+class FirstAccessChangePasswordViewModel(private val authManager: AuthManager, private val userStorage: UserStorage) : ViewModel() {
     private val passwordValidator = PasswordPatternValidator()
 
     fun changePassword(
@@ -52,6 +53,7 @@ class FirstAccessChangePasswordViewModel(private val authManager: AuthManager) :
                 authManager.updateUserAccessStatus()
             }.onSuccess {
                 AppLogger.info(AppLogger.FIRST_ACCESS_TAG, "first_access_completed")
+                userStorage.setMustOnboarding(true)
                 onSuccess()
             }.onFailure { error ->
                 val code = AuthErrorMapper.from(error)

@@ -1,5 +1,16 @@
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFFBFBFB" />
-    <stroke android:width="1dp" android:color="@color/argos_border" />
-    <corners android:radius="30dp" />
-</shape>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/argos_disabled_surface" />
+            <stroke android:width="1dp" android:color="@color/argos_border" />
+            <corners android:radius="30dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFBFBFB" />
+            <stroke android:width="1dp" android:color="@color/argos_border" />
+            <corners android:radius="30dp" />
+        </shape>
+    </item>
+</selector>

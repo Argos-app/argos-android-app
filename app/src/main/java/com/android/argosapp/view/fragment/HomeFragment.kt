@@ -54,6 +54,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         applicationsAdapter = HomeFragmentApplicationsAdapter(
             onApplicationClick = ::openApplicationDetails,
         )
+        binding.btnApplicationsManagement.setOnClickListener {
+            (activity as? HomeActivity)?.showApplicationsManagement()
+        }
+        binding.homeManageLots.setOnClickListener {
+            (activity as? HomeActivity)?.showLotsManagement()
+        }
+        binding.homeManageExceptions.setOnClickListener {
+            (activity as? HomeActivity)?.showExceptionsManagement()
+        }
         binding.homeEventsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = applicationsAdapter
@@ -85,6 +94,19 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString(STATE_SELECTED_DATE, selectedDate.toString())
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.homeHerdHealth.setText(R.string.home_herd_health_loading)
+        viewModel.loadActiveWithdrawals { count ->
+            val status = _binding?.homeHerdHealth ?: return@loadActiveWithdrawals
+            status.text = when (count) {
+                null -> getString(R.string.home_herd_health_unavailable)
+                0 -> getString(R.string.home_herd_health)
+                else -> resources.getQuantityString(R.plurals.home_active_withdrawals, count, count)
+            }
+        }
     }
 
     override fun onDestroyView() {

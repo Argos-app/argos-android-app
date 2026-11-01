@@ -5,13 +5,19 @@ import android.content.Intent
 import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.data.cache.storage.HerdStorage
+import com.android.argosapp.data.cache.storage.ChatCacheStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
-import com.android.argosapp.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.ArgosApiAuthResponse
+import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.User
 import com.android.argosapp.util.logging.AppLogger
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -27,6 +33,10 @@ class AuthManager(
     private val tokenStorage: TokenStorage,
     private val userStorage: UserStorage,
     private val monthApplicationsStorage: MonthApplicationsStorage,
+    private val applicationsStorage: ApplicationsStorage,
+    private val animalExceptionStorage: AnimalExceptionStorage,
+    private val herdStorage: HerdStorage,
+    private val chatCacheStorage: ChatCacheStorage,
 ) {
     init {
         AppLogger.info(
@@ -68,6 +78,9 @@ class AuthManager(
                 } catch (error: CancellationException) {
                     AppLogger.debug(AppLogger.AUTH_TAG, "auth_google_credential_request_cancelled")
                     throw error
+                } catch (error: GetCredentialCancellationException) {
+                    AppLogger.debug(AppLogger.AUTH_TAG, "auth_google_credential_request_cancelled")
+                    onError(error)
                 } catch (error: GetCredentialException) {
                     AppLogger.error(AppLogger.AUTH_TAG, "auth_google_credential_request_failure", error)
                     onError(error)
@@ -94,13 +107,25 @@ class AuthManager(
         loggedSuspend(AppLogger.AUTH_TAG, "auth_argos") {
             argosApiRepository.authenticate(firebaseIdToken).also { response ->
                 val user = User(
-                    userName = response.user.userName,
-                    userEmail = response.user.userEmail,
-                    farmName = response.user.farmName,
+                    userName = response.userName,
+                    email = response.email,
+                    farmName = response.farmName,
+                    userId = response.userId,
+                    photoUrl = response.photoUrl,
+                    cpf = response.cpf,
+                    address = response.address,
+                    role = response.role
                 )
+
                 monthApplicationsStorage.clear()
+                applicationsStorage.clear()
+                animalExceptionStorage.clear()
+                herdStorage.clear()
+                chatCacheStorage.clear()
+
                 userStorage.saveUser(user)
                 tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
+
                 AppLogger.info(
                     AppLogger.AUTH_TAG,
                     "auth_argos_first_access_result",
@@ -134,9 +159,27 @@ class AuthManager(
             argosApiRepository.updateUserAccessStatus(requireBearerToken())
         }
 
-    suspend fun redefinePassword(email: String) =
+    suspend fun updateCurrentUser(data: UpdateCurrentUserDto) =
+        loggedSuspend(AppLogger.SESSION_TAG, "current_user_update") {
+            val currentUser = requireNotNull(userStorage.getUser()) {
+                "O perfil do usuário não está disponível no cache."
+            }
+
+            argosApiRepository.updateCurrentUser(requireBearerToken(), data)
+
+            userStorage.saveUser(
+                currentUser.copy(
+                    userName = data.name ?: currentUser.userName,
+                    email = data.email ?: currentUser.email,
+                    photoUrl = data.photoUrl ?: currentUser.photoUrl,
+                    address = data.address ?: currentUser.address,
+                ),
+            )
+        }
+
+    suspend fun redefinePassword(email: String, profileFlow: Boolean = false) =
         loggedSuspend(AppLogger.RESET_TAG, "password_reset_email_send") {
-            firebaseRepository.redefinePassword(email)
+            firebaseRepository.redefinePassword(email, profileFlow)
         }
 
     suspend fun verifyPasswordResetCode(oobCode: String): String =
@@ -189,6 +232,10 @@ class AuthManager(
             tokenStorage.clearTokens()
             userStorage.clearUser()
             monthApplicationsStorage.clear()
+            applicationsStorage.clear()
+            animalExceptionStorage.clear()
+            herdStorage.clear()
+            chatCacheStorage.clear()
         }
 
     fun signOut() {

@@ -4,77 +4,68 @@ import android.content.Context
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import androidx.room3.migration.Migration
-import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.AndroidSQLiteDriver
-import com.android.argosapp.data.cache.dao.ChatSessionDao
 import com.android.argosapp.data.cache.entity.CachedMonthEntity
-import com.android.argosapp.data.cache.entity.ChatMessageEntity
-import com.android.argosapp.data.cache.entity.ChatSessionEntity
 import com.android.argosapp.data.cache.entity.MonthApplicationEntity
 import com.android.argosapp.data.cache.dao.MonthApplicationsDao
 import com.android.argosapp.data.cache.dao.UserDao
 import com.android.argosapp.data.cache.entity.UserEntity
+import com.android.argosapp.data.cache.entity.ApplicationEntity
+import com.android.argosapp.data.cache.entity.ApplicationsCacheMetadata
+import com.android.argosapp.data.cache.dao.ApplicationsDao
+import com.android.argosapp.data.cache.dao.LotDao
+import com.android.argosapp.data.cache.dao.MedicineDao
+import com.android.argosapp.data.cache.entity.MedicineEntity
+import com.android.argosapp.data.cache.entity.LotEntity
+import com.android.argosapp.data.cache.entity.LotCacheMetadata
+import com.android.argosapp.data.cache.entity.MedicineCacheMetadata
+import com.android.argosapp.data.cache.entity.LotAnimalExceptionEntity
+import com.android.argosapp.data.cache.dao.AnimalExceptionDao
+import com.android.argosapp.data.cache.entity.AnimalExceptionEntity
+import com.android.argosapp.data.cache.entity.AnimalExceptionCacheMetadata
+import com.android.argosapp.data.cache.dao.NotificationDao
+import com.android.argosapp.data.cache.entity.NotificationEntity
+import com.android.argosapp.data.cache.dao.DeviceDao
+import com.android.argosapp.data.cache.entity.DeviceEntity
+import com.android.argosapp.data.cache.dao.HerdDao
+import com.android.argosapp.data.cache.entity.HerdEntity
+import com.android.argosapp.data.cache.entity.HerdCacheMetadata
 
 @Database(
     entities = [
         UserEntity::class,
         CachedMonthEntity::class,
         MonthApplicationEntity::class,
-        ChatSessionEntity::class,
-        ChatMessageEntity::class,
+        ApplicationEntity::class,
+        ApplicationsCacheMetadata::class,
+        MedicineEntity::class,
+        LotEntity::class,
+        LotCacheMetadata::class,
+        MedicineCacheMetadata::class,
+        LotAnimalExceptionEntity::class,
+        AnimalExceptionEntity::class,
+        AnimalExceptionCacheMetadata::class,
+        NotificationEntity::class,
+        DeviceEntity::class,
+        HerdEntity::class,
+        HerdCacheMetadata::class,
     ],
-    version = 3,
+    version = 1,
     exportSchema = false,
 )
 abstract class ArgosCacheDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun monthApplicationsDao(): MonthApplicationsDao
-    abstract fun chatSessionDao(): ChatSessionDao
+    abstract fun applicationsDao(): ApplicationsDao
+    abstract fun lotDao(): LotDao
+    abstract fun medicineDao(): MedicineDao
+    abstract fun animalExceptionDao(): AnimalExceptionDao
+    abstract fun notificationDao(): NotificationDao
+    abstract fun deviceDao(): DeviceDao
+    abstract fun herdDao(): HerdDao
 
     companion object {
         private const val DATABASE_NAME = "argos-cache.db"
-
-        private val MIGRATION_2_3 = Migration(2, 3) { connection ->
-            connection.execute(
-                """CREATE TABLE IF NOT EXISTS chat_sessions (
-                    id TEXT NOT NULL,
-                    userKey TEXT NOT NULL,
-                    createdAt INTEGER NOT NULL,
-                    updatedAt INTEGER NOT NULL,
-                    PRIMARY KEY(id)
-                )""".trimIndent(),
-            )
-            connection.execute(
-                """CREATE TABLE IF NOT EXISTS chat_messages (
-                    id TEXT NOT NULL,
-                    sessionId TEXT NOT NULL,
-                    userKey TEXT NOT NULL,
-                    position INTEGER NOT NULL,
-                    sender TEXT NOT NULL,
-                    text TEXT NOT NULL,
-                    kind TEXT NOT NULL,
-                    optionsJson TEXT NOT NULL,
-                    responseState TEXT,
-                    createdAt INTEGER NOT NULL,
-                    PRIMARY KEY(id),
-                    FOREIGN KEY(sessionId) REFERENCES chat_sessions(id) ON UPDATE NO ACTION ON DELETE CASCADE
-                )""".trimIndent(),
-            )
-            connection.execute(
-                "CREATE INDEX IF NOT EXISTS index_chat_sessions_userKey_updatedAt ON chat_sessions(userKey, updatedAt)",
-            )
-            connection.execute(
-                "CREATE INDEX IF NOT EXISTS index_chat_messages_sessionId_position ON chat_messages(sessionId, position)",
-            )
-            connection.execute(
-                "CREATE INDEX IF NOT EXISTS index_chat_messages_userKey_sessionId ON chat_messages(userKey, sessionId)",
-            )
-        }
-
-        private suspend fun SQLiteConnection.execute(sql: String) {
-            prepare(sql).use { statement -> statement.step() }
-        }
 
         @Volatile
         private var instance: ArgosCacheDatabase? = null
@@ -84,7 +75,6 @@ abstract class ArgosCacheDatabase : RoomDatabase() {
                 context.applicationContext,
                 DATABASE_NAME,
             )
-                .addMigrations(MIGRATION_2_3)
                 .setDriver(AndroidSQLiteDriver())
                 .build()
                 .also { instance = it }

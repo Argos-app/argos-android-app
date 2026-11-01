@@ -6,18 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import com.android.argosapp.viewmodel.HomeViewModel
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentOnboardingBinding
-import com.android.argosapp.util.session.OnboardingProgressStorage
 import com.android.argosapp.view.activity.HomeActivity
 
 class OnboardingFragment : Fragment() {
     private var _binding: FragmentOnboardingBinding? = null
     private val binding get() = requireNotNull(_binding)
-    private val progressStorage by lazy { OnboardingProgressStorage(requireContext().applicationContext) }
+    private val viewModel: HomeViewModel by activityViewModels()
     private var step = 0
-    private val userEmail: String
-        get() = requireArguments().getString(ARG_USER_EMAIL).orEmpty()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,7 +30,7 @@ class OnboardingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         step = savedInstanceState?.getInt(STATE_STEP, FIRST_STEP)?.coerceIn(FIRST_STEP, LAST_STEP)
-            ?: progressStorage.pendingStep(userEmail)
+            ?: FIRST_STEP
         renderStep()
         binding.onboardingNextButton.setOnClickListener {
             if (step < LAST_STEP) {
@@ -49,7 +48,6 @@ class OnboardingFragment : Fragment() {
     private fun showStep(newStep: Int) {
         step = newStep.coerceIn(FIRST_STEP, LAST_STEP)
         renderStep()
-        progressStorage.saveStep(userEmail, step)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -66,6 +64,8 @@ class OnboardingFragment : Fragment() {
         val content = STEP_CONTENTS[step]
         onboardingBackdrop.showStep(step)
         onboardingIllustration.setImageResource(content.illustration)
+        onboardingIllustration.scaleX = content.scale
+        onboardingIllustration.scaleY = content.scale
         onboardingIllustration.contentDescription = getString(content.illustrationDescription)
         onboardingTitle.setText(content.title)
         onboardingDescription.setText(content.description)
@@ -83,6 +83,7 @@ class OnboardingFragment : Fragment() {
         val illustrationDescription: Int,
         val title: Int,
         val description: Int,
+        val scale: Float,
     )
 
     private fun updateIndicator(
@@ -91,10 +92,11 @@ class OnboardingFragment : Fragment() {
         indicatorStep: Int,
     ) {
         val selected = step == indicatorStep
-        dot.setBackgroundResource(
-            if (selected) R.drawable.onboarding_step_indicator_selected
-            else R.drawable.onboarding_step_indicator_inactive,
-        )
+        dot.background = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(androidx.core.content.ContextCompat.getColor(requireContext(),
+                if (selected) R.color.argos_green else R.color.argos_divider))
+        }
         indicator.contentDescription = getString(
             if (selected) R.string.onboarding_step_selected else R.string.onboarding_step_unselected,
             indicatorStep + 1,
@@ -103,7 +105,7 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun completeOnboarding() {
-        progressStorage.markCompleted(userEmail)
+        viewModel.completeOnboarding()
         closeOverlay()
     }
 
@@ -114,7 +116,6 @@ class OnboardingFragment : Fragment() {
     }
 
     companion object {
-        private const val ARG_USER_EMAIL = "user_email"
         private const val FIRST_STEP = 0
         private const val LAST_STEP = 2
         private const val STATE_STEP = "onboarding_step"
@@ -124,24 +125,23 @@ class OnboardingFragment : Fragment() {
                 R.string.onboarding_art_welcome,
                 R.string.onboarding_title_welcome,
                 R.string.onboarding_description_welcome,
+                1f,
             ),
             StepContent(
                 R.drawable.onboarding_step_features_tobby,
                 R.string.onboarding_art_features,
                 R.string.onboarding_title_features,
                 R.string.onboarding_description_features,
+                1.1f,
             ),
             StepContent(
                 R.drawable.onboarding_step_ready_tobby,
                 R.string.onboarding_art_ready,
                 R.string.onboarding_title_ready,
                 R.string.onboarding_description_ready,
+                1.12f,
             ),
         )
 
-        fun newInstance(userEmail: String): OnboardingFragment =
-            OnboardingFragment().apply {
-                arguments = Bundle().apply { putString(ARG_USER_EMAIL, userEmail) }
-            }
     }
 }

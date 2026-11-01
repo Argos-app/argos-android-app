@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/argos_background"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="36dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp">
+
+        <ImageButton
+            android:id="@+id/profileNotificationsBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/screen_back_button_ripple"
+            android:contentDescription="@string/navigate_back"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/go_back"
+            android:stateListAnimator="@null" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fontFamily="@font/dm_sans"
+            android:gravity="center"
+            android:text="@string/profile_notifications"
+            android:textColor="@color/argos_green"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/profileNotificationsList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="24dp" />
+
+        <TextView
+            android:id="@+id/profileNotificationsMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/dm_sans"
+            android:gravity="center"
+            android:textColor="@color/argos_text_secondary"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

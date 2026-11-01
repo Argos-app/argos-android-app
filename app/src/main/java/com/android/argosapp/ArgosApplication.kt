@@ -1,22 +1,18 @@
 package com.android.argosapp
 
 import android.app.Application
-import com.android.argosapp.data.repository.ArgosApiRepository
+import com.cloudinary.android.MediaManager
 import com.android.argosapp.data.repository.AiChatApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.MockedArgosApiRepository
 import com.android.argosapp.data.repository.RemoteArgosApiRepository
 import com.android.argosapp.util.logging.AppLogger
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ArgosApplication : Application() {
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    val runMode: ArgosRunMode = ArgosRunMode.RUN_MOCKED // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
+    val runMode: ArgosRunMode = ArgosRunMode.RUN_HOMOLOGATION // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
 
     val argosApiRepository: ArgosApiRepository by lazy {
         when (runMode) {
@@ -28,22 +24,12 @@ class ArgosApplication : Application() {
         }
     }
 
-    val firebaseRepository: FirebaseRepository by lazy { FirebaseRepository() }
-    val aiChatApiRepository: AiChatApiRepository by lazy {
-        AiChatApiRepository.newClient(firebaseRepository)
-    }
+    val aiChatApiRepository by lazy { AiChatApiRepository.newClient(FirebaseRepository(), TokenStorage(this)) }
 
     override fun onCreate() {
         super.onCreate()
 
-        var observedFirebaseUid = FirebaseAuth.getInstance().currentUser?.uid
-        FirebaseAuth.getInstance().addAuthStateListener { auth ->
-            val currentUid = auth.currentUser?.uid
-            if (currentUid != observedFirebaseUid) {
-                observedFirebaseUid = currentUid
-                applicationScope.launch { aiChatApiRepository.clearCachedToken() }
-            }
-        }
+        MediaManager.init(this, mapOf("cloud_name" to BuildConfig.CLOUDINARY_CLOUD_NAME))
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

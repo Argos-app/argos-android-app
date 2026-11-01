@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -99,15 +100,22 @@ class CalendarManager(
     private fun createDayCell(date: LocalDate, belongsToDisplayedMonth: Boolean): View {
         val content = createDayContents(date, belongsToDisplayedMonth)
         val accessibilityDescription = date.format(ACCESSIBILITY_DATE_FORMATTER).capitalized()
+        val cell = FrameLayout(context).apply {
+            layoutParams = calendarCellLayoutParams()
+        }
 
         if (date == selectedDate && belongsToDisplayedMonth) {
             val dayText = content.findViewWithTag<TextView>(DAY_TEXT_TAG)
             dayText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
             dayText.setTypeface(dayText.typeface, Typeface.BOLD)
 
-            return MaterialCardView(context).apply {
-                layoutParams = calendarCellLayoutParams()
-                radius = dp(CALENDAR_SELECTION_RADIUS_DP).toFloat()
+            val selectedCircle = MaterialCardView(context).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    dp(CALENDAR_DAY_CELL_SIZE_DP),
+                    dp(CALENDAR_DAY_CELL_SIZE_DP),
+                    Gravity.CENTER,
+                )
+                radius = dp(CALENDAR_DAY_CELL_SIZE_DP).toFloat() / 2f
                 cardElevation = 0f
                 strokeWidth = 0
                 preventCornerOverlap = false
@@ -117,20 +125,27 @@ class CalendarManager(
                 stateDescription = context.getString(R.string.home_calendar_selected)
                 addView(
                     content,
-                    ViewGroup.LayoutParams(
+                    FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     ),
                 )
                 bindDateInteraction(this, date, belongsToDisplayedMonth)
             }
+            cell.addView(selectedCircle)
+            return cell
         }
 
-        content.layoutParams = calendarCellLayoutParams()
+        content.layoutParams = FrameLayout.LayoutParams(
+            dp(CALENDAR_DAY_CELL_SIZE_DP),
+            dp(CALENDAR_DAY_CELL_SIZE_DP),
+            Gravity.CENTER,
+        )
         content.contentDescription = accessibilityDescription
         content.background = ContextCompat.getDrawable(context, R.drawable.calendar_day_ripple)
         bindDateInteraction(content, date, belongsToDisplayedMonth)
-        return content
+        cell.addView(content)
+        return cell
     }
 
     private fun createDayContents(
@@ -204,7 +219,7 @@ class CalendarManager(
 
     private fun calendarCellLayoutParams() = GridLayout.LayoutParams().apply {
         width = 0
-        height = dp(CALENDAR_DAY_CELL_HEIGHT_DP)
+        height = dp(CALENDAR_DAY_CELL_SIZE_DP)
         columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
     }
 
@@ -237,8 +252,7 @@ class CalendarManager(
         private const val DAYS_PER_WEEK = 7
         private const val FIVE_WEEKS = 35
         private const val SIX_WEEKS = 42
-        private const val CALENDAR_DAY_CELL_HEIGHT_DP = 43
-        private const val CALENDAR_SELECTION_RADIUS_DP = 22
+        private const val CALENDAR_DAY_CELL_SIZE_DP = 43
         private const val NOTICE_DOT_SIZE_DP = 6
         private const val NOTICE_DOT_GAP_DP = 4
         private const val NOTICE_DOT_ROW_WIDTH_DP = NOTICE_DOT_SIZE_DP * 2 + NOTICE_DOT_GAP_DP
