@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:app/src/main/java/com/android/argosapp/data/exception/auth/AuthErrorMapper.kt
 package com.android.argosapp.data.exception.auth
+========
+package com.android.argosapp.exception.auth
+>>>>>>>> origin/develop:app/src/main/java/com/android/argosapp/exception/auth/AuthErrorMapper.kt
 
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.firebase.auth.FirebaseAuthException
@@ -12,12 +16,12 @@ object AuthErrorMapper {
         return when (error) {
             is IOException -> AuthErrorCode.NETWORK
             is GetCredentialException -> AuthErrorCode.GOOGLE_CANCELLED
-            is FirebaseAuthException -> mapFirebaseCode(error.errorCode)
+            is FirebaseAuthException -> fromFirebaseCode(error.errorCode)
             else -> AuthErrorCode.UNKNOWN
         }
     }
 
-    private fun mapFirebaseCode(errorCode: String): AuthErrorCode = when (errorCode) {
+    internal fun fromFirebaseCode(errorCode: String): AuthErrorCode = when (errorCode) {
         "ERROR_USER_NOT_FOUND" -> AuthErrorCode.USER_NOT_FOUND
         "ERROR_WRONG_PASSWORD",
         "ERROR_INVALID_CREDENTIAL",

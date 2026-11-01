@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:app/src/main/java/com/android/argosapp/data/exception/auth/AuthErrorCode.kt
 package com.android.argosapp.data.exception.auth
+========
+package com.android.argosapp.exception.auth
+>>>>>>>> origin/develop:app/src/main/java/com/android/argosapp/exception/auth/AuthErrorCode.kt
 
 enum class AuthErrorCode {
     EMPTY_FIELDS,
