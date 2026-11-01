@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.android.argosapp.view.component.LotsManagementLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -588,4 +588,4 @@
             android:contentDescription="@null"
             android:src="@drawable/add_icon" />
     </com.google.android.material.card.MaterialCardView>
-</com.android.argosapp.view.component.LotsManagementLayout>
+</FrameLayout>

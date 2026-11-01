@@ -246,11 +246,11 @@
     <string name="lots_create_new_herd">+ Novo Rebanho</string>
     <string name="lots_create_breed_label">Raça</string>
     <string name="lots_create_breed_hint">Ex: Nelore</string>
-    <string name="lots_create_breed_error">Informe a raça.</string>
+    <string name="lots_create_breed_error">Informe uma raça com até 40 caracteres.</string>
     <string name="lots_create_head_count_label">Quantidade de cabeças</string>
     <string name="lots_create_head_count_hint">Ex: 200</string>
-    <string name="lots_create_name_error">Informe um nome de lote com até 120 caracteres.</string>
-    <string name="lots_create_herd_error">Informe um nome de rebanho com até 120 caracteres.</string>
+    <string name="lots_create_name_error">Informe um nome de lote com até 20 caracteres.</string>
+    <string name="lots_create_herd_error">Informe um nome de rebanho com até 60 caracteres.</string>
     <string name="lots_create_category_error">Selecione uma categoria.</string>
     <string name="lots_create_head_count_error">Informe uma quantidade de cabeças maior que zero.</string>
     <string name="lots_create_slaughter_date_error">Selecione uma data válida.</string>
@@ -275,4 +275,5 @@
     <string name="reset_user_email_unavailable">Não foi possível carregar o e-mail da sua conta.</string>
     <string name="lots_slaughter_success">Abate registrado com sucesso.</string>
     <string name="lots_slaughter_error">Não foi possível registrar o abate. Tente novamente.</string>
+    <string name="refresh_failed">Não foi possível atualizar os dados.</string>
 </resources>
