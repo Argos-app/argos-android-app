@@ -1,9 +1,11 @@
 package com.android.argosapp.data.repository
 
+import android.net.Uri
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
@@ -17,6 +19,11 @@ class FirebaseRepository(
 
     init {
         logger.info("repository_initialized")
+    }
+
+    suspend fun getMessagingToken(): String = logger.runSuspending("get_messaging_token") {
+        FirebaseMessaging.getInstance().token.await().takeIf { it.isNotBlank() }
+            ?: error("O Firebase não retornou um token de notificações válido.")
     }
 
     suspend fun loginWithCredentials(email: String, password: String): String =
@@ -64,10 +71,14 @@ class FirebaseRepository(
             currentUser.updatePassword(newPassword).await()
         }
 
-    suspend fun redefinePassword(email: String): Unit =
+    suspend fun redefinePassword(email: String, profileFlow: Boolean = false): Unit =
         logger.runSuspending("send_password_reset_email") {
+            val continueUrl = Uri.parse(PASSWORD_RESET_CONTINUE_URL).buildUpon()
+                .appendQueryParameter("source", if (profileFlow) PROFILE_RESET_SOURCE else LOGIN_RESET_SOURCE)
+                .build()
+
             val settings = ActionCodeSettings.newBuilder()
-                .setUrl(PASSWORD_RESET_CONTINUE_URL)
+                .setUrl(continueUrl.toString())
                 .setHandleCodeInApp(true)
                 .setAndroidPackageName("com.android.argosapp", false, null)
                 .build()
@@ -87,17 +98,21 @@ class FirebaseRepository(
 
     fun signOut(): Unit = logger.runSynchronous("sign_out") { firebaseAuth.signOut() }
 
-    private suspend fun getCurrentIdToken(): String = logger.runSuspending("get_id_token") {
+    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String = logger.runSuspending("get_id_token") {
         val currentUser = requireNotNull(firebaseAuth.currentUser) {
             "O Firebase não possui um usuário autenticado."
         }
 
-        requireNotNull(currentUser.getIdToken(false).await()?.token?.takeIf { it.isNotBlank() }) {
+        requireNotNull(currentUser.getIdToken(forceRefresh).await()?.token?.takeIf { it.isNotBlank() }) {
             "O Firebase não retornou um ID token válido."
         }
     }
 
+    fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
+
     private companion object {
+        const val PROFILE_RESET_SOURCE = "profile"
+        const val LOGIN_RESET_SOURCE = "login"
         const val PASSWORD_RESET_CONTINUE_URL =
             "https://argos-app-a3c63.firebaseapp.com/redefinir-senha"
     }

@@ -7,19 +7,24 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.activity.viewModels
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.data.cache.storage.HerdStorage
+import com.android.argosapp.data.cache.storage.ChatCacheStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
-import com.android.argosapp.exception.auth.messageRes
+import com.android.argosapp.data.exception.auth.messageRes
 import com.android.argosapp.viewmodel.FirstAccessChangePasswordViewModel
 import com.android.argosapp.util.validation.PasswordPatternValidator
 import com.android.argosapp.util.logging.AppLogger
@@ -35,13 +40,14 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
             TokenStorage(applicationContext),
             UserStorage(applicationContext),
             MonthApplicationsStorage(applicationContext),
+            ApplicationsStorage(applicationContext),
+            AnimalExceptionStorage(applicationContext),
+            HerdStorage(applicationContext),
+            ChatCacheStorage(applicationContext),
         )
     }
-    private val viewModel by lazy {
-        ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = FirstAccessChangePasswordViewModel(authManager) as T
-        })[FirstAccessChangePasswordViewModel::class.java]
+    private val viewModel: FirstAccessChangePasswordViewModel by viewModels {
+        viewModelFactory { initializer { FirstAccessChangePasswordViewModel(authManager, UserStorage(applicationContext)) } }
     }
     private val passwordValidator = PasswordPatternValidator()
     private var newPasswordVisible = false

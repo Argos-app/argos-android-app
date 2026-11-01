@@ -30,7 +30,6 @@ open class AppLogger {
 
     companion object {
         const val AUTH_TAG = "ARGOS_AUTH"
-        const val LOGIN_TAG = "ARGOS_LOGIN"
         const val FIRST_ACCESS_TAG = "ARGOS_FIRST"
         const val RESET_TAG = "ARGOS_RESET"
         const val SESSION_TAG = "ARGOS_SESSION"

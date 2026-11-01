@@ -30,15 +30,20 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Inject google-services.json
+      - name: Validate google-services.json
         env:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON_B64" ]; then
-            echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > app/google-services.json
-            python -m json.tool app/google-services.json > /dev/null
+            echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > "$RUNNER_TEMP/google-services.json"
+            python -m json.tool "$RUNNER_TEMP/google-services.json" > /dev/null
+            if python -c 'import json, sys; data=json.load(open(sys.argv[1])); sys.exit(0 if any(c.get("client_info", {}).get("android_client_info", {}).get("package_name") == "com.android.argosapp" for c in data.get("client", [])) else 1)' "$RUNNER_TEMP/google-services.json"; then
+              cp "$RUNNER_TEMP/google-services.json" app/google-services.json
+            else
+              echo "::warning title=Invalid Firebase config::GOOGLE_SERVICES_JSON_B64 does not contain a client for com.android.argosapp. Using the checked-in configuration."
+            fi
           else
-            echo "::warning title=Missing secret::GOOGLE_SERVICES_JSON_B64 not set. Firebase plugin will require this file at build time."
+            echo "::notice title=Using checked-in Firebase config::GOOGLE_SERVICES_JSON_B64 is not set; using app/google-services.json from the repository."
           fi
 
       - name: Run unit tests

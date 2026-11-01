@@ -77,12 +77,12 @@
                     android:importantForAccessibility="yes">
 
                     <ImageView
-                        android:layout_width="21dp"
-                        android:layout_height="25dp"
+                        android:id="@+id/navigationProfileIcon"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:layout_gravity="center"
                         android:contentDescription="@null"
-                        android:scaleX="0.9545"
-                        android:src="@drawable/profile_home_nav_icon" />
+                        android:src="@drawable/profile_home_nav_placeholder" />
                 </FrameLayout>
 
                 <FrameLayout
@@ -125,4 +125,10 @@
             </LinearLayout>
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/onboardingOverlayContainer"
+        android:elevation="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 </FrameLayout>

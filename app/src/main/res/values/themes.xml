@@ -3,9 +3,23 @@
 
     <style name="Theme.Argosapp" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:fontFamily">@font/dm_sans</item>
-        <item name="android:windowLightStatusBar">true</item>0
+        <item name="android:colorAccent">@color/argos_green</item>
+        <item name="colorAccent">@color/argos_green</item>
+        <item name="colorPrimary">@color/argos_green</item>
+        <item name="colorSecondary">@color/argos_accent</item>
+        <item name="android:datePickerDialogTheme">@style/Theme.Argosapp.DatePickerDialog</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">#FFF4F1EB</item>
         <item name="android:navigationBarColor">#FFF4F1EB</item>
+    </style>
+
+    <style name="Theme.Argosapp.DatePickerDialog" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/argos_green</item>
+        <item name="android:colorControlActivated">@color/argos_green</item>
+        <item name="android:colorControlHighlight">@color/argos_calendar_ripple</item>
+        <item name="android:colorPrimary">@color/argos_green</item>
+        <item name="android:colorPrimaryDark">@color/argos_green</item>
+        <item name="android:colorBackground">@color/argos_background</item>
     </style>
 
     <style name="Theme.Argosapp.Home" parent="Theme.Argosapp">
@@ -38,6 +52,18 @@
         <item name="android:fontFamily">@font/dm_sans</item>
         <item name="android:textColor">@color/argos_green</item>
         <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="ApplicationsFilterTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:fontFamily">@font/dm_sans</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/argos_text_primary</item>
+        <item name="android:textSize">10sp</item>
     </style>
 
 </resources>

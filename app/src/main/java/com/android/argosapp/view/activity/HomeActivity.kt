@@ -1,8 +1,16 @@
 package com.android.argosapp.view.activity
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.android.argosapp.R
@@ -10,12 +18,30 @@ import com.android.argosapp.databinding.ActivityHomeBinding
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
+import com.android.argosapp.view.fragment.OnboardingFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
+import com.android.argosapp.view.fragment.ApplicationsManagementFragment
+import com.android.argosapp.view.fragment.ExceptionsManagementFragment
+import com.android.argosapp.view.fragment.LotsManagementFragment
+import com.android.argosapp.view.fragment.ProfileEditFragment
+import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
+import com.android.argosapp.view.fragment.ProfileNotificationsFragment
+import com.android.argosapp.util.navigation.FragmentNavHelper
+import com.android.argosapp.viewmodel.HomeViewModel
 
 class HomeActivity : FragmentActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private val viewModel: HomeViewModel by viewModels()
+
+    private val fragmentNavHelper by lazy {
+        FragmentNavHelper(supportFragmentManager, R.id.homeFragmentContainer)
+    }
+
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     private var currentDestination: Destination? = null
     private lateinit var navBarBlurEffect: NavBarBlurEffect
 
@@ -25,7 +51,6 @@ class HomeActivity : FragmentActivity() {
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         navBarBlurEffect = NavBarBlurEffect(
             source = binding.homeFragmentContainer,
             backdrop = binding.navigationBlurBackdrop,
@@ -42,9 +67,10 @@ class HomeActivity : FragmentActivity() {
         binding.navigationChatbot.setOnClickListener { showDestination(Destination.CHATBOT, animateIndicator = true) }
         binding.navigationProfile.setOnClickListener { showDestination(Destination.PROFILE, animateIndicator = true) }
 
-        val destination = savedInstanceState
-            ?.getString(STATE_DESTINATION)
-            ?.let { runCatching { Destination.valueOf(it) }.getOrNull() }
+        val destinationName = intent.getStringExtra(EXTRA_INITIAL_DESTINATION)
+            ?: savedInstanceState?.getString(STATE_DESTINATION)
+
+        val destination = Destination.values().firstOrNull { it.name == destinationName }
             ?: Destination.HOME
 
         if (savedInstanceState == null || supportFragmentManager.fragments.isEmpty()) {
@@ -57,6 +83,27 @@ class HomeActivity : FragmentActivity() {
 
         }
         updateNavigationBarVisibility()
+        showOnboardingIfPending()
+        requestNotificationPermissionOnStartup()
+    }
+
+    private fun showOnboardingIfPending() {
+        val existing = supportFragmentManager.findFragmentByTag("onboarding")
+        if (viewModel.mustOnboarding()) {
+            binding.onboardingOverlayContainer.visibility = View.VISIBLE
+            if (existing == null) {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.onboardingOverlayContainer, OnboardingFragment(), "onboarding")
+                    .commit()
+            }
+        } else if (existing != null) {
+            supportFragmentManager.beginTransaction().remove(existing).commit()
+        }
+    }
+
+    fun closeOnboardingOverlay(fragment: OnboardingFragment) {
+        binding.onboardingOverlayContainer.visibility = View.GONE
+        supportFragmentManager.beginTransaction().remove(fragment).commit()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -65,17 +112,21 @@ class HomeActivity : FragmentActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            viewModel.registerDevice()
+        }
+    }
+
     private fun showDestination(destination: Destination, animateIndicator: Boolean) {
         updateNavigationSelection(destination, animateIndicator)
 
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStackImmediate(
-                null,
-                androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE,
-            )
+        if (fragmentNavHelper.hasBackStack()) {
+            fragmentNavHelper.clearBackStack()
         }
         if (currentDestination == destination &&
-            supportFragmentManager.findFragmentByTag(destination.name) != null
+            fragmentNavHelper.findFragmentByTag(destination.name) != null
 
         ) {
             return
@@ -88,38 +139,123 @@ class HomeActivity : FragmentActivity() {
 
         }
 
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.homeFragmentContainer, fragment, destination.name)
-            .commitNow()
+        fragmentNavHelper.navigate(
+            fragment = fragment,
+            tag = destination.name,
+            commitNow = true,
+        )
         currentDestination = destination
         navBarBlurEffect.bindSource()
     }
 
+    fun navigateToHome() = showDestination(Destination.HOME, animateIndicator = true)
+
     fun showApplicationDetails(application: ApplicationWithdrawal) {
         setNavigationBarVisible(false)
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .setCustomAnimations(
-                R.anim.home_details_enter,
-                R.anim.home_details_exit,
-                R.anim.home_details_pop_enter,
-                R.anim.home_details_pop_exit,
-            )
-            .replace(
-                R.id.homeFragmentContainer,
-                HomeApplicationDetailsFragment.newInstance(application),
-                HomeApplicationDetailsFragment.TAG,
-            )
-            .addToBackStack(HomeApplicationDetailsFragment.TAG)
-            .commit()
+        fragmentNavHelper.navigate(
+            fragment = HomeApplicationDetailsFragment.newInstance(application),
+            tag = HomeApplicationDetailsFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        setIntent(intent)
+
+        if (intent.getStringExtra(EXTRA_INITIAL_DESTINATION) == PROFILE_DESTINATION) {
+            showDestination(Destination.PROFILE, animateIndicator = false)
+        }
+    }
+
+    fun showProfileEdit() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ProfileEditFragment(),
+            tag = ProfileEditFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showProfileNotifications() {
+        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ProfileNotificationsFragment(),
+            tag = ProfileNotificationsFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showProfileLocationPicker(currentAddress: String) {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = MapLocationPickerFragment.newInstance(currentAddress),
+            tag = MapLocationPickerFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showApplicationsManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ApplicationsManagementFragment(),
+            tag = ApplicationsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showExceptionsManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = ExceptionsManagementFragment(),
+            tag = ExceptionsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
+    fun showLotsManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = LotsManagementFragment(),
+            tag = LotsManagementFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
     private fun updateNavigationBarVisibility() {
-        val showingDetails =
-            supportFragmentManager.findFragmentById(R.id.homeFragmentContainer) is HomeApplicationDetailsFragment
-        setNavigationBarVisible(!showingDetails)
+        val currentFragment = fragmentNavHelper.currentFragment()
+        val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
+            currentFragment is ProfileEditFragment ||
+            currentFragment is ProfileNotificationsFragment ||
+            currentFragment is MapLocationPickerFragment ||
+            currentFragment is ApplicationsManagementFragment ||
+            currentFragment is ExceptionsManagementFragment ||
+            currentFragment is LotsManagementFragment
+        setNavigationBarVisible(!showingOverlay)
+    }
+
+    private fun requestNotificationPermissionOnStartup() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
     private fun setNavigationBarVisible(visible: Boolean) {
@@ -127,6 +263,13 @@ class HomeActivity : FragmentActivity() {
         binding.homeBottomNavigation.visibility = visibility
         binding.navigationBlurBackdrop.visibility = visibility
     }
+
+    private fun overlayAnimations() = FragmentNavHelper.Animations(
+        enter = R.anim.home_details_enter,
+        exit = R.anim.home_details_exit,
+        popEnter = R.anim.home_details_pop_enter,
+        popExit = R.anim.home_details_pop_exit,
+    )
 
     private fun updateNavigationSelection(destination: Destination, animateIndicator: Boolean) {
         binding.navigationHome.isSelected = destination == Destination.HOME
@@ -178,7 +321,14 @@ class HomeActivity : FragmentActivity() {
         PROFILE,
     }
 
-    private companion object {
-        const val STATE_DESTINATION = "home_destination"
+    companion object {
+        private const val STATE_DESTINATION = "home_destination"
+        private const val EXTRA_INITIAL_DESTINATION = "initial_destination"
+        private const val PROFILE_DESTINATION = "PROFILE"
+
+        fun createProfileIntent(context: Context): Intent =
+            Intent(context, HomeActivity::class.java)
+                .putExtra(EXTRA_INITIAL_DESTINATION, PROFILE_DESTINATION)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
 }
