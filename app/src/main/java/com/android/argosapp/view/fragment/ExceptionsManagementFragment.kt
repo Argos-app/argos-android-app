@@ -33,6 +33,16 @@ class ExceptionsManagementFragment : Fragment(R.layout.fragment_exceptions_manag
         setupExceptionsList()
         setupFilters()
         setupPullToRefresh()
+        parentFragmentManager.setFragmentResultListener(
+            CreateExceptionBottomSheetFragment.REGISTERED_RESULT,
+            viewLifecycleOwner,
+        ) { _, _ ->
+            viewModel.refresh(
+                onRefreshing = ::setRefreshing,
+                onExceptionsLoaded = ::showExceptions,
+                onError = { showLoadError() },
+            )
+        }
         setupAddButton()
         renderLoadingState()
         viewModel.render(

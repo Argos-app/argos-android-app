@@ -170,7 +170,9 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
             if (lot == null) lotValue.error = getString(R.string.applications_register_lot_required)
             if (medicine == null) medicineValue.error = getString(R.string.applications_register_medicine_required)
             if (!validDose) doseField.error = getString(R.string.applications_register_dose_invalid)
-            if (lot == null || medicine == null || !validDose) return@setOnClickListener
+            if (lot == null || medicine == null || !validDose) {
+                return@setOnClickListener
+            }
 
             optionsViewModel.registerApplication(
                 data = RegisterLotApplicationDto(lot, medicine, selectedDate.toString(), dose.toBigDecimal()),

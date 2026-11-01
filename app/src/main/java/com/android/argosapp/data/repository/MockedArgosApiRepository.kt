@@ -10,6 +10,7 @@ import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
+import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.Herd
@@ -32,9 +33,9 @@ class MockedArgosApiRepository(
 ) : ArgosApiRepository {
     private val logger = RepositoryAppLogger("MockedArgosApiRepository")
     private var isFirstAccess = firstAccess
-    // shortcut: mock registrations last only for this session; persist them when testing app restarts.
     private val registeredApplications = mutableListOf<Application>()
     private val registeredLots = mutableListOf<RegisterLotDto>()
+    private val registeredAnimalExceptions = mutableListOf<RegisterAnimalExceptionDto>()
     private val herds = mutableListOf(
         Herd("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000001", "Rebanho Nelore", "Nelore", 100),
     )
@@ -110,7 +111,6 @@ class MockedArgosApiRepository(
             herds[herdIndex] = herd.copy(headCount = herd.headCount + data.headCount)
         }
         registeredLots.add(0, data)
-        Unit
     }
 
     override suspend fun listHerds(bearerToken: String): List<Herd> {
@@ -125,12 +125,13 @@ class MockedArgosApiRepository(
             releaseSlaughterDate = lot.releaseSlaughterDate,
             category = lot.category,
             animalExceptionOutList = emptyList(),
+            lotId = UUID.nameUUIDFromBytes(lot.lotName.toByteArray()).toString(),
         )
     } + listOf(
-        LotDto("Lote 100% real", null, null, "ENGORDA", emptyList()),
-        LotDto("Lote 101% real", null, null, "RECRIA", emptyList()),
+        LotDto("Lote 100% real", null, null, "ENGORDA", emptyList(), UUID(0L, 100).toString()),
+        LotDto("Lote 101% real", null, null, "RECRIA", emptyList(), UUID(0L, 101).toString()),
     ) + List(28) { index ->
-        LotDto("Lote ${index + 102}% real", null, null, "ENGORDA", emptyList())
+        LotDto("Lote ${index + 102}% real", null, null, "ENGORDA", emptyList(), UUID(0L, index.toLong() + 102).toString())
     }
 
     private val medicines = listOf(
@@ -168,7 +169,8 @@ class MockedArgosApiRepository(
             "Sub Terminacao 002", "Engorda 006",
         )
         val tags = listOf("075", "102", "118", "124", "131", "145", "163", "177", "098", "105", "119", "128", "137", "149", "158", "166", "181", "194")
-        val records = lots.mapIndexed { index, lot ->
+        val availableLots = listLots(bearerToken)
+        val records = (lots.mapIndexed { index, lot ->
             val eligible = index < 8
             AnimalExceptionDto(
                 id = UUID(0L, index.toLong() + 200).toString(),
@@ -186,7 +188,25 @@ class MockedArgosApiRepository(
                 latestMedicine = null,
                 latestMedicineWithdrawalEnd = null,
             )
-        }.filter { active == null || it.status == (if (active) "ATIVO" else "ENCERRADO") }
+        } + registeredAnimalExceptions.mapIndexedNotNull { index, exception ->
+            val originLot = availableLots.firstOrNull { it.lotId == exception.originLotId } ?: return@mapIndexedNotNull null
+            AnimalExceptionDto(
+                id = UUID(1L, index.toLong() + 1).toString(),
+                earTag = exception.earTag,
+                currentLotCode = originLot.lotName,
+                originLotCode = originLot.lotName,
+                exceptionDate = LocalDate.now().toString(),
+                slaughterReleaseDate = null,
+                exceptionReason = exception.exceptionReason,
+                status = "ATIVO",
+                fitForSlaughter = false,
+                eligibleToReturn = false,
+                returnFitnessPercentage = 0,
+                eligibilityTag = "INAPTO",
+                latestMedicine = null,
+                latestMedicineWithdrawalEnd = null,
+            )
+        }).filter { active == null || it.status == (if (active) "ATIVO" else "ENCERRADO") }
         val fromIndex = (page * size).coerceIn(0, records.size)
         val toIndex = (fromIndex + size).coerceIn(fromIndex, records.size)
         return AnimalExceptionPageDto(
@@ -198,6 +218,20 @@ class MockedArgosApiRepository(
             first = page == 0,
             last = toIndex >= records.size,
         )
+    }
+
+    override suspend fun registerAnimalException(
+        bearerToken: String,
+        data: RegisterAnimalExceptionDto,
+    ): Unit = logger.runSuspending("register_animal_exception") {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        require(data.originLotId.isNotBlank()) { "Origin lot ID is required." }
+        require(listLots(bearerToken).any { it.lotId == data.originLotId }) { "Origin lot not found." }
+        require(data.earTag.isNotBlank()) { "Ear tag is required." }
+        require(data.exceptionReason.isNotBlank()) { "Exception reason is required." }
+        require(data.currentWeight.signum() > 0) { "Current weight must be positive." }
+        delay(600)
+        registeredAnimalExceptions.add(data)
     }
     override suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto {
         val fromIndex = (page * size).coerceAtMost(medicines.size)

@@ -244,7 +244,9 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
 
         val registerButton = content.findViewById<com.google.android.material.button.MaterialButton>(R.id.applicationRegisterButton)
         registerButton.setOnClickListener {
-            if (!validateAnimalApplication(doseField, earTagField, lotValue, medicineValue, animalLots, animalMedicines)) return@setOnClickListener
+            if (!validateAnimalApplication(doseField, earTagField, lotValue, medicineValue, animalLots, animalMedicines)) {
+                return@setOnClickListener
+            }
             val dose = doseField.text.toString().removeSuffix(" ml")
             val applicationDate = LocalDate.parse(dateValue.text.toString(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).toString()
             registrationOptionsViewModel.registerApplication(

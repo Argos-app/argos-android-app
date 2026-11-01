@@ -97,6 +97,7 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
                 onSelected = { selected ->
                     creatingHerd = selected == newHerdOption
                     selectedHerdId = herds.firstOrNull { it.herdName == selected }?.herdId
+                    herdValue.error = null
                     herdValue.text = selected
                     herdValue.setTextColor(requireContext().getColor(R.color.argos_text_primary))
                     newHerdFields.visibility = if (creatingHerd) View.VISIBLE else View.GONE
@@ -165,7 +166,9 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
             slaughterDateValue.error = if (LotFormValidator.Field.SLAUGHTER_DATE in invalidFields) {
                 getString(R.string.lots_create_slaughter_date_error)
             } else null
-            if (invalidFields.isNotEmpty()) return@setOnClickListener
+            if (invalidFields.isNotEmpty()) {
+                return@setOnClickListener
+            }
 
             viewModel.registerLot(
                 lotName = lotName,

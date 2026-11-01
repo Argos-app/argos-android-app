@@ -7,6 +7,7 @@ import androidx.room3.PrimaryKey
 data class LotEntity(
     @PrimaryKey(autoGenerate = true) val rowId: Long = 0,
     val lotName: String,
+    val lotId: String?,
     val openDate: String?,
     val releaseSlaughterDate: String?,
     val category: String?,

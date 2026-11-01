@@ -10,6 +10,7 @@ import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.ApplicationWithdrawalDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.data.dto.DeviceRegisterResponse
+import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
@@ -53,6 +54,12 @@ private interface ArgosApiService {
         @Query("page") page: Int,
         @Query("size") size: Int,
     ): Response<AnimalExceptionPageDto>
+
+    @POST("animal-exceptions")
+    suspend fun registerAnimalException(
+        @Header("Authorization") authorization: String,
+        @Body data: RegisterAnimalExceptionDto,
+    ): Response<Unit>
 
     @POST("lot")
     suspend fun registerLot(
@@ -240,6 +247,27 @@ class RemoteArgosApiRepository(
         logResponse("get_animal_exceptions_page", response.code(), response.isSuccessful)
         if (!response.isSuccessful) throw HttpException(response)
         requireNotNull(response.body()) { "Successful animal exception page response contained no body." }
+    }
+
+    override suspend fun registerAnimalException(
+        bearerToken: String,
+        data: RegisterAnimalExceptionDto,
+    ): Unit = logger.runSuspending(
+        operation = "register_animal_exception",
+        startFields = arrayOf(
+            "environment" to environment,
+            "method" to "POST",
+            "endpoint" to "animal-exceptions",
+            "has_origin_lot_id" to data.originLotId.isNotBlank(),
+            "has_ear_tag" to data.earTag.isNotBlank(),
+            "has_exception_reason" to data.exceptionReason.isNotBlank(),
+            "current_weight" to data.currentWeight,
+        ),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerAnimalException("Bearer $bearerToken", data)
+        logResponse("register_animal_exception", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
     }
     override suspend fun authenticate(firebaseIdToken: String): ArgosApiAuthResponse = logger.runSuspending(
         operation = "authenticate",

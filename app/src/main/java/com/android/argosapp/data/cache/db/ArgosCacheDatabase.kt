@@ -4,10 +4,7 @@ import android.content.Context
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import androidx.room3.migration.Migration
-import androidx.sqlite.execSQL
 import androidx.sqlite.driver.AndroidSQLiteDriver
-import androidx.sqlite.SQLiteConnection
 import com.android.argosapp.data.cache.entity.CachedMonthEntity
 import com.android.argosapp.data.cache.entity.MonthApplicationEntity
 import com.android.argosapp.data.cache.dao.MonthApplicationsDao

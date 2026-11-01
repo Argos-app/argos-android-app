@@ -15,6 +15,7 @@ class LotStorage(context: Context) {
     suspend fun getAll(): List<LotDto> = dao.getAll().map { entity ->
         LotDto(
             lotName = entity.lotName,
+            lotId = entity.lotId,
             openDate = entity.openDate,
             releaseSlaughterDate = entity.releaseSlaughterDate,
             category = entity.category,
@@ -37,6 +38,7 @@ class LotStorage(context: Context) {
         val lots = items.map { lot ->
             LotEntity(
                 lotName = lot.lotName,
+                lotId = lot.lotId,
                 openDate = lot.openDate,
                 releaseSlaughterDate = lot.releaseSlaughterDate,
                 category = lot.category,

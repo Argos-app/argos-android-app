@@ -9,6 +9,7 @@ data class LotDto(
     val releaseSlaughterDate: String?,
     val category: String?,
     val animalExceptionOutList: List<LotAnimalExceptionDto>?,
+    val lotId: String? = null,
 ) {
     fun toModel(): Lot = Lot(
         lotName = lotName,
