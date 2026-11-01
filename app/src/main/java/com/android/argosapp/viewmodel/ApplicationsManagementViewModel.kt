@@ -36,7 +36,7 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
         onFilterLoading: (Boolean) -> Unit,
         onRefreshLoading: (Boolean) -> Unit,
         onApplicationsLoaded: (List<ApplicationModel>) -> Unit,
-        onError: (Exception) -> Unit,
+        onError: (Exception, Boolean) -> Unit,
     ) {
         loadApplications(
             forceRefresh = false,
@@ -50,7 +50,7 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
     fun refresh(
         onRefreshLoading: (Boolean) -> Unit,
         onApplicationsLoaded: (List<ApplicationModel>) -> Unit,
-        onError: (Exception) -> Unit,
+        onError: (Exception, Boolean) -> Unit,
     ) {
         loadApplications(
             forceRefresh = true,
@@ -85,7 +85,7 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
         onFilterLoading: (Boolean) -> Unit,
         onRefreshLoading: (Boolean) -> Unit,
         onApplicationsLoaded: (List<ApplicationModel>) -> Unit,
-        onError: (Exception) -> Unit,
+        onError: (Exception, Boolean) -> Unit,
     ) {
         viewModelScope.launch {
             var hasLoadedData = false
@@ -101,7 +101,7 @@ class ApplicationsManagementViewModel(application: AndroidApplication) : Android
                     onRefreshLoading(result.refreshing && hasLoadedData)
                     result.error?.let { error ->
                         reportLoadFailure(error)
-                        if (result.data == null) onError(error)
+                        onError(error, result.data != null)
                     }
                     if (!result.refreshing && !hasLoadedData) onFilterLoading(false)
                 }

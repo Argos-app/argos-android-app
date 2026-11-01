@@ -6,8 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="16dp"
-    app:cardBackgroundColor="#FFFBFAF9"
-    app:cardCornerRadius="24dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="30dp"
     app:cardElevation="0dp"
     app:strokeColor="#FFE3DCCF"
     app:strokeWidth="1dp">
@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="20dp"
         android:paddingTop="20dp"
         android:paddingBottom="20dp">
 
@@ -33,7 +33,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 tools:text="Brinco: 075" />
 
@@ -45,8 +45,8 @@
 
                 <ImageView
                     android:id="@+id/exceptionStatusIcon"
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:contentDescription="@null"
                     tools:src="@drawable/positive_icon" />
 
@@ -57,9 +57,9 @@
                     android:layout_marginStart="5dp"
                     android:fontFamily="@font/dm_sans"
                     android:textColor="@color/argos_accent"
-                    android:textSize="10sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
-                    tools:text="Apto" />
+                    tools:text="Inapto" />
             </LinearLayout>
         </LinearLayout>
 
@@ -68,11 +68,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:ellipsize="end"
             android:fontFamily="@font/dm_sans"
-            android:maxLines="1"
             android:textColor="@color/argos_text_secondary"
-            android:textSize="10sp"
+            android:textSize="14sp"
             tools:text="Lote atual: Sub Engorda 001" />
 
         <View
@@ -89,8 +87,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:contentDescription="@null"
                 android:src="@drawable/warning_icon" />
 
@@ -100,68 +98,66 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:ellipsize="end"
                 android:fontFamily="@font/dm_sans"
-                android:maxLines="1"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="10sp"
+                android:textSize="14sp"
                 tools:text="Motivo: Animal com suspeita de febre aftosa." />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="52dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_record_date_label"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/exceptionStartDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="10sp"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 tools:text="04/06/2026" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="52dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_slaughter_release_label"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/exceptionEndDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="10sp"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 tools:text="04/08/2026" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -172,7 +168,7 @@
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_return_fitness"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/exceptionReturnProgressLabel"
@@ -180,21 +176,22 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="10sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 tools:text="60%" />
         </LinearLayout>
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/exceptionReturnProgress"
-            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="5dp"
+            android:layout_height="12dp"
+            android:layout_marginTop="8dp"
             android:max="100"
             android:progress="0"
-            android:progressBackgroundTint="#FFE3DCCF"
-            android:progressTint="@color/argos_nav_selected"
+            app:indicatorColor="@color/argos_nav_selected"
+            app:trackColor="#FFE3DCCF"
+            app:trackCornerRadius="6dp"
+            app:trackThickness="12dp"
             tools:progress="60" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

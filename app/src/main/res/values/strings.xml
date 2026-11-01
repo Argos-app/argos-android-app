@@ -63,6 +63,12 @@
     <string name="home_greeting">Olá, %1$s. Que bom te ver!</string>
     <string name="home_greeting_fallback">Olá! Que bom te ver!</string>
     <string name="home_herd_health">Todo o rebanho está saudável.</string>
+    <string name="home_herd_health_loading">Verificando carências...</string>
+    <string name="home_herd_health_unavailable">Não foi possível determinar as carências.</string>
+    <plurals name="home_active_withdrawals">
+        <item quantity="one">O rebanho tem %1$d carência.</item>
+        <item quantity="other">O rebanho tem %1$d carências.</item>
+    </plurals>
     <string name="home_choose_action">Escolha o que deseja fazer:</string>
     <string name="home_manage_medication">Gerenciar Medicamentos</string>
     <string name="home_manage_applications">Gerenciar Aplicações</string>
@@ -122,9 +128,9 @@
     <string name="exceptions_status_fit">Apto</string>
     <string name="exceptions_status_unfit">Inapto</string>
     <string name="exceptions_reason">Motivo: %1$s</string>
-    <string name="exceptions_record_date_label">Registro:</string>
-    <string name="exceptions_slaughter_release_label">Liberação para abate:</string>
-    <string name="exceptions_return_fitness">Aptidão para retorno</string>
+    <string name="exceptions_record_date_label">Início:</string>
+    <string name="exceptions_slaughter_release_label">Fim:</string>
+    <string name="exceptions_return_fitness">Período para retorno</string>
     <string name="exceptions_progress_percent">%1$d%%</string>
     <string name="exceptions_create_title">Criar Exceção</string>
     <string name="exceptions_origin_lot">Lote de Origem</string>
@@ -194,13 +200,33 @@
     <string name="applications_register_success">Aplicação registrada.</string>
     <string name="applications_register_error">Não foi possível registrar. Tente novamente.</string>
     <string name="lots_title">Lotes</string>
-    <string name="lots_search_hint">Pesquisar lote</string>
+    <string name="lots_search_hint">Buscar lote</string>
     <string name="lots_search">Pesquisar lotes</string>
-    <string name="lots_filter_all">Todos</string>
-    <string name="lots_filter_engorda">Engorda</string>
-    <string name="lots_filter_recria">Recria</string>
+    <string name="lots_filter_all">Tudo</string>
+    <string name="lots_filter_slaughter">Abate</string>
+    <string name="lots_overview">Visão geral</string>
+    <string name="lots_no_active">Nenhum lote ativo</string>
+    <string name="lots_previous">Lote anterior</string>
+    <string name="lots_next">Próximo lote</string>
+    <string name="lots_register_slaughter">Registrar abate</string>
+    <string name="lots_slaughter_confirmation">Registrar abate do lote %1$s?</string>
+    <string name="lots_slaughter_unavailable">Abate indisponível para %1$s</string>
+    <string name="lots_slaughter_confirmation_message">Após o registro, o lote ficará disponível apenas no histórico.</string>
+    <string name="lots_slaughter_unavailable_message">Em carência. Liberação em %1$s.</string>
+    <string name="lots_slaughter_unknown_date">Data de liberação não informada.</string>
+    <string name="lots_slaughter_not_available">O registro de abate ainda não está disponível.</string>
+    <string name="lots_no_registered">Você ainda não possui lotes cadastrados no Argos. Organize o manejo do seu rebanho e acompanhe o período de carência de forma inteligente.</string>
+    <string name="lots_treatments_description">Animais em tratamento são separados em um lote temporário até o fim do período de carência, permitindo o abate do restante do lote.</string>
+    <string name="lots_exceptions_empty">Nenhuma exceção informada para este lote.</string>
+    <string name="lots_treatment_row">Brinco: %1$s\nMedicamento: %2$s\nFim da carência: %3$s</string>
+    <plurals name="lots_treatments_count">
+        <item quantity="one">%d animal em tratamento:</item>
+        <item quantity="other">%d animais em tratamento:</item>
+    </plurals>
     <string name="lots_loading">Carregando lotes.</string>
     <string name="lots_empty">Nenhum lote encontrado.</string>
+    <string name="lots_empty_description">Sua propriedade está pronta para receber seu primeiro lote de animais.</string>
+    <string name="lots_empty_add">Cadastrar primeiro lote</string>
     <string name="lots_load_error">N&#227;o foi poss&#237;vel carregar os lotes.</string>
     <string name="lots_retry">Tentar novamente</string>
     <string name="lots_add">Adicionar lote</string>
@@ -232,7 +258,9 @@
     <string name="lots_create_error">Não foi possível criar o lote. Tente novamente.</string>
     <string name="lots_create_submitting">Criando lote.</string>
     <string name="lots_card_category">Categoria: %1$s</string>
-    <string name="lots_card_release_date">Abate previsto: %1$s</string>
+    <string name="lots_card_head_count">Cabeças: %1$s</string>
+    <string name="lots_card_open_date">Data de criação: %1$s</string>
+    <string name="lots_card_release_date">Data prevista de abate: %1$s</string>
     <string-array name="lots_categories">
         <item>Engorda</item>
         <item>Recria</item>
@@ -245,4 +273,6 @@
     <string name="profile_notifications_settings">Abrir configurações</string>
     <string name="profile_notifications_later">Talvez depois</string>
     <string name="reset_user_email_unavailable">Não foi possível carregar o e-mail da sua conta.</string>
+    <string name="lots_slaughter_success">Abate registrado com sucesso.</string>
+    <string name="lots_slaughter_error">Não foi possível registrar o abate. Tente novamente.</string>
 </resources>

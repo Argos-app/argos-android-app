@@ -5,6 +5,7 @@ import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
+import com.android.argosapp.data.dto.LotAnimalExceptionDto
 import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionDto
@@ -35,6 +36,7 @@ class MockedArgosApiRepository(
     private var isFirstAccess = firstAccess
     private val registeredApplications = mutableListOf<Application>()
     private val registeredLots = mutableListOf<RegisterLotDto>()
+    private val deletedLotIds = mutableSetOf<String>()
     private val registeredAnimalExceptions = mutableListOf<RegisterAnimalExceptionDto>()
     private val herds = mutableListOf(
         Herd("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000001", "Rebanho Nelore", "Nelore", 100),
@@ -118,20 +120,42 @@ class MockedArgosApiRepository(
         return herds.toList()
     }
 
-    override suspend fun listLots(bearerToken: String): List<LotDto> = registeredLots.map { lot ->
+    override suspend fun listLots(bearerToken: String): List<LotDto> = (registeredLots.map { lot ->
         LotDto(
             lotName = lot.lotName,
             openDate = LocalDate.now().toString(),
             releaseSlaughterDate = lot.releaseSlaughterDate,
-            category = lot.category,
-            animalExceptionOutList = emptyList(),
+            category = when (lot.category) {
+                "FATTENING" -> "ENGORDA"
+                "BREEDING" -> "CRIA"
+                "REARING" -> "RECRIA"
+                else -> lot.category
+            },
+            animalExceptionOutList = null,
             lotId = UUID.nameUUIDFromBytes(lot.lotName.toByteArray()).toString(),
+            headCount = lot.headCount,
         )
     } + listOf(
-        LotDto("Lote 100% real", null, null, "ENGORDA", emptyList(), UUID(0L, 100).toString()),
-        LotDto("Lote 101% real", null, null, "RECRIA", emptyList(), UUID(0L, 101).toString()),
-    ) + List(28) { index ->
-        LotDto("Lote ${index + 102}% real", null, null, "ENGORDA", emptyList(), UUID(0L, index.toLong() + 102).toString())
+        LotDto("Lote 100% real", "2026-06-04", "2026-12-01", "ENGORDA", null, UUID(0L, 100).toString(), 200),
+        LotDto("Lote 101% real", "2026-04-15", "2026-08-04", "RECRIA", null, UUID(0L, 101).toString(), 120),
+        LotDto(
+            lotName = "Sub Engorda 001",
+            openDate = "2026-10-20",
+            releaseSlaughterDate = "2026-12-05",
+            category = "ENGORDA",
+            animalExceptionOutList = listOf(
+                LotAnimalExceptionDto("BR-0001", "Ivermectina", "2026-11-15"),
+                LotAnimalExceptionDto("BR-0002", "Vacina A", "2026-12-05"),
+            ),
+            lotId = UUID(0L, 102).toString(),
+            headCount = 2,
+        ),
+    )).filterNot { it.lotId in deletedLotIds }
+
+    override suspend fun deleteLot(bearerToken: String, lotId: String) {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        require(listLots(bearerToken).any { it.lotId == lotId }) { "Lot not found." }
+        deletedLotIds.add(lotId)
     }
 
     private val medicines = listOf(
@@ -170,6 +194,7 @@ class MockedArgosApiRepository(
         )
         val tags = listOf("075", "102", "118", "124", "131", "145", "163", "177", "098", "105", "119", "128", "137", "149", "158", "166", "181", "194")
         val availableLots = listLots(bearerToken)
+        val today = LocalDate.now()
         val records = (lots.mapIndexed { index, lot ->
             val eligible = index < 8
             AnimalExceptionDto(
@@ -177,8 +202,8 @@ class MockedArgosApiRepository(
                 earTag = tags[index],
                 currentLotCode = lot,
                 originLotCode = lot,
-                exceptionDate = "2026-06-04",
-                slaughterReleaseDate = "2026-08-04",
+                exceptionDate = today.minusDays(if (eligible) 20 else 5).toString(),
+                slaughterReleaseDate = today.plusDays(if (eligible) -1 else 5).toString(),
                 exceptionReason = "Animal com suspeita de febre aftosa.",
                 status = "ATIVO",
                 fitForSlaughter = eligible,

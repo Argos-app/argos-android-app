@@ -1,4 +1,5 @@
 <resources>
+    <color name="launcher_icon_background">#D5CCBA</color>
     <color name="argos_green">#FF06412F</color>
     <color name="argos_accent">#FF62BB4D</color>
     <color name="argos_notice_important">#FF7F411A</color>

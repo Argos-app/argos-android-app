@@ -41,6 +41,8 @@ interface ArgosApiRepository {
 
     suspend fun listLots(bearerToken: String): List<LotDto>
 
+    suspend fun deleteLot(bearerToken: String, lotId: String)
+
     suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto
 
     suspend fun getAnimalExceptionsPage(bearerToken: String, active: Boolean?, page: Int, size: Int): AnimalExceptionPageDto

@@ -44,7 +44,7 @@ class ExceptionsManagementAdapter :
             )
             val statusIcon = ContextCompat.getDrawable(
                 context,
-                if (exception.eligibleToReturn) R.drawable.positive_icon else R.drawable.negative_icon,
+                if (exception.eligibleToReturn) R.drawable.positive_icon else R.drawable.warning_icon,
             )
             binding.exceptionEarTag.text = context.getString(R.string.exceptions_ear_tag, exception.earTag)
             binding.exceptionLotName.text = context.getString(
@@ -64,11 +64,11 @@ class ExceptionsManagementAdapter :
             )
             binding.exceptionStartDate.text = exception.exceptionDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
             binding.exceptionEndDate.text = exception.slaughterReleaseDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
-            binding.exceptionReturnProgressLabel.text = context.getString(
-                R.string.exceptions_progress_percent,
-                exception.returnFitnessPercentage,
-            )
-            binding.exceptionReturnProgress.progress = exception.returnFitnessPercentage.coerceIn(0, 100)
+            val elapsedPercentage = exception.elapsedReturnPercentage(LocalDate.now())
+            binding.exceptionReturnProgressLabel.text = elapsedPercentage?.let {
+                context.getString(R.string.exceptions_progress_percent, it)
+            } ?: context.getString(R.string.home_calendar_unknown_value)
+            binding.exceptionReturnProgress.progress = elapsedPercentage ?: 0
         }
 
         private fun String?.toDisplayDate(fallback: String): String = this?.let { value ->

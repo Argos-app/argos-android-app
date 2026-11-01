@@ -15,7 +15,7 @@ class LotFormValidator {
         SLAUGHTER_DATE,
     }
 
-    fun isValidName(value: String): Boolean = value.trim().isNotEmpty() && value.trim().length <= MAX_NAME_LENGTH
+    private fun isValidName(value: String, maxLength: Int): Boolean = value.trim().isNotEmpty() && value.trim().length <= maxLength
 
     fun isValidCategory(value: String, availableCategories: Collection<String>): Boolean =
         value in availableCategories
@@ -39,9 +39,9 @@ class LotFormValidator {
         slaughterDate: String,
         availableCategories: Collection<String>,
     ): Set<Field> = buildSet {
-        if (!isValidName(lotName)) add(Field.LOT_NAME)
-        if (isNewHerd && !isValidName(herdName)) add(Field.HERD_NAME)
-        if (isNewHerd && breed.isNullOrBlank()) add(Field.BREED)
+        if (!isValidName(lotName, 20)) add(Field.LOT_NAME)
+        if (isNewHerd && !isValidName(herdName, 60)) add(Field.HERD_NAME)
+        if (isNewHerd && (breed == null || !isValidName(breed, 40))) add(Field.BREED)
         if (!isNewHerd && herdId.isNullOrBlank()) add(Field.HERD_NAME)
         if (!isValidCategory(category, availableCategories)) add(Field.CATEGORY)
         if (!isValidHeadCount(headCount)) add(Field.HEAD_COUNT)
@@ -49,7 +49,6 @@ class LotFormValidator {
     }
 
     companion object {
-        const val MAX_NAME_LENGTH = 120
         private val SLAUGHTER_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("dd/MM/uuuu")
             .withResolverStyle(ResolverStyle.STRICT)

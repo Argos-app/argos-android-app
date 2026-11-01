@@ -1,6 +1,7 @@
 package com.android.argosapp.data.dto
 
 import com.android.argosapp.model.Lot
+import com.android.argosapp.model.LotAnimalException
 import java.time.LocalDate
 
 data class LotDto(
@@ -10,12 +11,22 @@ data class LotDto(
     val category: String?,
     val animalExceptionOutList: List<LotAnimalExceptionDto>?,
     val lotId: String? = null,
+    val headCount: Int? = null,
 ) {
     fun toModel(): Lot = Lot(
         lotName = lotName,
+        lotId = lotId,
         openDate = openDate.toLocalDateOrNull(),
         releaseSlaughterDate = releaseSlaughterDate.toLocalDateOrNull(),
         category = category,
+        headCount = headCount,
+        animalExceptions = animalExceptionOutList.orEmpty().map { animal ->
+            LotAnimalException(
+                earCode = animal.earCode,
+                medicine = animal.medicine,
+                releaseSlaughterDate = animal.releaseSlaughterDate.toLocalDateOrNull(),
+            )
+        },
     )
 
     private fun String?.toLocalDateOrNull(): LocalDate? = this?.let { value ->

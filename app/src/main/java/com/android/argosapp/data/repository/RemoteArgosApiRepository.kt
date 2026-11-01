@@ -25,6 +25,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Header
 import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -39,6 +41,9 @@ private interface ArgosApiService {
 
     @GET("lot/list-all")
     suspend fun listLots(@Header("Authorization") authorization: String): Response<List<LotDto>>
+
+    @DELETE("lot/{lotId}")
+    suspend fun deleteLot(@Header("Authorization") authorization: String, @Path("lotId") lotId: String): Response<Unit>
 
     @GET("medicines")
     suspend fun listMedicines(
@@ -203,6 +208,16 @@ class RemoteArgosApiRepository(
         if (!response.isSuccessful) throw HttpException(response)
 
         requireNotNull(response.body()) { "Successful lot list response contained no body." }
+    }
+
+    override suspend fun deleteLot(bearerToken: String, lotId: String): Unit = logger.runSuspending(
+        operation = "delete_lot",
+        startFields = arrayOf("environment" to environment, "method" to "DELETE", "endpoint" to "lot/{lotId}"),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.deleteLot("Bearer $bearerToken", lotId)
+        logResponse("delete_lot", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
     }
 
     override suspend fun getMedicinesPage(

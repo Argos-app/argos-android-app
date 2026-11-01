@@ -12,4 +12,5 @@ data class LotEntity(
     val releaseSlaughterDate: String?,
     val category: String?,
     val animalExceptionOutListIsNull: Boolean,
+    val headCount: Int? = null,
 )

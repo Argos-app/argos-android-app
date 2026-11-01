@@ -60,7 +60,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             viewModel.refresh(
                 onRefreshLoading = ::setRefreshing,
                 onApplicationsLoaded = ::showApplications,
-                onError = { showLoadError() },
+                onError = { _, cached -> if (cached) showRefreshError() else showLoadError() },
             )
         }
 
@@ -68,7 +68,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             onFilterLoading = ::setLoading,
             onRefreshLoading = ::setRefreshing,
             onApplicationsLoaded = ::showApplications,
-            onError = { showLoadError() },
+            onError = { _, cached -> if (cached) showRefreshError() else showLoadError() },
         )
     }
 
@@ -157,7 +157,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             viewModel.refresh(
                 onRefreshLoading = ::setRefreshing,
                 onApplicationsLoaded = ::showApplications,
-                onError = { showLoadError() },
+                onError = { _, cached -> if (cached) showRefreshError() else showLoadError() },
             )
         }
     }
@@ -273,7 +273,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                     viewModel.refresh(
                         onRefreshLoading = ::setRefreshing,
                         onApplicationsLoaded = ::showApplications,
-                        onError = { showLoadError() },
+                        onError = { _, cached -> if (cached) showRefreshError() else showLoadError() },
                     )
                     dialog.dismiss()
                 },
@@ -605,6 +605,10 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         hasApplicationLoadFailed = false
         applicationsAdapter?.submitList(applications)
         renderLoadingState()
+    }
+
+    private fun showRefreshError() {
+        _binding?.let { Toast.makeText(it.root.context, R.string.refresh_failed, Toast.LENGTH_SHORT).show() }
     }
 
     private fun showLoadError() {

@@ -86,7 +86,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_total"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="10sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/exceptionsTotalCount"
@@ -118,7 +118,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_fit"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="10sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/exceptionsFitCount"
@@ -150,7 +150,7 @@
                         android:gravity="center"
                         android:text="@string/exceptions_unfit"
                         android:textColor="@color/argos_text_secondary"
-                        android:textSize="10sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/exceptionsUnfitCount"

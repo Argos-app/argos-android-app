@@ -19,6 +19,7 @@ class LotStorage(context: Context) {
             openDate = entity.openDate,
             releaseSlaughterDate = entity.releaseSlaughterDate,
             category = entity.category,
+            headCount = entity.headCount,
             animalExceptionOutList = if (entity.animalExceptionOutListIsNull) null else {
                 dao.getAnimalExceptions(entity.rowId).map { animal ->
                     LotAnimalExceptionDto(
@@ -33,6 +34,7 @@ class LotStorage(context: Context) {
 
     suspend fun getNamesForSelect(): List<String> = dao.getNamesForSelect()
     suspend fun getCreatedAt(): Long? = dao.getCreatedAt()
+    suspend fun deleteById(lotId: String) = dao.deleteById(lotId)
 
     suspend fun replaceAll(items: List<LotDto>) {
         val lots = items.map { lot ->
@@ -42,6 +44,7 @@ class LotStorage(context: Context) {
                 openDate = lot.openDate,
                 releaseSlaughterDate = lot.releaseSlaughterDate,
                 category = lot.category,
+                headCount = lot.headCount,
                 animalExceptionOutListIsNull = lot.animalExceptionOutList == null,
             )
         }

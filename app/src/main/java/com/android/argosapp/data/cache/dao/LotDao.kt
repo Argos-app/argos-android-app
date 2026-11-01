@@ -32,6 +32,18 @@ interface LotDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveMetadata(item: LotCacheMetadata)
 
+    @Query("DELETE FROM lot_animal_exceptions WHERE lotRowId IN (SELECT rowId FROM lots WHERE lotId = :lotId)")
+    suspend fun deleteAnimalExceptionsForLot(lotId: String)
+
+    @Query("DELETE FROM lots WHERE lotId = :lotId")
+    suspend fun deleteLot(lotId: String)
+
+    @Transaction
+    suspend fun deleteById(lotId: String) {
+        deleteAnimalExceptionsForLot(lotId)
+        deleteLot(lotId)
+    }
+
     @Query("DELETE FROM lots")
     suspend fun clearLots()
 
