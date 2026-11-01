@@ -23,4 +23,5 @@
     <color name="argos_error">#FFB3261E</color>
     <color name="argos_nav_glass">#70D3C9B5</color>
     <color name="argos_nav_selected">#FF779A86</color>
+    <color name="argos_onboarding_decoration">#3862BB4D</color>
 </resources>

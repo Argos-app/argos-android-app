@@ -125,4 +125,10 @@
             </LinearLayout>
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/onboardingOverlayContainer"
+        android:elevation="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 </FrameLayout>

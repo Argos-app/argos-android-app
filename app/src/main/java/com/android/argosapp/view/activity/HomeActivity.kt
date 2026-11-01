@@ -18,6 +18,7 @@ import com.android.argosapp.databinding.ActivityHomeBinding
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.view.effect.NavBarBlurEffect
 import com.android.argosapp.view.fragment.ChatbotFragment
+import com.android.argosapp.view.fragment.OnboardingFragment
 import com.android.argosapp.view.fragment.HomeFragment
 import com.android.argosapp.view.fragment.HomeApplicationDetailsFragment
 import com.android.argosapp.view.fragment.ApplicationsManagementFragment
@@ -82,7 +83,27 @@ class HomeActivity : FragmentActivity() {
 
         }
         updateNavigationBarVisibility()
+        showOnboardingIfPending()
         requestNotificationPermissionOnStartup()
+    }
+
+    private fun showOnboardingIfPending() {
+        val existing = supportFragmentManager.findFragmentByTag("onboarding")
+        if (viewModel.mustOnboarding()) {
+            binding.onboardingOverlayContainer.visibility = View.VISIBLE
+            if (existing == null) {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.onboardingOverlayContainer, OnboardingFragment(), "onboarding")
+                    .commit()
+            }
+        } else if (existing != null) {
+            supportFragmentManager.beginTransaction().remove(existing).commit()
+        }
+    }
+
+    fun closeOnboardingOverlay(fragment: OnboardingFragment) {
+        binding.onboardingOverlayContainer.visibility = View.GONE
+        supportFragmentManager.beginTransaction().remove(fragment).commit()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

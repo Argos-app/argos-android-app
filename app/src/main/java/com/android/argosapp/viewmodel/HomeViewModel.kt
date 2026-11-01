@@ -41,6 +41,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         },
     )
 
+    fun mustOnboarding() = userStorage.mustOnboarding()
+
+    fun completeOnboarding() = userStorage.setMustOnboarding(false)
+
     private var requestedMonth: YearMonth? = null
 
     fun loadActiveWithdrawals(onResult: (Int?) -> Unit) {

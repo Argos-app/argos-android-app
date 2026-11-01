@@ -45,7 +45,7 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
         )
     }
     private val viewModel: FirstAccessChangePasswordViewModel by viewModels {
-        viewModelFactory { initializer { FirstAccessChangePasswordViewModel(authManager) } }
+        viewModelFactory { initializer { FirstAccessChangePasswordViewModel(authManager, UserStorage(applicationContext)) } }
     }
     private val passwordValidator = PasswordPatternValidator()
     private var newPasswordVisible = false
