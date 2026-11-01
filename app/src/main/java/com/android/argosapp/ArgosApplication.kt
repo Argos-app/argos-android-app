@@ -2,6 +2,9 @@ package com.android.argosapp
 
 import android.app.Application
 import com.cloudinary.android.MediaManager
+import com.android.argosapp.data.repository.AiChatApiRepository
+import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.MockedArgosApiRepository
 import com.android.argosapp.data.repository.RemoteArgosApiRepository
@@ -9,7 +12,7 @@ import com.android.argosapp.util.logging.AppLogger
 import timber.log.Timber
 
 class ArgosApplication : Application() {
-    val runMode: ArgosRunMode = ArgosRunMode.RUN_MOCKED_WITH_FIRST_ACCESS // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
+    val runMode: ArgosRunMode = ArgosRunMode.RUN_HOMOLOGATION // Aqui foi setado explicitamente para run em etapa de desenvolvimento, caso queria mude o modo de run aqui
 
     val argosApiRepository: ArgosApiRepository by lazy {
         when (runMode) {
@@ -20,6 +23,8 @@ class ArgosApplication : Application() {
             ArgosRunMode.RUN_MOCKED_WITH_NOT_FOUND -> MockedArgosApiRepository(notFound = true)
         }
     }
+
+    val aiChatApiRepository by lazy { AiChatApiRepository.newClient(FirebaseRepository(), TokenStorage(this)) }
 
     override fun onCreate() {
         super.onCreate()

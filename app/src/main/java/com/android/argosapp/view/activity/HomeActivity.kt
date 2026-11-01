@@ -148,6 +148,8 @@ class HomeActivity : FragmentActivity() {
         navBarBlurEffect.bindSource()
     }
 
+    fun navigateToHome() = showDestination(Destination.HOME, animateIndicator = true)
+
     fun showApplicationDetails(application: ApplicationWithdrawal) {
         setNavigationBarVisible(false)
         fragmentNavHelper.navigate(

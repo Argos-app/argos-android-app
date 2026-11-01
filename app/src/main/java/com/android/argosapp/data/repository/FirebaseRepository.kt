@@ -98,15 +98,17 @@ class FirebaseRepository(
 
     fun signOut(): Unit = logger.runSynchronous("sign_out") { firebaseAuth.signOut() }
 
-    private suspend fun getCurrentIdToken(): String = logger.runSuspending("get_id_token") {
+    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String = logger.runSuspending("get_id_token") {
         val currentUser = requireNotNull(firebaseAuth.currentUser) {
             "O Firebase não possui um usuário autenticado."
         }
 
-        requireNotNull(currentUser.getIdToken(false).await()?.token?.takeIf { it.isNotBlank() }) {
+        requireNotNull(currentUser.getIdToken(forceRefresh).await()?.token?.takeIf { it.isNotBlank() }) {
             "O Firebase não retornou um ID token válido."
         }
     }
+
+    fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
 
     private companion object {
         const val PROFILE_RESET_SOURCE = "profile"
