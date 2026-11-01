@@ -174,95 +174,32 @@
             </FrameLayout>
         </LinearLayout>
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="10dp"
-            android:orientation="horizontal">
+            android:fontFamily="@font/dm_sans"
+            android:text="@string/applications_register_ear_tag"
+            android:textColor="@color/argos_green"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:fontFamily="@font/dm_sans"
-                    android:text="@string/applications_register_date"
-                    android:textColor="@color/argos_green"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:id="@+id/applicationDateField"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/application_field_background"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:contentDescription="@null"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/application_calendar_icon" />
-
-                    <TextView
-                        android:id="@+id/applicationDateValue"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/dm_sans"
-                        android:text="@string/applications_register_date_hint"
-                        android:textColor="#FF000000"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:fontFamily="@font/dm_sans"
-                    android:text="@string/applications_register_ear_tag"
-                    android:textColor="@color/argos_green"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/applicationEarTagField"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/application_field_background"
-                    android:fontFamily="@font/dm_sans"
-                    android:gravity="center_vertical"
-                    android:hint="@string/applications_register_ear_tag_hint"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="#FF000000"
-                    android:textColorHint="@color/argos_placeholder"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
-
+        <EditText
+            android:id="@+id/applicationEarTagField"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/application_field_background"
+            android:fontFamily="@font/dm_sans"
+            android:gravity="center_vertical"
+            android:hint="@string/applications_register_ear_tag_hint"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingHorizontal="14dp"
+            android:textColor="#FF000000"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="12sp" />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

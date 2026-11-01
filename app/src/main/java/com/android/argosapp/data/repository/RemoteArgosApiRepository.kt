@@ -11,6 +11,7 @@ import com.android.argosapp.data.dto.ApplicationWithdrawalDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.data.dto.DeviceRegisterResponse
 import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
+import com.android.argosapp.data.dto.RegisterAnimalApplicationDto
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
@@ -59,6 +60,13 @@ private interface ArgosApiService {
         @Query("page") page: Int,
         @Query("size") size: Int,
     ): Response<AnimalExceptionPageDto>
+
+    @POST("animal-application/{animalExceptionId}")
+    suspend fun registerAnimalApplication(
+        @Header("Authorization") authorization: String,
+        @Path("animalExceptionId") animalExceptionId: String,
+        @Body data: RegisterAnimalApplicationDto,
+    ): Response<Unit>
 
     @POST("animal-exceptions")
     suspend fun registerAnimalException(
@@ -262,6 +270,20 @@ class RemoteArgosApiRepository(
         logResponse("get_animal_exceptions_page", response.code(), response.isSuccessful)
         if (!response.isSuccessful) throw HttpException(response)
         requireNotNull(response.body()) { "Successful animal exception page response contained no body." }
+    }
+
+    override suspend fun registerAnimalApplication(
+        bearerToken: String,
+        animalExceptionId: String,
+        data: RegisterAnimalApplicationDto,
+    ): Unit = logger.runSuspending(
+        operation = "register_animal_application",
+        startFields = arrayOf("environment" to environment, "method" to "POST", "endpoint" to "animal-application/{animalExceptionId}"),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerAnimalApplication("Bearer $bearerToken", animalExceptionId, data)
+        logResponse("register_animal_application", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
     }
 
     override suspend fun registerAnimalException(

@@ -12,6 +12,7 @@ import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
+import com.android.argosapp.data.dto.RegisterAnimalApplicationDto
 import java.time.LocalDate
 
 /**
@@ -48,6 +49,8 @@ interface ArgosApiRepository {
     suspend fun getAnimalExceptionsPage(bearerToken: String, active: Boolean?, page: Int, size: Int): AnimalExceptionPageDto
 
     suspend fun registerAnimalException(bearerToken: String, data: RegisterAnimalExceptionDto)
+
+    suspend fun registerAnimalApplication(bearerToken: String, animalExceptionId: String, data: RegisterAnimalApplicationDto)
 
     suspend fun registerDevice(bearerToken: String, data: DeviceRegisterDto): String
 }

@@ -12,6 +12,7 @@ import com.android.argosapp.data.dto.AnimalExceptionDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
+import com.android.argosapp.data.dto.RegisterAnimalApplicationDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.Herd
@@ -243,6 +244,35 @@ class MockedArgosApiRepository(
             first = page == 0,
             last = toIndex >= records.size,
         )
+    }
+
+    override suspend fun registerAnimalApplication(bearerToken: String, animalExceptionId: String, data: RegisterAnimalApplicationDto) {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        val animal = getAnimalExceptionsPage(bearerToken, true, 0, 100).data.singleOrNull { it.id == animalExceptionId }
+        require(animal != null && animal.earTag == data.earCode) { "Animal exception not found." }
+        val medicine = medicines.firstOrNull { it.medicineBatchId == data.medicineBatchId }
+            ?: throw NoSuchElementException("Medicine batch not found.")
+        require(data.dose.signum() > 0 && data.unit.isNotBlank() && data.route.isNotBlank()) { "Invalid application." }
+        delay(600)
+        val now = LocalDateTime.now()
+        val withdrawalEnd = now.toLocalDate().plusDays(medicine.withdrawalDays?.toLong() ?: 0)
+        registeredApplications.add(0, Application(
+            lotName = animal.currentLotCode,
+            lotCode = null,
+            earCode = data.earCode,
+            medicineName = medicine.medicineName,
+            applicationDate = now,
+            applicationTime = now.toLocalTime(),
+            dose = data.dose,
+            unit = data.unit,
+            route = data.route,
+            headCountApplied = 1,
+            headCount = 1,
+            meatWithdrawalEnd = withdrawalEnd,
+            status = if (withdrawalEnd.isAfter(now.toLocalDate())) "Pendente" else "Concluida",
+            goal = data.goal,
+            notes = null,
+        ))
     }
 
     override suspend fun registerAnimalException(

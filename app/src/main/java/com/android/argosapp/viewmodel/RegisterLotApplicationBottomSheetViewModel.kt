@@ -9,6 +9,10 @@ import com.android.argosapp.data.cache.storage.LotStorage
 import com.android.argosapp.data.cache.storage.MedicineStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.RegisterAnimalApplicationDto
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.util.logging.AppLogger
+import java.math.BigDecimal
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.dto.MedicinePageDto
 import kotlinx.coroutines.CancellationException
@@ -138,6 +142,57 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
         }
     }
 
+    fun registerAnimalApplication(
+        lotName: String,
+        earCode: String,
+        medicineName: String,
+        dose: BigDecimal,
+        onLoading: (Boolean) -> Unit,
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        if (submitting) return
+        submitting = true
+        viewModelScope.launch {
+            onLoading(true)
+            try {
+                val token = requireToken()
+                val medicines = medicineStorage.getAll().filter { it.medicineName == medicineName }
+                require(medicines.size == 1) { "Medicamento não encontrado ou possui lotes ambíguos." }
+                val matches = mutableListOf<com.android.argosapp.data.dto.AnimalExceptionDto>()
+                var pageNumber = 0
+                while (true) {
+                    val page = repository.getAnimalExceptionsPage(token, true, pageNumber, 100)
+                    matches += page.data.filter { it.earTag == earCode && it.currentLotCode == lotName }
+                    if (page.last) break
+                    check(page.data.isNotEmpty() && pageNumber < page.totalPages - 1) { "Paginação de exceções inválida." }
+                    pageNumber++
+                }
+                require(matches.size == 1) { "Animal não encontrado no lote selecionado ou brinco duplicado." }
+                repository.registerAnimalApplication(token, matches.single().id, RegisterAnimalApplicationDto(
+                    earCode = earCode,
+                    medicineBatchId = medicines.single().medicineBatchId,
+                    dose = dose,
+                ))
+                try {
+                    AnimalExceptionStorage(getApplication()).clear()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    AppLogger.error(AppLogger.REPOSITORY_TAG, "animal_exception_cache_clear_failure", error)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                onError(error)
+                return@launch
+            } finally {
+                submitting = false
+                onLoading(false)
+            }
+            onSuccess()
+        }
+    }
     private fun requireToken(): String = tokenStorage.getArgosApiToken()
         ?.takeIf(String::isNotBlank)
         ?: throw SecurityException("Bearer token is unavailable.")

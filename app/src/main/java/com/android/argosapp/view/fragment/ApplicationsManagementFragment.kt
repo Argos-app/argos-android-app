@@ -216,7 +216,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             null,
             false,
         )
-        setupApplicationDatePicker(content)
+
         val animalLots = mutableListOf<String>()
         val animalMedicines = mutableListOf<String>()
         setupAnimalOptionSelectors(content, animalLots, animalMedicines)
@@ -225,8 +225,8 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         val earTagField = content.findViewById<EditText>(R.id.applicationEarTagField)
         val lotValue = content.findViewById<TextView>(R.id.applicationLotValue)
         val medicineValue = content.findViewById<TextView>(R.id.applicationMedicineValue)
-        val dateValue = content.findViewById<TextView>(R.id.applicationDateValue)
-        setDigitsOnlyFilter(earTagField)
+
+
         var formattingDose = false
         doseField.doAfterTextChanged { editable ->
             if (formattingDose) return@doAfterTextChanged
@@ -248,15 +248,11 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 return@setOnClickListener
             }
             val dose = doseField.text.toString().removeSuffix(" ml")
-            val applicationDate = LocalDate.parse(dateValue.text.toString(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).toString()
-            registrationOptionsViewModel.registerApplication(
-                data = RegisterLotApplicationDto(
-                    lotName = lotValue.text.toString(),
-                    medicineName = medicineValue.text.toString(),
-                    applicationDate = applicationDate,
-                    dose = dose.toBigDecimal(),
-                    earCode = earTagField.text.toString(),
-                ),
+            registrationOptionsViewModel.registerAnimalApplication(
+                lotName = lotValue.text.toString(),
+                earCode = earTagField.text.toString().trim(),
+                medicineName = medicineValue.text.toString(),
+                dose = dose.toBigDecimal(),
                 onLoading = { loading ->
                     registerButton.isEnabled = !loading
                     registerButton.isClickable = !loading
@@ -277,8 +273,9 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                     )
                     dialog.dismiss()
                 },
-                onError = {
-                    Toast.makeText(requireContext(), R.string.applications_register_error, Toast.LENGTH_LONG).show()
+                onError = { error ->
+                    val message = if (error is IllegalArgumentException) error.message else getString(R.string.applications_register_error)
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
                 },
             )
         }
@@ -489,33 +486,6 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             showOptions(medicineField, medicineValue, medicines, true)
         }
     }
-    private fun setupApplicationDatePicker(content: View) {
-        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val dateValue = content.findViewById<TextView>(R.id.applicationDateValue)
-        var selectedDate = LocalDate.now()
-        dateValue.text = selectedDate.format(dateFormatter)
-        content.findViewById<View>(R.id.applicationDateField).setOnClickListener {
-            DatePickerDialog(
-                requireContext(),
-                R.style.Theme_Argosapp_DatePickerDialog,
-                { _, year, month, day ->
-                    selectedDate = LocalDate.of(year, month + 1, day)
-                    dateValue.text = selectedDate.format(dateFormatter)
-                },
-                selectedDate.year,
-                selectedDate.monthValue - 1,
-                selectedDate.dayOfMonth,
-            ).show()
-        }
-    }
-
-    private fun setDigitsOnlyFilter(field: EditText) {
-        field.filters = arrayOf(android.text.InputFilter { source, _, _, _, _, _ ->
-            val digitsOnly = source.filter { it in '0'..'9' }
-            if (digitsOnly.length == source.length) null else digitsOnly
-        })
-    }
-
     private fun validateAnimalApplication(
         doseField: EditText,
         earTagField: EditText,
@@ -525,7 +495,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         medicines: List<String>,
     ): Boolean {
         val validDose = applicationFormValidator.isValidDose(doseField.text.toString().removeSuffix(" ml"))
-        val validEarTag = applicationFormValidator.isValidEarTag(earTagField.text.toString())
+        val validEarTag = earTagField.text.toString().isNotBlank()
         val validLot = lotValue.text.toString() in lots
         val validMedicine = medicineValue.text.toString() in medicines
 
