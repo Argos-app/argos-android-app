@@ -76,6 +76,8 @@ data class ChatbotUiState(
     val messagesCursor: String? = null,
     val hasEarlierMessages: Boolean = false,
     val canContinueAfterInterruption: Boolean = false,
+    val isRecoveryBlocked: Boolean = false,
+    val canRetryPendingRecovery: Boolean = false,
 )
 
 class ChatbotViewModel internal constructor(
@@ -185,7 +187,9 @@ class ChatbotViewModel internal constructor(
     }
 
     fun retryOrDismissError() {
-        if (currentState.canContinueAfterInterruption) {
+        if (currentState.canRetryPendingRecovery) {
+            retryPendingRecovery()
+        } else if (currentState.canContinueAfterInterruption) {
             continueAfterInterruption()
         } else if (currentState.page == ChatbotPage.HISTORY && currentState.userKey.isNotBlank()) {
             showHistory()
@@ -376,7 +380,7 @@ class ChatbotViewModel internal constructor(
         val prompt = current.messages.latestUnansweredPrompt(includeExpired = true)
             ?.takeIf { it.inputType == "single_choice" }
             ?: return
-        if (current.isSending) return
+        if (current.isSending || current.isRecoveryBlocked) return
         if (prompt.isExpired()) {
             currentState = current.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
             return
@@ -405,7 +409,7 @@ class ChatbotViewModel internal constructor(
         val prompt = current.messages.latestUnansweredPrompt(includeExpired = true)
             ?.takeIf { it.inputType == "confirmation" }
             ?: return
-        if (current.isSending) return
+        if (current.isSending || current.isRecoveryBlocked) return
         if (prompt.isExpired()) {
             currentState = current.copy(errorMessage = "Esta pergunta expirou. Envie uma nova mensagem.")
             return
@@ -425,7 +429,7 @@ class ChatbotViewModel internal constructor(
         previousPrompt: ChatMessage?,
         makeInput: () -> AiInteractionInputDto,
     ) {
-        if (requestInFlight || currentState.isSending) return
+        if (requestInFlight || currentState.isSending || currentState.isRecoveryBlocked) return
         val generation = accountGeneration
         val screenGeneration = conversationGeneration
         requestInFlight = true
@@ -572,8 +576,7 @@ class ChatbotViewModel internal constructor(
             requestInFlight = false
             throw error
         } catch (error: Exception) {
-            requestInFlight = false
-            currentState = currentState.copy(isSending = false, errorMessage = "Não foi possível recuperar a interação pendente.")
+            markPendingRecoveryUnavailable()
             return
         }
         if (generation != accountGeneration) return
@@ -588,13 +591,8 @@ class ChatbotViewModel internal constructor(
             return
         }
         if (pending.interrupted) {
+            showInterruptedInteraction(pending)
             requestInFlight = false
-            val sameConversation = currentState.currentSessionId == pending.sessionId
-            currentState = currentState.copy(
-                isSending = !sameConversation,
-                canContinueAfterInterruption = !sameConversation,
-                errorMessage = getApplication<Application>().getString(R.string.chatbot_interruption_warning),
-            )
             return
         }
         interactionJob = viewModelScope.launch {
@@ -605,8 +603,14 @@ class ChatbotViewModel internal constructor(
                 throw error
             } catch (error: Exception) {
                 if (generation == accountGeneration) {
-                    if (error is RejectedInteractionException) showRejectedInteraction(error.pending)
-                    else currentState = currentState.copy(errorMessage = error.toUserMessage())
+                    when (error) {
+                        is RejectedInteractionException -> if (error.pending.interrupted) showInterruptedInteraction(error.pending) else showRejectedInteraction(error.pending)
+                        is InterruptedInteractionException -> {
+                            val interrupted = runCatching { pendingStore.get(userKey) }.getOrNull()
+                            if (interrupted != null) showInterruptedInteraction(interrupted) else markPendingRecoveryUnavailable(error.toUserMessage())
+                        }
+                        else -> markPendingRecoveryUnavailable(error.toUserMessage())
+                    }
                 }
             } finally {
                 finishPendingRecovery(generation, userKey)
@@ -616,20 +620,58 @@ class ChatbotViewModel internal constructor(
 
     private suspend fun finishPendingRecovery(generation: Int, userKey: String) {
         if (generation != accountGeneration) return
+        if (currentState.canRetryPendingRecovery) {
+            requestInFlight = false
+            return
+        }
         val pending = try {
             pendingStore.get(userKey)
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
             requestInFlight = false
-            currentState = currentState.copy(isSending = false, errorMessage = "Não foi possível recuperar a interação pendente.")
+            markPendingRecoveryUnavailable()
             return
         }
         requestInFlight = false
         currentState = currentState.copy(
             isSending = pending != null && pending.rejectionCode == null,
-            canContinueAfterInterruption = pending?.interrupted == true && pending.rejectionCode == null && currentState.currentSessionId != pending.sessionId,
+            canContinueAfterInterruption = pending?.interrupted == true && pending.rejectionCode == null,
         )
+    }
+
+    private fun markPendingRecoveryUnavailable(message: String = "Não foi possível recuperar a interação pendente.") {
+        requestInFlight = false
+        currentState = currentState.copy(
+            isSending = false,
+            isRecoveryBlocked = true,
+            canRetryPendingRecovery = true,
+            errorMessage = message,
+        )
+    }
+
+    private fun showInterruptedInteraction(pending: PendingInteraction) {
+        val current = currentState
+        val existingText = pending.input.recoveryText()
+        val draft = existingText?.takeIf { text ->
+            current.currentSessionId == pending.sessionId && current.messages.none { it.sender == ChatSender.USER && it.text == text }
+        }?.let { rejectedDraft(pending.sessionId, it) }
+        currentState = current.copy(
+            isSending = true,
+            canContinueAfterInterruption = true,
+            answerDraftToRestore = draft ?: current.answerDraftToRestore,
+            isRecoveryBlocked = false,
+            canRetryPendingRecovery = false,
+            errorMessage = getApplication<Application>().getString(R.string.chatbot_interruption_warning),
+        )
+    }
+
+    fun retryPendingRecovery() {
+        val current = currentState
+        if (requestInFlight || !current.canRetryPendingRecovery || current.userKey.isBlank()) return
+        val generation = accountGeneration
+        currentState = current.copy(isSending = true, isRecoveryBlocked = false, canRetryPendingRecovery = false, errorMessage = null)
+        viewModelScope.launch { startPendingRecovery(current.userKey, generation) }
     }
 
     fun continueAfterInterruption() {
@@ -709,6 +751,10 @@ class ChatbotViewModel internal constructor(
     }
 
     private fun showRejectedInteraction(pending: PendingInteraction) {
+        if (pending.interrupted) {
+            showInterruptedInteraction(pending)
+            return
+        }
         val text = if (pending.operationId == null && !pending.interrupted) pending.input.message ?: pending.input.answer?.text else null
         if (text != null) rememberComposerDraft(pending.userKey, pending.sessionId, text)
         currentState = currentState.copy(
@@ -717,6 +763,16 @@ class ChatbotViewModel internal constructor(
             answerDraftToRestore = text?.let { rejectedDraft(pending.sessionId, it) },
             errorMessage = RejectedInteractionException(pending).message,
         )
+    }
+
+    private fun AiInteractionInputDto.recoveryText(): String? = when (kind) {
+        "message" -> message
+        "answer" -> when (answer?.kind) {
+            "text" -> answer.text
+            "confirmation" -> if (answer.confirm == true) "Confirmar" else "Cancelar"
+            else -> null
+        }
+        else -> null
     }
 
     private suspend fun <T> readCache(action: suspend () -> T): T? = try {

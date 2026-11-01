@@ -57,13 +57,15 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
                 ?: getString(R.string.chatbot_title)
         } else getString(R.string.chatbot_title)
         binding.chatbotTabs.isVisible = state.page != ChatbotPage.CONVERSATION
-        binding.chatbotNewTab.isEnabled = !state.isSending
-        binding.chatbotHistoryTab.isEnabled = !state.isSending
+        val canNavigateDuringRecovery = state.canContinueAfterInterruption
+        binding.chatbotNewTab.isEnabled = (!state.isSending || canNavigateDuringRecovery) && !state.isRecoveryBlocked
+        binding.chatbotHistoryTab.isEnabled = (!state.isSending || canNavigateDuringRecovery) && !state.isRecoveryBlocked
         binding.chatbotLoading.isVisible = state.isLoading
         binding.chatbotErrorCard.isVisible = state.errorMessage != null
         binding.chatbotError.text = state.errorMessage.orEmpty()
         binding.chatbotRetry.setText(
             when {
+                state.canRetryPendingRecovery -> R.string.chatbot_retry_pending_recovery
                 state.canContinueAfterInterruption -> R.string.chatbot_continue_after_interruption
                 history || state.userKey.isBlank() -> R.string.chatbot_retry
                 else -> R.string.chatbot_dismiss_error

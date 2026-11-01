@@ -20,7 +20,14 @@ class ChatbotRecoveryViewModelTest {
     private class MemoryStore(initial: PendingInteraction? = null) : PendingInteractionStore {
         @Volatile var pending: PendingInteraction? = initial
         @Volatile var failNextSave = false
-        override suspend fun get(userKey: String) = pending?.takeIf { it.userKey == userKey }
+        @Volatile var failNextGet = false
+        override suspend fun get(userKey: String): PendingInteraction? {
+            if (failNextGet) {
+                failNextGet = false
+                throw IllegalStateException("Falha ao ler")
+            }
+            return pending?.takeIf { it.userKey == userKey }
+        }
         override suspend fun save(pending: PendingInteraction) {
             if (failNextSave) {
                 failNextSave = false
@@ -71,6 +78,36 @@ class ChatbotRecoveryViewModelTest {
     }
 
     private fun clear(store: ViewModelStore) = instrumentation.runOnMainSync { store.clear() }
+
+    @Test
+    fun failedPendingReadDoesNotLeaveComposerInSendingState() {
+        MockWebServer().use { server ->
+            val pending = MemoryStore(PendingInteraction("user-1", "session-1", input, operationId = "op-1"))
+            pending.failNextGet = true
+            val owner = ViewModelStore()
+            try {
+                val vm = create(owner, pending, server)
+                awaitCondition { vm.state.value.errorMessage == "Não foi possível recuperar a interação pendente." }
+                assertFalse(vm.state.value.isSending)
+                assertTrue(vm.state.value.isRecoveryBlocked)
+                assertTrue(vm.state.value.canRetryPendingRecovery)
+                assertEquals(0, server.requestCount)
+
+                server.enqueue(response("""{"access_token":"token"}"""))
+                server.enqueue(response("""{"operation_id":"op-1","status":"completed","result":{"schema_version":"1","status":"completed","session_id":"session-1","interaction_id":"op-1","public_request_id":"request-1","response":{"kind":"answer","text":"OK"}}}"""))
+                server.enqueue(response("""{"session_id":"session-1","items":[],"has_more":false}"""))
+                instrumentation.runOnMainSync { vm.retryPendingRecovery() }
+                awaitCondition { pending.pending == null && !vm.state.value.isSending }
+                assertFalse(vm.state.value.isRecoveryBlocked)
+                assertEquals(3, server.requestCount)
+                val authRequest = server.takeRequest(1, TimeUnit.SECONDS)!!
+                assertEquals("POST", authRequest.method)
+                assertEquals("/v1/auth/firebase", authRequest.path)
+                assertEquals("/v1/sessions/session-1/interactions/op-1", server.takeRequest(1, TimeUnit.SECONDS)!!.path)
+                assertEquals("/v1/sessions/session-1/messages?limit=100", server.takeRequest(1, TimeUnit.SECONDS)!!.path)
+            } finally { clear(owner) }
+        }
+    }
 
     @Test
     fun rejectedMessageRemainsInItsOriginalConversationAfterNavigation() {
@@ -182,6 +219,38 @@ class ChatbotRecoveryViewModelTest {
                 val vm = create(owner, pending, server)
                 awaitCondition { pending.pending?.rejectionCode == -1 && !vm.state.value.isSending }
                 assertTrue(vm.state.value.errorMessage.orEmpty().contains("incerto"))
+            } finally { clear(owner) }
+        }
+    }
+
+    @Test
+    fun interruptedMessageRemainsRecoverableWhenOriginalSessionIsOpened() {
+        MockWebServer().use { server ->
+            server.enqueue(response("""{"access_token":"token"}"""))
+            server.enqueue(response("""{"session_id":"session-1","items":[],"has_more":false}"""))
+            val pending = MemoryStore(PendingInteraction("user-1", "session-1", input, operationId = "op-1", interrupted = true))
+            val state = initialState.copy(currentSessionId = null, page = ChatbotPage.HISTORY)
+            val owner = ViewModelStore()
+            try {
+                val vm = create(owner, pending, server, state)
+                awaitCondition { vm.state.value.canContinueAfterInterruption }
+
+                instrumentation.runOnMainSync { vm.openSession("session-1") }
+                awaitCondition {
+                    vm.state.value.currentSessionId == "session-1" &&
+                        vm.state.value.canContinueAfterInterruption &&
+                        !vm.state.value.isLoading
+                }
+                assertTrue(pending.pending!!.interrupted)
+                assertEquals("op-1", pending.pending!!.operationId)
+                assertEquals("mensagem original", vm.state.value.answerDraftToRestore?.text)
+                assertEquals("session-1", vm.state.value.answerDraftToRestore?.sessionId)
+                assertTrue(vm.state.value.isSending)
+                assertEquals(2, server.requestCount)
+                val authRequest = server.takeRequest(1, TimeUnit.SECONDS)!!
+                assertEquals("POST", authRequest.method)
+                assertEquals("/v1/auth/firebase", authRequest.path)
+                assertEquals("/v1/sessions/session-1/messages?limit=100", server.takeRequest(1, TimeUnit.SECONDS)!!.path)
             } finally { clear(owner) }
         }
     }

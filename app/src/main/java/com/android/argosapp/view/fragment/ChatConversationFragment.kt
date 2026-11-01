@@ -99,7 +99,7 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
             viewModel.rememberComposerDraft(state.userKey, restored.sessionId, restored.text)
             viewModel.consumeAnswerDraft()
         }
-        binding.chatbotInput.isEnabled = true
+        binding.chatbotInput.isEnabled = !state.isSending && !state.isLoading && !state.isRecoveryBlocked
         val activeComposerKey = state.userKey to state.currentSessionId
         if (composerKey != activeComposerKey) {
             composerKey = activeComposerKey
@@ -107,7 +107,7 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
             if (binding.chatbotInput.text?.toString() != restored) binding.chatbotInput.setText(restored)
             binding.chatbotInput.setSelection(binding.chatbotInput.length())
         }
-        binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading && state.userKey.isNotBlank()
+        binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading && !state.isRecoveryBlocked && state.userKey.isNotBlank()
         binding.chatbotSend.alpha = if (binding.chatbotSend.isEnabled) 1f else 0.45f
         binding.chatbotLoadEarlier.isVisible = state.hasEarlierMessages
         binding.chatbotLoadEarlier.isEnabled = !state.isLoading
