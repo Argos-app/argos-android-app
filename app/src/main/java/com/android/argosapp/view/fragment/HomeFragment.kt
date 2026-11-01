@@ -96,6 +96,19 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onSaveInstanceState(outState)
     }
 
+    override fun onResume() {
+        super.onResume()
+        binding.homeHerdHealth.setText(R.string.home_herd_health_loading)
+        viewModel.loadActiveWithdrawals { count ->
+            val status = _binding?.homeHerdHealth ?: return@loadActiveWithdrawals
+            status.text = when (count) {
+                null -> getString(R.string.home_herd_health_unavailable)
+                0 -> getString(R.string.home_herd_health)
+                else -> resources.getQuantityString(R.plurals.home_active_withdrawals, count, count)
+            }
+        }
+    }
+
     override fun onDestroyView() {
         _binding?.homeEventsRecyclerView?.adapter = null
         applicationsAdapter = null

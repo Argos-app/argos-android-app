@@ -85,13 +85,15 @@
                     tools:text="Olá, Vinícius. Que bom te ver!" />
 
                 <TextView
+                    android:id="@+id/homeHerdHealth"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:textFontWeight="600"
-                    android:text="@string/home_herd_health"
+                    android:text="@string/home_herd_health_loading"
                     android:textColor="@color/argos_text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    tools:text="Todo o rebanho está saudável." />
 
                 <View
                     android:layout_width="match_parent"
@@ -122,43 +124,6 @@
                         android:layout_height="match_parent"
                         android:orientation="horizontal">
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/homeManageMedication"
-                        android:layout_width="192dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginEnd="18dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="#FFFBFAF9"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:layout_width="54dp"
-                                android:layout_height="54dp"
-                                android:contentDescription="@null"
-                                android:src="@drawable/pill_icon" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
-                                android:gravity="center"
-                                android:maxLines="2"
-                                android:text="@string/home_manage_medication"
-                                android:textColor="@color/argos_text_primary"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/homeManageApplications"
@@ -184,7 +149,7 @@
                                 android:layout_width="60dp"
                                 android:layout_height="60dp"
                                 android:contentDescription="@null"
-                                android:src="@drawable/syringe" />
+                                android:src="@drawable/application_icon" />
 
                             <TextView
                                 android:layout_width="match_parent"
@@ -199,11 +164,87 @@
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <com.google.android.material.card.MaterialCardView
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/homeManageExceptions"
+                            android:layout_width="192dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginEnd="18dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardBackgroundColor="#FFFBFAF9"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical"
+                                android:padding="8dp">
+
+                                <ImageView
+                                    android:layout_width="63dp"
+                                    android:layout_height="58dp"
+                                    android:contentDescription="@null"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/exceptions_management_icon" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:gravity="center"
+                                    android:maxLines="2"
+                                    android:text="@string/home_manage_exceptions"
+                                    android:textColor="@color/argos_text_primary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/homeManageMedication"
+                            android:layout_width="192dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginEnd="18dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardBackgroundColor="#FFFBFAF9"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical"
+                                android:padding="8dp">
+
+                                <ImageView
+                                    android:layout_width="60dp"
+                                    android:layout_height="60dp"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/medicine_icon" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:gravity="center"
+                                    android:maxLines="2"
+                                    android:text="@string/home_manage_medication"
+                                    android:textColor="@color/argos_text_primary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
                         android:id="@+id/homeManageLots"
                         android:layout_width="192dp"
                         android:layout_height="match_parent"
-                        android:layout_marginEnd="18dp"
                         android:clickable="true"
                         android:focusable="true"
                         app:cardBackgroundColor="#FFFBFAF9"
@@ -219,11 +260,11 @@
                             android:padding="8dp">
 
                             <ImageView
-                                android:layout_width="60dp"
-                                android:layout_height="60dp"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
                                 android:contentDescription="@null"
                                 android:scaleType="fitCenter"
-                                android:src="@drawable/lotes_management_icon" />
+                                android:src="@drawable/lot_icon" />
 
                             <TextView
                                 android:layout_width="match_parent"
@@ -232,44 +273,6 @@
                                 android:gravity="center"
                                 android:maxLines="2"
                                 android:text="@string/home_manage_lots"
-                                android:textColor="@color/argos_text_primary"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/homeManageExceptions"
-                        android:layout_width="192dp"
-                        android:layout_height="match_parent"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="#FFFBFAF9"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:layout_width="70dp"
-                                android:layout_height="58dp"
-                                android:contentDescription="@null"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/exceptions_management_icon" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
-                                android:gravity="center"
-                                android:maxLines="2"
-                                android:text="@string/home_manage_exceptions"
                                 android:textColor="@color/argos_text_primary"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
