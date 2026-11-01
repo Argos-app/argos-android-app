@@ -211,7 +211,7 @@ class AiChatApiRepository(
         private const val MAX_POLL_DELAY_MS = 5000L
         private const val MAX_INTERACTION_WAIT_MS = 6 * 60 * 1000L
 
-        fun newClient(firebaseRepository: FirebaseRepository, tokenStorage: TokenStorage): AiChatApiRepository =
+        fun newClient(firebaseRepository: FirebaseRepository, tokenStorage: AiTokenStorage): AiChatApiRepository =
             AiChatApiRepository(firebaseRepository, com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL, tokenStorage)
 
         fun newClientMessageId(): String = UUID.randomUUID().toString()
