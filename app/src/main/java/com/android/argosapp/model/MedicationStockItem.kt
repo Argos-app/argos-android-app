@@ -26,6 +26,5 @@ data class MedicationStockRegistration(
     val quantity: BigDecimal,
     val supplierName: String,
     val supplierCnpj: String,
-    val propertyId: String,
     val category: StockCategory? = null,
 )

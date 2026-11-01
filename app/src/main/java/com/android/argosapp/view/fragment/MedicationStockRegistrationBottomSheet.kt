@@ -182,11 +182,6 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     private fun submitRegistration() {
         if (!validate()) return
-        if (!viewModel.isMockedRepository) {
-            Snackbar.make(binding.root, R.string.stock_api_registration_pending, Snackbar.LENGTH_LONG).show()
-            return
-        }
-
         val product = requireNotNull(selectedProduct)
         val request = MedicationStockRegistration(
             productRegistration = product.registrationCode,
@@ -196,7 +191,6 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
             quantity = requireNotNull(binding.quantityInput.text.toString().replace(',', '.').toBigDecimalOrNull()),
             supplierName = binding.supplierInput.text.toString().trim(),
             supplierCnpj = binding.cnpjInput.text.toString().filter(Char::isDigit),
-            propertyId = MOCK_PROPERTY_ID,
             category = category,
         )
 
@@ -207,14 +201,14 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
                 if (_binding == null) return@launch
                 Snackbar.make(
                     requireActivity().findViewById(android.R.id.content),
-                    R.string.stock_mock_registration_success,
+                    R.string.stock_registration_success,
                     Snackbar.LENGTH_LONG,
                 ).show()
                 dismiss()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _binding?.let { Snackbar.make(it.root, R.string.stock_mock_registration_error, Snackbar.LENGTH_LONG).show() }
+                _binding?.let { Snackbar.make(it.root, R.string.stock_registration_error, Snackbar.LENGTH_LONG).show() }
             } finally {
                 _binding?.registerButton?.isEnabled = true
             }
@@ -241,7 +235,6 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "medication_stock_registration"
-        private const val MOCK_PROPERTY_ID = "mock-property-id"
         private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     }
 }

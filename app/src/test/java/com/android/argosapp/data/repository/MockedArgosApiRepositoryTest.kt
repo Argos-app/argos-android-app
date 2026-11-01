@@ -62,7 +62,6 @@ class MockedArgosApiRepositoryTest {
             quantity = BigDecimal("12.5"),
             supplierName = "Distribuidora Teste",
             supplierCnpj = "12345678000199",
-            propertyId = "mock-property-id",
             category = StockCategory.MEDICATION,
         )
 

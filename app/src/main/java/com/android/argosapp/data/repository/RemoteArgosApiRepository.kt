@@ -75,7 +75,6 @@ private data class MedicineBatchRequestDto(
     val quantity: BigDecimal,
     val supplierName: String,
     val supplierCnpj: String,
-    val propertyId: String,
 ) {
     constructor(registration: MedicationStockRegistration) : this(
         productRegistration = registration.productRegistration,
@@ -85,7 +84,6 @@ private data class MedicineBatchRequestDto(
         quantity = registration.quantity,
         supplierName = registration.supplierName,
         supplierCnpj = registration.supplierCnpj,
-        propertyId = registration.propertyId,
     )
 }
 private interface ArgosApiService {
@@ -193,6 +191,54 @@ class RemoteArgosApiRepository(
 ) : ArgosApiRepository {
     override val isMedicationStockImplemented = true
 
+    override suspend fun getMedicationStockPage(
+        query: String,
+        category: StockCategory?,
+        cursor: String?,
+        pageSize: Int,
+    ): StockPage {
+        val token = requireApiToken()
+        val requestedPage = cursor?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val effectivePageSize = pageSize.coerceIn(1, 100)
+        val items = mutableListOf<MedicationStockItem>()
+        var page = requestedPage
+        var totalPages = 0
+        do {
+            val response = api.getMedicationStock("Bearer $token", page, effectivePageSize)
+            if (!response.isSuccessful) throw HttpException(response)
+            val body = requireNotNull(response.body()) { "A API retornou uma página de medicamentos vazia." }
+            totalPages = body.totalPages
+            items += body.data.map(StockMedicineListItemDto::toModel).filter { item ->
+                (query.isBlank() || item.medicationName.contains(query.trim(), ignoreCase = true)) &&
+                    (category == null || item.category == category)
+            }
+            page++
+        } while ((query.isNotBlank() || category != null) && items.size < effectivePageSize && page < totalPages)
+
+        return StockPage(
+            items = items,
+            nextCursor = page.takeIf { it < totalPages }?.toString(),
+        )
+    }
+
+    override suspend fun getMedicationProducts(): List<StockProduct> {
+        // O backend ainda não disponibilizou uma rota de catálogo de produtos/MAPA.
+        return emptyList()
+    }
+
+    override suspend fun registerMedicationStock(registration: MedicationStockRegistration) {
+        val response = api.registerMedicineStock(
+            authorization = "Bearer ${requireApiToken()}",
+            registration = MedicineBatchRequestDto(registration),
+        )
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    private fun requireApiToken(): String =
+        requireNotNull(bearerTokenProvider()?.takeIf(String::isNotBlank)) {
+            "A sessão não possui bearer token da API Argos. Entre novamente antes de consultar medicamentos."
+        }
+
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
         const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
@@ -229,51 +275,6 @@ class RemoteArgosApiRepository(
     }
 
 
-    override suspend fun getMedicationStockPage(
-        query: String,
-        category: StockCategory?,
-        cursor: String?,
-        pageSize: Int,
-    ): StockPage {
-        val token = requireApiToken()
-        val requestedPage = cursor?.toIntOrNull()?.coerceAtLeast(0) ?: 0
-        val effectivePageSize = pageSize.coerceIn(1, 100)
-        val items = mutableListOf<MedicationStockItem>()
-        var page = requestedPage
-        var totalPages = 0
-        do {
-            val response = api.getMedicationStock("Bearer $token", page, effectivePageSize)
-            if (!response.isSuccessful) throw HttpException(response)
-            val body = requireNotNull(response.body()) { "A API retornou uma página de medicamentos vazia." }
-            totalPages = body.totalPages
-            items += body.data.map(StockMedicineListItemDto::toModel).filter { item ->
-                (query.isBlank() || item.medicationName.contains(query.trim(), ignoreCase = true)) &&
-                    (category == null || item.category == category)
-            }
-            page++
-        } while ((query.isNotBlank() || category != null) && items.size < effectivePageSize && page < totalPages)
-
-        return StockPage(
-            items = items,
-            nextCursor = page.takeIf { it < totalPages }?.toString(),
-        )
-    }
-
-    override suspend fun getMedicationProducts(): List<StockProduct> = emptyList()
-
-    override suspend fun registerMedicationStock(registration: MedicationStockRegistration) {
-        require(registration.propertyId.isNotBlank()) { "Informe o propertyId antes de registrar o estoque." }
-        val response = api.registerMedicineStock(
-            authorization = "Bearer ${requireApiToken()}",
-            registration = MedicineBatchRequestDto(registration),
-        )
-        if (!response.isSuccessful) throw HttpException(response)
-    }
-
-    private fun requireApiToken(): String =
-        requireNotNull(bearerTokenProvider()?.takeIf(String::isNotBlank)) {
-            "A sessão não possui bearer token da API Argos. Entre novamente antes de consultar medicamentos."
-        }
     override suspend fun registerLotApplication(
         bearerToken: String,
         userId: String,

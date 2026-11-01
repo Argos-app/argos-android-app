@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.argosapp.ArgosApplication
 import com.android.argosapp.model.StockCategory
 import com.android.argosapp.model.MedicationStockRegistration
-import com.android.argosapp.data.repository.MockedArgosApiRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,7 +19,6 @@ class MedicationStockViewModel(application: Application) : AndroidViewModel(appl
     private val mutableState = MutableStateFlow(pager.state)
     val state = mutableState.asStateFlow()
     val integrationPending get() = !repository.isMedicationStockImplemented
-    val isMockedRepository get() = repository is MockedArgosApiRepository
     private var pageJob: Job? = null
 
     init { loadNextPage() }
