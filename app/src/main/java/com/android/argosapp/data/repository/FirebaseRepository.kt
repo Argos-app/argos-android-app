@@ -12,9 +12,14 @@ import kotlinx.coroutines.tasks.await
 /**
  * Abstrai as operações realizadas diretamente no Firebase Authentication.
  */
+interface FirebaseIdTokenProvider {
+    fun currentFirebaseUid(): String?
+    suspend fun getCurrentIdToken(forceRefresh: Boolean): String
+}
+
 class FirebaseRepository(
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
-) {
+) : FirebaseIdTokenProvider {
     private val logger = RepositoryAppLogger("FirebaseRepository")
 
     init {
@@ -32,7 +37,7 @@ class FirebaseRepository(
                 .signInWithEmailAndPassword(email, password)
                 .await()
 
-            getCurrentIdToken()
+            getCurrentIdToken(false)
         }
 
     suspend fun loginWithGoogle(idToken: String): String =
@@ -41,7 +46,7 @@ class FirebaseRepository(
                 .signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
                 .await()
 
-            getCurrentIdToken()
+            getCurrentIdToken(false)
         }
 
     suspend fun hasValidSession(): Boolean = logger.runSuspending("has_valid_session") {
@@ -50,7 +55,7 @@ class FirebaseRepository(
             false
         } else {
             try {
-                getCurrentIdToken().isNotBlank()
+                getCurrentIdToken(false).isNotBlank()
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
@@ -98,7 +103,7 @@ class FirebaseRepository(
 
     fun signOut(): Unit = logger.runSynchronous("sign_out") { firebaseAuth.signOut() }
 
-    suspend fun getCurrentIdToken(forceRefresh: Boolean = false): String = logger.runSuspending("get_id_token") {
+    override suspend fun getCurrentIdToken(forceRefresh: Boolean): String = logger.runSuspending("get_id_token") {
         val currentUser = requireNotNull(firebaseAuth.currentUser) {
             "O Firebase não possui um usuário autenticado."
         }
@@ -108,7 +113,7 @@ class FirebaseRepository(
         }
     }
 
-    fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
+    override fun currentFirebaseUid(): String? = firebaseAuth.currentUser?.uid
 
     private companion object {
         const val PROFILE_RESET_SOURCE = "profile"

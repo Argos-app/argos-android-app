@@ -1,5 +1,6 @@
 package com.android.argosapp.data.repository
 
+import com.android.argosapp.data.cache.storage.AiTokenStorage
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -29,7 +30,7 @@ class AiChatApiRepositoryTest {
                     """{"operation_id":"$operationId","status":"completed","result":{"schema_version":"1","status":"completed","degradation_reasons":[],"created_at":"2026-10-25T12:00:00Z","session_id":"session-1","interaction_id":"$operationId","public_request_id":"request-1","response":{"kind":"answer","text":"Tudo certo"}}}""",
                 ),
             )
-            val repository = AiChatApiRepository(FakeFirebaseTokens(), server.url("/").toString())
+            val repository = AiChatApiRepository(FakeFirebaseTokens(), server.url("/").toString(), FakeAiTokenStorage())
 
             val result = repository.interact(
                 "session-1",
@@ -58,7 +59,7 @@ class AiChatApiRepositoryTest {
             server.enqueue(jsonResponse("""{"access_token":"ai-jwt"}"""))
             server.enqueue(jsonResponse("""{"session_id":"session-1","farm_ids":["farm-1"],"created_at":"2026-10-24T12:00:00Z"}""", 201))
             val firebase = FakeFirebaseTokens()
-            val repository = AiChatApiRepository(firebase, server.url("/").toString())
+            val repository = AiChatApiRepository(firebase, server.url("/").toString(), FakeAiTokenStorage())
 
             val session = repository.createSession()
 
@@ -81,7 +82,7 @@ class AiChatApiRepositoryTest {
             server.enqueue(jsonResponse("""{"access_token":"new-ai-jwt"}"""))
             server.enqueue(jsonResponse("""{"session_id":"session-1","farm_ids":[],"created_at":"2026-10-24T12:00:00Z"}""", 201))
             val firebase = FakeFirebaseTokens()
-            val repository = AiChatApiRepository(firebase, server.url("/").toString())
+            val repository = AiChatApiRepository(firebase, server.url("/").toString(), FakeAiTokenStorage())
 
             repository.createSession()
 
@@ -125,7 +126,7 @@ class AiChatApiRepositoryTest {
                 server.enqueue(jsonResponse("""{"session_id":"session-$index","farm_ids":[],"created_at":"2026-10-24T12:00:00Z"}""", 201))
             }
             val firebase = FakeFirebaseTokens()
-            val repository = AiChatApiRepository(firebase, server.url("/").toString())
+            val repository = AiChatApiRepository(firebase, server.url("/").toString(), FakeAiTokenStorage())
 
             repository.createSession()
             firebase.uid = "firebase-user-2"
@@ -236,6 +237,20 @@ class AiChatApiRepositoryTest {
         .setResponseCode(status)
         .addHeader("Content-Type", "application/json")
         .setBody(body)
+
+    private class FakeAiTokenStorage : AiTokenStorage {
+        private val tokens = mutableMapOf<String, String>()
+
+        override fun getAiToken(uid: String): String? = tokens[uid]
+
+        override fun saveAiToken(uid: String, token: String) {
+            tokens[uid] = token
+        }
+
+        override fun clearAiToken() {
+            tokens.clear()
+        }
+    }
 
     private class FakeFirebaseTokens : FirebaseIdTokenProvider {
         val refreshRequests = mutableListOf<Boolean>()

@@ -4,7 +4,13 @@ import android.content.Context
 import androidx.core.content.edit
 import com.android.argosapp.util.session.SharedPreferencesCipher
 
-class TokenStorage(context: Context) {
+interface AiTokenStorage {
+    fun getAiToken(uid: String): String?
+    fun saveAiToken(uid: String, token: String)
+    fun clearAiToken()
+}
+
+class TokenStorage(context: Context) : AiTokenStorage {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     private val cipher = SharedPreferencesCipher(KEY_ALIAS)
 
@@ -24,10 +30,10 @@ class TokenStorage(context: Context) {
         }
     }
 
-    fun getAiToken(uid: String): String? =
+    override fun getAiToken(uid: String): String? =
         inMemoryAiToken?.takeIf { it.first == uid }?.second
 
-    fun saveAiToken(uid: String, token: String) = synchronized(aiTokenLock) {
+    override fun saveAiToken(uid: String, token: String) = synchronized(aiTokenLock) {
         inMemoryAiToken = uid to token
         preferences.edit {
             if (isRememberMeEnabled()) {
@@ -40,7 +46,7 @@ class TokenStorage(context: Context) {
         }
     }
 
-    fun clearAiToken() = synchronized(aiTokenLock) {
+    override fun clearAiToken() = synchronized(aiTokenLock) {
         inMemoryAiToken = null
         preferences.edit { remove(AI_TOKEN_KEY); remove(AI_UID_KEY) }
     }

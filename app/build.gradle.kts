@@ -17,6 +17,9 @@ fun escapeBuildConfigValue(value: String) = value
 val cloudinaryCloudName = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_CLOUD_NAME", ""))
 val cloudinaryUploadPreset = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", ""))
 val googleMapsApiKey = escapeBuildConfigValue(localProperties.getProperty("MAPS_API_KEY", ""))
+val argosAiBaseUrl = escapeBuildConfigValue(
+    providers.gradleProperty("argosAiBaseUrl").getOrElse("http://10.0.2.2:8080/"),
+)
 
 android {
     namespace = "com.android.argosapp"
@@ -36,6 +39,8 @@ android {
         buildConfigField("String", "MAPS_API_KEY", "\"$googleMapsApiKey\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
+
+        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -90,6 +95,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.firebase:firebase-messaging")
     testImplementation(libs.junit)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

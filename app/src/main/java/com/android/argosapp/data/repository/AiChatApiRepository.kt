@@ -1,7 +1,7 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.data.dto.*
-import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.AiTokenStorage
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import org.json.JSONObject
 import org.json.JSONArray
@@ -61,9 +61,9 @@ private interface AiChatApi {
 
 
 class AiChatApiRepository(
-    private val firebaseRepository: FirebaseRepository,
+    private val firebaseRepository: FirebaseIdTokenProvider,
     baseUrl: String,
-    private val tokenStorage: TokenStorage,
+    private val tokenStorage: AiTokenStorage,
 ) {
     private val api = Retrofit.Builder()
         .baseUrl(baseUrl.ensureTrailingSlash())
