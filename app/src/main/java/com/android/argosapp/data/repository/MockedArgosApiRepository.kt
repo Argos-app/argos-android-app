@@ -12,6 +12,7 @@ import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.Herd
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
@@ -34,6 +35,9 @@ class MockedArgosApiRepository(
     // shortcut: mock registrations last only for this session; persist them when testing app restarts.
     private val registeredApplications = mutableListOf<Application>()
     private val registeredLots = mutableListOf<RegisterLotDto>()
+    private val herds = mutableListOf(
+        Herd("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000001", "Rebanho Nelore", "Nelore", 100),
+    )
     private val registeredDevices = mutableMapOf<String, String>()
 
     override suspend fun registerDevice(bearerToken: String, data: DeviceRegisterDto): String {
@@ -90,13 +94,28 @@ class MockedArgosApiRepository(
     override suspend fun registerLot(bearerToken: String, data: RegisterLotDto): Unit = logger.runSuspending("register_lot") {
         require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
         require(data.lotName.isNotBlank()) { "Lot name is required." }
-        require(data.herdName.isNotBlank()) { "Herd name is required." }
         require(data.category.isNotBlank()) { "Lot category is required." }
         require(data.headCount > 0) { "Head count must be positive." }
         LocalDate.parse(data.releaseSlaughterDate)
+        val herdIndex = herds.indexOfFirst { it.herdId == data.herdId }
+        if (herdIndex == -1) {
+            require(data.herdName.isNotBlank()) { "Herd name is required." }
+            require(!data.breed.isNullOrBlank()) { "Breed is required." }
+        }
         delay(600)
+        if (herdIndex == -1) {
+            herds.add(Herd(UUID.randomUUID().toString(), herds.first().propertyId, data.herdName, data.breed!!, data.headCount))
+        } else {
+            val herd = herds[herdIndex]
+            herds[herdIndex] = herd.copy(headCount = herd.headCount + data.headCount)
+        }
         registeredLots.add(0, data)
         Unit
+    }
+
+    override suspend fun listHerds(bearerToken: String): List<Herd> {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        return herds.toList()
     }
 
     override suspend fun listLots(bearerToken: String): List<LotDto> = registeredLots.map { lot ->

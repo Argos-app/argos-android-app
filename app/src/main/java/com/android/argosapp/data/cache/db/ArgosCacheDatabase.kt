@@ -7,6 +7,7 @@ import androidx.room3.RoomDatabase
 import androidx.room3.migration.Migration
 import androidx.sqlite.execSQL
 import androidx.sqlite.driver.AndroidSQLiteDriver
+import androidx.sqlite.SQLiteConnection
 import com.android.argosapp.data.cache.entity.CachedMonthEntity
 import com.android.argosapp.data.cache.entity.MonthApplicationEntity
 import com.android.argosapp.data.cache.dao.MonthApplicationsDao
@@ -29,6 +30,9 @@ import com.android.argosapp.data.cache.dao.NotificationDao
 import com.android.argosapp.data.cache.entity.NotificationEntity
 import com.android.argosapp.data.cache.dao.DeviceDao
 import com.android.argosapp.data.cache.entity.DeviceEntity
+import com.android.argosapp.data.cache.dao.HerdDao
+import com.android.argosapp.data.cache.entity.HerdEntity
+import com.android.argosapp.data.cache.entity.HerdCacheMetadata
 
 @Database(
     entities = [
@@ -46,6 +50,8 @@ import com.android.argosapp.data.cache.entity.DeviceEntity
         AnimalExceptionCacheMetadata::class,
         NotificationEntity::class,
         DeviceEntity::class,
+        HerdEntity::class,
+        HerdCacheMetadata::class,
     ],
     version = 1,
     exportSchema = false,
@@ -59,6 +65,7 @@ abstract class ArgosCacheDatabase : RoomDatabase() {
     abstract fun animalExceptionDao(): AnimalExceptionDao
     abstract fun notificationDao(): NotificationDao
     abstract fun deviceDao(): DeviceDao
+    abstract fun herdDao(): HerdDao
 
     companion object {
         private const val DATABASE_NAME = "argos-cache.db"

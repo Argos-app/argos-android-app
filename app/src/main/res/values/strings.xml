@@ -212,6 +212,12 @@
     <string name="lots_create_later">Deixar para depois</string>
     <string name="lots_create_herd_label">Nome do rebanho</string>
     <string name="lots_create_herd_hint">Ex: Rebanho apto a abate</string>
+    <string name="lots_create_herd_select_label">Rebanho</string>
+    <string name="lots_create_herd_select_hint">Selecione um rebanho</string>
+    <string name="lots_create_new_herd">+ Novo Rebanho</string>
+    <string name="lots_create_breed_label">Raça</string>
+    <string name="lots_create_breed_hint">Ex: Nelore</string>
+    <string name="lots_create_breed_error">Informe a raça.</string>
     <string name="lots_create_head_count_label">Quantidade de cabeças</string>
     <string name="lots_create_head_count_hint">Ex: 200</string>
     <string name="lots_create_name_error">Informe um nome de lote com até 120 caracteres.</string>
@@ -235,4 +241,5 @@
     <string name="profile_notifications_permission_required">Ative as notificações para acessar esta tela.</string>
     <string name="profile_notifications_settings">Abrir configurações</string>
     <string name="profile_notifications_later">Talvez depois</string>
+    <string name="reset_user_email_unavailable">Não foi possível carregar o e-mail da sua conta.</string>
 </resources>

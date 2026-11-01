@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.LinearLayout
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import com.android.argosapp.R
@@ -35,8 +36,13 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         val lotNameField = view.findViewById<EditText>(R.id.createLotNameField)
         val herdNameField = view.findViewById<EditText>(R.id.createLotHerdNameField)
+        val breedField = view.findViewById<EditText>(R.id.createLotBreedField)
+        val herdField = view.findViewById<View>(R.id.createLotHerdField)
+        val herdValue = view.findViewById<TextView>(R.id.createLotHerdValue)
+        val newHerdFields = view.findViewById<LinearLayout>(R.id.createLotNewHerdFields)
         val headCountField = view.findViewById<EditText>(R.id.createLotHeadCountField)
         val categoryField = view.findViewById<View>(R.id.createLotCategoryField)
         val categoryValue = view.findViewById<TextView>(R.id.createLotCategoryValue)
@@ -47,7 +53,56 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
         val categories = resources.getStringArray(R.array.lots_categories)
 
         lotNameField.doAfterTextChanged { lotNameField.error = null }
+        var selectedHerdId: String? = null
+        var creatingHerd = false
+        var herds = emptyList<com.android.argosapp.model.Herd>()
+        var herdLoadFailed = false
+        var herdRefreshErrorShown = false
         herdNameField.doAfterTextChanged { herdNameField.error = null }
+        breedField.doAfterTextChanged { breedField.error = null }
+        fun loadHerds(force: Boolean = false) {
+            viewModel.loadHerds(
+                force = force,
+                onLoading = { loading -> setHerdFieldLoading(herdField, herdValue, loading) },
+                onHerdsLoaded = { loaded ->
+                    herds = loaded
+                    herdLoadFailed = false
+                    herdValue.text = getString(R.string.lots_create_herd_select_hint)
+                    setHerdFieldReady(herdField, herdValue, hasHerds = true)
+                },
+                onError = {
+                    if (herds.isNotEmpty()) {
+                        if (!herdRefreshErrorShown) {
+                            herdRefreshErrorShown = true
+                            Toast.makeText(requireContext(), R.string.applications_register_cache_refresh_error, Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        herdLoadFailed = true
+                        setHerdFieldError(herdField, herdValue)
+                    }
+                },
+            )
+        }
+        loadHerds()
+        herdField.setOnClickListener {
+            if (herds.isEmpty() && herdLoadFailed) {
+                loadHerds(force = true)
+                return@setOnClickListener
+            }
+            val newHerdOption = getString(R.string.lots_create_new_herd)
+            selectManager.showOptions(
+                anchor = herdField,
+                options = herds.map { it.herdName }.distinct() + newHerdOption,
+                dropdownIcon = view.findViewById(R.id.createLotHerdDropdownIcon),
+                onSelected = { selected ->
+                    creatingHerd = selected == newHerdOption
+                    selectedHerdId = herds.firstOrNull { it.herdName == selected }?.herdId
+                    herdValue.text = selected
+                    herdValue.setTextColor(requireContext().getColor(R.color.argos_text_primary))
+                    newHerdFields.visibility = if (creatingHerd) View.VISIBLE else View.GONE
+                },
+            )
+        }
         headCountField.doAfterTextChanged { headCountField.error = null }
         categoryField.setOnClickListener {
             selectManager.showOptions(
@@ -79,12 +134,15 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
         submitButton.setOnClickListener {
             val lotName = lotNameField.text.toString()
             val herdName = herdNameField.text.toString()
+            val breed = breedField.text.toString()
             val category = categoryValue.text.toString()
             val headCount = headCountField.text.toString()
             val slaughterDate = slaughterDateValue.text.toString()
             val invalidFields = viewModel.invalidFields(
                 lotName = lotName,
+                herdId = selectedHerdId,
                 herdName = herdName,
+                breed = breed,
                 category = category,
                 headCount = headCount,
                 slaughterDate = slaughterDate,
@@ -96,6 +154,8 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
             herdNameField.error = if (LotFormValidator.Field.HERD_NAME in invalidFields) {
                 getString(R.string.lots_create_herd_error)
             } else null
+            breedField.error = if (LotFormValidator.Field.BREED in invalidFields) getString(R.string.lots_create_breed_error) else null
+            herdValue.error = if (!creatingHerd && selectedHerdId == null) getString(R.string.lots_create_herd_select_hint) else null
             categoryValue.error = if (LotFormValidator.Field.CATEGORY in invalidFields) {
                 getString(R.string.lots_create_category_error)
             } else null
@@ -109,7 +169,9 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
 
             viewModel.registerLot(
                 lotName = lotName,
+                herdId = selectedHerdId,
                 herdName = herdName,
+                breed = breed.takeIf { creatingHerd },
                 category = category,
                 headCount = headCount,
                 slaughterDate = slaughterDate,
@@ -143,6 +205,37 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
             if (submitting) View.VISIBLE else View.GONE
         laterButton.isEnabled = !submitting
         isCancelable = !submitting
+    }
+
+    private fun setHerdFieldLoading(field: View, value: TextView, loading: Boolean) {
+        field.isEnabled = !loading
+        field.setBackgroundResource(R.drawable.application_field_background)
+        field.findViewById<View>(R.id.createLotHerdLoadingIndicator).visibility = if (loading) View.VISIBLE else View.GONE
+        if (loading) {
+            value.text = getString(R.string.applications_register_options_loading)
+            value.setTextColor(requireContext().getColor(R.color.argos_placeholder))
+            field.findViewById<View>(R.id.createLotHerdDropdownIcon).visibility = View.GONE
+            field.findViewById<View>(R.id.createLotHerdErrorIcon).visibility = View.GONE
+        }
+    }
+
+    private fun setHerdFieldReady(field: View, value: TextView, hasHerds: Boolean) {
+        field.isEnabled = true
+        field.setBackgroundResource(R.drawable.application_field_background)
+        value.setTextColor(requireContext().getColor(R.color.argos_placeholder))
+        field.findViewById<View>(R.id.createLotHerdLoadingIndicator).visibility = View.GONE
+        field.findViewById<View>(R.id.createLotHerdDropdownIcon).visibility = if (hasHerds) View.VISIBLE else View.GONE
+        field.findViewById<View>(R.id.createLotHerdErrorIcon).visibility = View.GONE
+    }
+
+    private fun setHerdFieldError(field: View, value: TextView) {
+        field.isEnabled = true
+        field.setBackgroundResource(R.drawable.application_field_background)
+        value.text = getString(R.string.applications_register_options_error)
+        value.setTextColor(requireContext().getColor(R.color.argos_error))
+        field.findViewById<View>(R.id.createLotHerdLoadingIndicator).visibility = View.GONE
+        field.findViewById<View>(R.id.createLotHerdDropdownIcon).visibility = View.GONE
+        field.findViewById<View>(R.id.createLotHerdErrorIcon).visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {

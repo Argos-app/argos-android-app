@@ -16,6 +16,7 @@ import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
 import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.data.cache.storage.HerdStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.exception.auth.AuthErrorCode
@@ -36,6 +37,7 @@ class LoginActivity : ComponentActivity() {
             MonthApplicationsStorage(applicationContext),
             ApplicationsStorage(applicationContext),
             AnimalExceptionStorage(applicationContext),
+            HerdStorage(applicationContext),
         )
     }
     private val viewModel: LoginViewModel by viewModels {

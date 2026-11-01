@@ -4,6 +4,7 @@ import com.android.argosapp.data.dto.ArgosApiAuthResponse
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.Herd
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
@@ -34,6 +35,8 @@ interface ArgosApiRepository {
     ): List<ApplicationWithdrawal>
 
     suspend fun registerLot(bearerToken: String, data: RegisterLotDto)
+
+    suspend fun listHerds(bearerToken: String): List<Herd>
 
     suspend fun listLots(bearerToken: String): List<LotDto>
 

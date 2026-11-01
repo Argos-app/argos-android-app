@@ -13,6 +13,7 @@ import com.android.argosapp.data.dto.DeviceRegisterResponse
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.Herd
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -32,6 +33,9 @@ import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
 private interface ArgosApiService {
+    @GET("herd/list-all")
+    suspend fun listHerds(@Header("Authorization") authorization: String): Response<List<Herd>>
+
     @GET("lot/list-all")
     suspend fun listLots(@Header("Authorization") authorization: String): Response<List<LotDto>>
 
@@ -106,7 +110,7 @@ class RemoteArgosApiRepository(
     private companion object {
         const val PRODUCTION_BASE_URL = "https://argos-backend.discloud.app/api/v1/"
         const val HOMOLOGATION_BASE_URL = "https://argos-backend-hmg.discloud.app/api/v1/"
-        const val SECONDS_TO_TIMEOUT = 30L
+        const val SECONDS_TO_TIMEOUT = 10000L
     }
 
     private val logger = RepositoryAppLogger("RemoteArgosApiRepository")
@@ -169,6 +173,17 @@ class RemoteArgosApiRepository(
         logResponse("register_lot", response.code(), response.isSuccessful)
         if (!response.isSuccessful) throw HttpException(response)
     }
+    override suspend fun listHerds(bearerToken: String): List<Herd> = logger.runSuspending(
+        operation = "list_herds",
+        startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "herd/list-all"),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.listHerds("Bearer $bearerToken")
+        logResponse("list_herds", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()) { "Successful herd list response contained no body." }
+    }
+
     override suspend fun listLots(bearerToken: String): List<LotDto> = logger.runSuspending(
         operation = "list_application_lots",
         startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "lot/list-all"),

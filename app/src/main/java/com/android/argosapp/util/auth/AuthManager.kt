@@ -10,6 +10,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
 import com.android.argosapp.data.cache.storage.ApplicationsStorage
 import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.data.cache.storage.HerdStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
@@ -33,6 +34,7 @@ class AuthManager(
     private val monthApplicationsStorage: MonthApplicationsStorage,
     private val applicationsStorage: ApplicationsStorage,
     private val animalExceptionStorage: AnimalExceptionStorage,
+    private val herdStorage: HerdStorage,
 ) {
     init {
         AppLogger.info(
@@ -116,6 +118,7 @@ class AuthManager(
                 monthApplicationsStorage.clear()
                 applicationsStorage.clear()
                 animalExceptionStorage.clear()
+                herdStorage.clear()
 
                 userStorage.saveUser(user)
                 tokenStorage.saveTokens(firebaseIdToken, response.bearerToken, rememberMe)
@@ -228,6 +231,7 @@ class AuthManager(
             monthApplicationsStorage.clear()
             applicationsStorage.clear()
             animalExceptionStorage.clear()
+            herdStorage.clear()
         }
 
     fun signOut() {

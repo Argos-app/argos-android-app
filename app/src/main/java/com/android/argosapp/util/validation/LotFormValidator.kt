@@ -9,6 +9,7 @@ class LotFormValidator {
     enum class Field {
         LOT_NAME,
         HERD_NAME,
+        BREED,
         CATEGORY,
         HEAD_COUNT,
         SLAUGHTER_DATE,
@@ -30,13 +31,18 @@ class LotFormValidator {
     fun invalidFields(
         lotName: String,
         herdName: String,
+        herdId: String?,
+        breed: String?,
+        isNewHerd: Boolean,
         category: String,
         headCount: String,
         slaughterDate: String,
         availableCategories: Collection<String>,
     ): Set<Field> = buildSet {
         if (!isValidName(lotName)) add(Field.LOT_NAME)
-        if (!isValidName(herdName)) add(Field.HERD_NAME)
+        if (isNewHerd && !isValidName(herdName)) add(Field.HERD_NAME)
+        if (isNewHerd && breed.isNullOrBlank()) add(Field.BREED)
+        if (!isNewHerd && herdId.isNullOrBlank()) add(Field.HERD_NAME)
         if (!isValidCategory(category, availableCategories)) add(Field.CATEGORY)
         if (!isValidHeadCount(headCount)) add(Field.HEAD_COUNT)
         if (!isValidSlaughterDate(slaughterDate)) add(Field.SLAUGHTER_DATE)
