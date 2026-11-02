@@ -343,6 +343,7 @@ class RemoteArgosApiRepository(
             "environment" to environment,
             "method" to "POST",
             "endpoint" to "animal-exceptions",
+            "origin_lot_id" to data.originLotId,
             "has_origin_lot_id" to data.originLotId.isNotBlank(),
             "has_ear_tag" to data.earTag.isNotBlank(),
             "has_exception_reason" to data.exceptionReason.isNotBlank(),
