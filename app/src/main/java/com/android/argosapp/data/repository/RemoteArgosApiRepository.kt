@@ -20,7 +20,9 @@ import com.android.argosapp.model.Application
 import com.android.argosapp.model.ApplicationWithdrawal
 import com.android.argosapp.model.Herd
 import com.android.argosapp.util.logging.RepositoryAppLogger
+import com.google.gson.Gson
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.HttpException
@@ -62,7 +64,7 @@ private interface ArgosApiService {
         @Header("Authorization") authorization: String,
         @Query("page") page: Int,
         @Query("size") size: Int,
-    ): Response<MedicineCatalogPageDto>
+    ): Response<ResponseBody>
 
     @POST("medicines")
     suspend fun registerMedicine(
@@ -273,15 +275,22 @@ class RemoteArgosApiRepository(
         bearerToken: String,
         page: Int,
         size: Int,
-    ): MedicineCatalogPageDto = logger.runSuspending(
-        operation = "get_medicine_catalog_page",
-        startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "medicines/catalog", "page" to page, "size" to size),
-        failureFields = ::httpFailureFields,
-    ) {
-        val response = api.listMedicineCatalog("Bearer $bearerToken", page, size)
-        logResponse("get_medicine_catalog_page", response.code(), response.isSuccessful)
-        if (!response.isSuccessful) throw HttpException(response)
-        requireNotNull(response.body()) { "Successful medicine catalog response contained no body." }
+    ): MedicineCatalogPageDto {
+        var responsePayload: String? = null
+        return logger.runSuspending(
+            operation = "get_medicine_catalog_page",
+            startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "medicines/catalog", "page" to page, "size" to size),
+            failureFields = { error -> httpFailureFields(error, responsePayload) },
+        ) {
+            val response = api.listMedicineCatalog("Bearer $bearerToken", page, size)
+            responsePayload = (if (response.isSuccessful) response.body() else response.errorBody())?.string()
+            logMedicineCatalogPayload(response.code(), responsePayload)
+            logResponse("get_medicine_catalog_page", response.code(), response.isSuccessful)
+            if (!response.isSuccessful) throw HttpException(response)
+            val payload = requireNotNull(responsePayload) { "Successful medicine catalog response contained no body." }
+            Gson().fromJson(payload, MedicineCatalogPageDto::class.java)
+                ?: throw IllegalStateException("Successful medicine catalog response contained invalid JSON.")
+        }
     }
 
     override suspend fun registerMedicine(bearerToken: String, data: RegisterMedicineDto): String = logger.runSuspending(
@@ -510,10 +519,10 @@ class RemoteArgosApiRepository(
         }
     }
 
-    private fun httpFailureFields(error: Throwable): Array<out Pair<String, Any?>> {
+    private fun httpFailureFields(error: Throwable, rawResponseBody: String? = null): Array<out Pair<String, Any?>> {
         val httpError = error as? HttpException
         val response = httpError?.response()
-        val body = response?.errorBody()?.string()?.trim()?.takeIf(String::isNotEmpty)
+        val body = (rawResponseBody ?: response?.errorBody()?.string())?.trim()?.takeIf(String::isNotEmpty)
         val responseMessage = body?.let { responseBody ->
             val parsedMessage = runCatching {
                 extractApiErrorMessage(JSONObject(responseBody))
@@ -554,6 +563,18 @@ class RemoteArgosApiRepository(
             "http_status" to statusCode,
             "successful" to successful,
         )
+    }
+
+    private fun logMedicineCatalogPayload(statusCode: Int, payload: String?) {
+        val parts = payload?.chunked(700).orEmpty().ifEmpty { listOf("") }
+        parts.forEachIndexed { index, part ->
+            logger.info(
+                "get_medicine_catalog_page_payload_received",
+                "http_status" to statusCode,
+                "payload_part" to "${index + 1}/${parts.size}",
+                "payload" to part,
+            )
+        }
     }
 
 }

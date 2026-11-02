@@ -120,7 +120,7 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
         }
         slaughterDateField.setOnClickListener {
             val today = LocalDate.now()
-            DatePickerDialog(
+            val datePicker = DatePickerDialog(
                 requireContext(),
                 R.style.Theme_Argosapp_DatePickerDialog,
                 { _, year, month, day ->
@@ -131,7 +131,12 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
                 today.year,
                 today.monthValue - 1,
                 today.dayOfMonth,
-            ).show()
+            )
+            datePicker.show()
+            datePicker.window?.setLayout(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
         }
         submitButton.setOnClickListener {
             val lotName = lotNameField.text.toString()

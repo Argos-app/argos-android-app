@@ -9,6 +9,7 @@ import com.android.argosapp.data.cache.storage.LotStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
+import com.android.argosapp.util.logging.AppLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -18,7 +19,9 @@ class CreateExceptionBottomSheetViewModel(application: Application) : AndroidVie
     private val lotStorage = LotStorage(application)
     private var submitting = false
     private val lotsCache = CacheDailyRefreshHelper(
-        getCachedData = { lotStorage.getAll().filter { !it.lotId.isNullOrBlank() } },
+        getCachedData = {
+            lotStorage.getAll().filter { !it.lotId.isNullOrBlank() && it.animalExceptionOutList == null }
+        },
         getCacheUpdatedAt = { lotStorage.getCreatedAt() },
         updateCache = { lotStorage.replaceAll(repository.listLots(requireToken())) },
     )
@@ -49,6 +52,13 @@ class CreateExceptionBottomSheetViewModel(application: Application) : AndroidVie
             onLoading(true)
             try {
                 repository.registerAnimalException(requireToken(), data)
+                try {
+                    lotStorage.invalidateCache()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    AppLogger.error(AppLogger.REPOSITORY_TAG, "lot_cache_invalidate_failure", error)
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {

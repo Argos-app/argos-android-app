@@ -18,6 +18,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.argosapp.R
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.databinding.FragmentApplicationsManagementBinding
 import com.android.argosapp.model.Application
 import com.android.argosapp.model.AnimalExceptionRecord
@@ -30,6 +31,7 @@ import com.android.argosapp.viewmodel.RegisterLotApplicationBottomSheetViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_management) {
     private var _binding: FragmentApplicationsManagementBinding? = null
@@ -219,14 +221,16 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         )
 
         val animalLots = mutableListOf<String>()
-        val animalMedicines = mutableListOf<String>()
+        val animalMedicines = mutableListOf<MedicineDto>()
         var selectedAnimalException: AnimalExceptionRecord? = null
+        var selectedMedicine: MedicineDto? = null
         setupAnimalOptionSelectors(
             content,
             animalLots,
             animalMedicines,
             onLotSelected = { selectedAnimalException = null },
             onAnimalSelected = { selectedAnimalException = it },
+            onMedicineSelected = { selectedMedicine = it },
             onCacheRefreshError = { showRefreshError() },
         )
 
@@ -258,6 +262,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                     lotValue,
                     medicineValue,
                     animalLots,
+                    selectedMedicine,
                     animalMedicines,
                 )
             ) {
@@ -268,7 +273,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             registrationOptionsViewModel.registerAnimalApplication(
                 animalExceptionId = animal.id,
                 earCode = animal.earTag,
-                medicineName = medicineValue.text.toString(),
+                medicineBatchId = requireNotNull(selectedMedicine).medicineBatchId,
                 dose = dose.toBigDecimal(),
                 onLoading = { loading ->
                     registerButton.isEnabled = !loading
@@ -306,9 +311,10 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
     private fun setupAnimalOptionSelectors(
         content: View,
         lots: MutableList<String>,
-        medicines: MutableList<String>,
+        medicines: MutableList<MedicineDto>,
         onLotSelected: (String) -> Unit,
         onAnimalSelected: (AnimalExceptionRecord?) -> Unit,
+        onMedicineSelected: (MedicineDto?) -> Unit,
         onCacheRefreshError: () -> Unit,
     ) {
         var medicineHasMore = false
@@ -319,6 +325,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         val animalField = content.findViewById<View>(R.id.applicationAnimalField)
         val animalValue = content.findViewById<TextView>(R.id.applicationAnimalValue)
         val animalExceptions = mutableListOf<AnimalExceptionRecord>()
+        val medicineOptions = mutableListOf<String>()
 
         var lotLoadFailed = false
         var medicineLoadFailed = false
@@ -327,7 +334,11 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         var selectedLot: String? = null
         var selectedAnimal: AnimalExceptionRecord? = null
 
-        fun animalOptions() = selectedLot?.let { lot -> animalExceptions.filter { it.currentLotCode == lot } }.orEmpty()
+        fun animalOptions() = selectedLot?.let { lot ->
+            animalExceptions.filter { exception ->
+                (exception.originLotCode ?: exception.currentLotCode?.substringBeforeLast("-")) == lot
+            }
+        }.orEmpty()
 
         fun animalLabel(exception: AnimalExceptionRecord, duplicateTag: Boolean): String =
             if (duplicateTag) "${exception.earTag} · ${exception.id.takeLast(6)}" else exception.earTag
@@ -425,7 +436,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         }
 
         fun loadLots() {
-            registrationOptionsViewModel.loadLots(
+            registrationOptionsViewModel.loadExceptionLots(
                 onLoading = { loading ->
                     if (loading) {
                         lotLoadFailed = false
@@ -448,7 +459,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         }
 
         fun loadMedicines() {
-            registrationOptionsViewModel.loadMedicines(
+            registrationOptionsViewModel.loadAnimalMedicines(
                 onLoading = { loading ->
                     if (loading) {
                         medicineLoadFailed = false
@@ -458,6 +469,8 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 onLoaded = { options, hasMore ->
                     medicines.clear()
                     medicines.addAll(options)
+                    medicineOptions.clear()
+                    medicineOptions.addAll(options.map(::animalMedicineLabel))
                     medicineHasMore = hasMore
                     medicineLoadFailed = false
                     setOptionIndicatorState(medicineField, medicineValue, R.id.applicationMedicineLoadingIndicator, R.id.applicationMedicineErrorIcon, R.id.applicationMedicineDropdownIcon, hasOptions = options.isNotEmpty())
@@ -547,9 +560,11 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                         updateFooter()
                     },
                     onLoaded = { names, hasMore ->
-                        options.addAll(names)
+                        val labels = names.map(::animalMedicineLabel)
+                        medicines.addAll(names)
+                        options.addAll(labels)
                         medicineHasMore = hasMore
-                        dropdown.appendOptions(names)
+                        dropdown.appendOptions(labels)
                         pageLoadFailed = false
                         updateFooter()
                     },
@@ -583,11 +598,13 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             }
         }
         medicineField.setOnClickListener {
-            if (medicines.isEmpty()) {
+            if (medicineOptions.isEmpty()) {
                 if (medicineLoadFailed) loadMedicines()
                 return@setOnClickListener
             }
-            showOptions(medicineField, medicineValue, medicines, true)
+            showOptions(medicineField, medicineValue, medicineOptions, true) { label ->
+                onMedicineSelected(medicines.firstOrNull { animalMedicineLabel(it) == label })
+            }
         }
 
         animalField.setOnClickListener {
@@ -631,12 +648,15 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         lotValue: TextView,
         medicineValue: TextView,
         lots: List<String>,
-        medicines: List<String>,
+        selectedMedicine: MedicineDto?,
+        medicines: List<MedicineDto>,
     ): Boolean {
         val validDose = applicationFormValidator.isValidDose(doseField.text.toString().removeSuffix(" ml"))
         val validLot = lotValue.text.toString() in lots
-        val validAnimal = animal != null && animal.currentLotCode == lotValue.text.toString()
-        val validMedicine = medicineValue.text.toString() in medicines
+        val validAnimal = animal?.let {
+            (it.originLotCode ?: it.currentLotCode?.substringBeforeLast("-")) == lotValue.text.toString()
+        } == true
+        val validMedicine = selectedMedicine != null && medicines.any { it.medicineBatchId == selectedMedicine.medicineBatchId }
 
         if (!validDose) doseField.error = getString(R.string.applications_register_dose_invalid)
         if (!validAnimal) animalValue.error = getString(R.string.applications_register_ear_tag_invalid)
@@ -644,6 +664,22 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         if (!validMedicine) medicineValue.error = getString(R.string.applications_register_medicine_required)
         return validDose && validAnimal && validLot && validMedicine
     }
+
+    private fun animalMedicineLabel(medicine: MedicineDto): String {
+        val batch = medicine.batch?.takeIf(String::isNotBlank)?.let { " (Lote $it)" }.orEmpty()
+        val daysUntilExpiry = medicine.expiryDate?.let { expiry ->
+            runCatching { ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.parse(expiry)).toInt() }.getOrNull()
+        }
+        val expiry = daysUntilExpiry?.let { days ->
+            when {
+                days < 0 -> "vencido há ${-days} dias"
+                days == 0 -> "vence hoje"
+                else -> "vence em $days dias"
+            }
+        }?.let { " ($it)" }.orEmpty()
+        return "${medicine.medicineName}$batch$expiry"
+    }
+
     private var selectedStatus: String? = null
 
     private fun selectFilter(target: View, status: String?, animate: Boolean) {

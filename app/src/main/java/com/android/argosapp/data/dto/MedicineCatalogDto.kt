@@ -11,8 +11,8 @@ data class MedicineCatalogPageDto(
 )
 
 data class MedicineCatalogDto(
-    val productRegistration: String,
-    val medicineName: String,
+    val productRegistration: String?,
+    val medicineName: String?,
     val activeIngredient: String? = null,
     val therapeuticCategory: String? = null,
 )

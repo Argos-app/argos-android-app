@@ -12,6 +12,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
+import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.R
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.util.validation.ApplicationFormValidator
@@ -21,6 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -28,10 +30,10 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     private val selectManager = SelectManager()
     private val optionsViewModel: RegisterLotApplicationBottomSheetViewModel by viewModels()
     private var lots: List<String> = emptyList()
-    private var medicines: List<String> = emptyList()
+    private var medicines: List<MedicineDto> = emptyList()
     private var medicineHasMore = false
     private var selectedLot: String? = null
-    private var selectedMedicine: String? = null
+    private var selectedMedicine: MedicineDto? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
         BottomSheetDialog(requireContext(), theme)
@@ -87,7 +89,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                     medicines = items
                     medicineHasMore = hasMore
                     medicineLoadFailed = false
-                    medicineValue.text = selectedMedicine ?: if (items.isEmpty()) getString(R.string.applications_register_options_empty) else getString(R.string.applications_register_medicine_hint)
+                    medicineValue.text = selectedMedicine?.let(::medicineOptionLabel) ?: if (items.isEmpty()) getString(R.string.applications_register_options_empty) else getString(R.string.applications_register_medicine_hint)
                     setOptionFieldReady(medicineField, medicineValue, R.id.applicationMedicineLoadingIndicator, R.id.applicationMedicineDropdownIcon, R.id.applicationMedicineErrorIcon, items.isNotEmpty(), items.isEmpty())
                 },
                 onError = {
@@ -118,10 +120,10 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 if (medicineLoadFailed) loadMedicines()
                 return@setOnClickListener
             }
-            showOptions(medicineField, medicines) { medicine ->
+            showOptions(medicineField, medicines.map(::medicineOptionLabel)) { label ->
                 medicineValue.error = null
-                selectedMedicine = medicine
-                medicineValue.text = selectedMedicine
+                selectedMedicine = medicines.firstOrNull { medicineOptionLabel(it) == label }
+                medicineValue.text = selectedMedicine?.let(::medicineOptionLabel)
                 medicineValue.setTextColor(requireContext().getColor(R.color.argos_text_primary))
             }
         }
@@ -135,7 +137,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         dateValue.text = today.format(dateFormatter)
 
         view.findViewById<View>(R.id.applicationDateField).setOnClickListener {
-            DatePickerDialog(
+            val datePicker = DatePickerDialog(
                 requireContext(),
                 R.style.Theme_Argosapp_DatePickerDialog,
                 { _, year, month, day ->
@@ -145,7 +147,12 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 today.year,
                 today.monthValue - 1,
                 today.dayOfMonth,
-            ).show()
+            )
+            datePicker.show()
+            datePicker.window?.setLayout(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
         }
 
         var formattingDose = false
@@ -164,7 +171,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         val registerButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.applicationRegisterButton)
         registerButton.setOnClickListener {
             val lot = selectedLot?.takeIf { it in lots }
-            val medicine = selectedMedicine?.takeIf { it in medicines }
+            val medicine = selectedMedicine?.takeIf { selected -> medicines.any { it.medicineBatchId == selected.medicineBatchId } }
             val dose = doseField.text.toString().removeSuffix(" ml")
             val validDose = applicationFormValidator.isValidDose(dose)
             if (lot == null) lotValue.error = getString(R.string.applications_register_lot_required)
@@ -175,7 +182,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
             }
 
             optionsViewModel.registerApplication(
-                data = RegisterLotApplicationDto(lot, medicine, selectedDate.toString(), dose.toBigDecimal()),
+                data = RegisterLotApplicationDto(lot, medicine.medicineName, selectedDate.toString(), dose.toBigDecimal()),
                 onLoading = { loading ->
                     registerButton.isEnabled = !loading
                     registerButton.isClickable = !loading
@@ -271,10 +278,11 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                     view?.findViewById<View>(R.id.applicationMedicineField)?.isEnabled = !loading
                     updateFooter()
                 },
-                onLoaded = { names, hasMore ->
-                    medicines = medicines + names
+                onLoaded = { batches, hasMore ->
+                    medicines = medicines + batches
+                    val labels = batches.map(::medicineOptionLabel)
                     medicineHasMore = hasMore
-                    dropdown.appendOptions(names)
+                    dropdown.appendOptions(labels)
                     pageLoadFailed = false
                     updateFooter()
                 },
@@ -360,6 +368,21 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         field.findViewById<View>(loadingId).visibility = View.GONE
         field.findViewById<View>(dropdownId).visibility = View.GONE
         field.findViewById<View>(errorId).visibility = View.VISIBLE
+    }
+
+    private fun medicineOptionLabel(medicine: MedicineDto): String {
+        val batch = medicine.batch?.takeIf(String::isNotBlank)?.let { " (Lote $it)" }.orEmpty()
+        val daysUntilExpiry = medicine.expiryDate?.let { expiry ->
+            runCatching { ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.parse(expiry)).toInt() }.getOrNull()
+        }
+        val expiry = daysUntilExpiry?.let { days ->
+            when {
+                days < 0 -> "vencido há ${-days} dias"
+                days == 0 -> "vence hoje"
+                else -> "vence em $days dias"
+            }
+        }?.let { " ($it)" }.orEmpty()
+        return "${medicine.medicineName}$batch$expiry"
     }
 
     companion object {

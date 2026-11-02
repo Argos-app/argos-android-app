@@ -17,6 +17,7 @@ fun escapeBuildConfigValue(value: String) = value
 val cloudinaryCloudName = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_CLOUD_NAME", ""))
 val cloudinaryUploadPreset = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", ""))
 val googleMapsApiKey = escapeBuildConfigValue(localProperties.getProperty("MAPS_API_KEY", ""))
+val argosAiBaseUrl = escapeBuildConfigValue(localProperties.getProperty("ARGOS_AI_BASE_URL", ""))
 
 android {
     namespace = "com.android.argosapp"
@@ -36,6 +37,7 @@ android {
         buildConfigField("String", "MAPS_API_KEY", "\"$googleMapsApiKey\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
+        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

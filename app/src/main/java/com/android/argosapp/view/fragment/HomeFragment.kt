@@ -46,7 +46,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         binding.homeGreeting.setText(R.string.home_greeting_fallback)
         binding.homeManageMedication.setOnClickListener {
-            startActivity(Intent(requireContext(), MedicationStockActivity::class.java))
+            (activity as? HomeActivity)?.showMedicationStockManagement()
         }
         loadUserGreeting(UserStorage(requireContext()))
 
