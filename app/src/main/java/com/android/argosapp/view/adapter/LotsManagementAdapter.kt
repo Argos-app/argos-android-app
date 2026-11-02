@@ -67,11 +67,11 @@ class LotsManagementAdapter : RecyclerView.Adapter<LotsManagementAdapter.LotView
                 val row = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = android.view.Gravity.CENTER_VERTICAL
-                    setPadding(0, dp(10), 0, dp(10))
+                    setPadding(0, dp(8), 0, dp(8))
                 }
                 val icon = ImageView(context).apply {
                     setImageResource(R.drawable.cow_icon)
-                    layoutParams = LinearLayout.LayoutParams(dp(28), dp(24)).apply { marginEnd = dp(10) }
+                    layoutParams = LinearLayout.LayoutParams(dp(24), dp(20)).apply { marginEnd = dp(8) }
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 }
                 val details = TextView(context).apply {
@@ -83,9 +83,9 @@ class LotsManagementAdapter : RecyclerView.Adapter<LotsManagementAdapter.LotView
                             ?: context.getString(R.string.home_calendar_unknown_value),
                     )
                     setTextColor(context.getColor(R.color.argos_text_secondary))
-                    textSize = 14f
+                    textSize = 10f
                     typeface = ResourcesCompat.getFont(context, R.font.dm_sans)
-                    setLineSpacing(dp(2).toFloat(), 1f)
+                    setLineSpacing(dp(1).toFloat(), 1f)
                 }
                 row.addView(icon)
                 row.addView(details)

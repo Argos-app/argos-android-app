@@ -20,12 +20,27 @@ class SelectManager {
         val popup: PopupWindow,
         val list: ListView,
         val adapter: ArrayAdapter<String>,
+        private val footer: View?,
+        private val footerHeightDp: Int,
     ) {
         fun appendOptions(options: List<String>) {
             val firstVisible = list.firstVisiblePosition
             val topOffset = list.getChildAt(0)?.top ?: 0
             adapter.addAll(options)
             list.setSelectionFromTop(firstVisible, topOffset)
+        }
+
+        fun replaceOptions(options: List<String>) {
+            adapter.clear()
+            adapter.addAll(options)
+            val density = list.resources.displayMetrics.density
+            fun dp(size: Int) = (size * density).toInt()
+            val footerHeight = if (footer?.visibility == View.VISIBLE) footerHeightDp else 0
+            popup.height = minOf(
+                dp(adapter.count * 48 + 16 + footerHeight),
+                dp(288),
+                list.resources.displayMetrics.heightPixels / 2,
+            )
         }
     }
 
@@ -92,7 +107,7 @@ class SelectManager {
         anchor.getLocationInWindow(location)
         popup.showAtLocation(anchor, Gravity.TOP or Gravity.LEFT, location[0], location[1] + anchor.height + dp(6))
         dropdownIcon?.rotation = 180f
-        return Dropdown(popup, list, adapter)
+        return Dropdown(popup, list, adapter, footer, footerHeightDp)
     }
 
     fun dismiss() {

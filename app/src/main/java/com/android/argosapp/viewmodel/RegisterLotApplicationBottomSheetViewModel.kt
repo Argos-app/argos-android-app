@@ -8,13 +8,14 @@ import com.android.argosapp.data.cache.CacheDailyRefreshHelper
 import com.android.argosapp.data.cache.storage.LotStorage
 import com.android.argosapp.data.cache.storage.MedicineStorage
 import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.RegisterAnimalApplicationDto
-import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
 import com.android.argosapp.util.logging.AppLogger
 import java.math.BigDecimal
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.model.AnimalExceptionRecord
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -23,6 +24,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     private val tokenStorage = TokenStorage(application)
     private val lotStorage = LotStorage(application)
     private val medicineStorage = MedicineStorage(application)
+    private val animalExceptionStorage = AnimalExceptionStorage(application)
     private var submitting = false
     private var loadingMoreMedicines = false
     private var refreshingMedicines = false
@@ -44,6 +46,24 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
                 size = MedicineStorage.PAGE_SIZE,
             )
             medicineStorage.saveFirstPage(page)
+        },
+    )
+    private val animalExceptionsCache = CacheDailyRefreshHelper(
+        getCachedData = { animalExceptionStorage.getAll() },
+        getCacheUpdatedAt = { animalExceptionStorage.getCreatedAt() },
+        updateCache = {
+            val exceptions = mutableListOf<AnimalExceptionRecord>()
+            var pageNumber = 0
+            while (true) {
+                val page = repository.getAnimalExceptionsPage(requireToken(), true, pageNumber, PAGE_SIZE)
+                exceptions += page.data.map { it.toModel() }
+                if (page.last) break
+                check(page.data.isNotEmpty() && pageNumber < page.totalPages - 1) {
+                    "Animal exception pagination ended unexpectedly."
+                }
+                pageNumber++
+            }
+            animalExceptionStorage.replaceAll(exceptions)
         },
     )
 
@@ -72,6 +92,21 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
             medicinesCache.getData(force).collect { result ->
                 refreshingMedicines = result.refreshing
                 result.data?.let { (names, hasMore) -> onLoaded(names, hasMore) }
+                onLoading(result.refreshing)
+                result.error?.let(onError)
+            }
+        }
+    }
+
+    fun loadAnimalExceptions(
+        force: Boolean = false,
+        onLoading: (Boolean) -> Unit,
+        onLoaded: (List<AnimalExceptionRecord>) -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        viewModelScope.launch {
+            animalExceptionsCache.getData(force).collect { result ->
+                result.data?.let(onLoaded)
                 onLoading(result.refreshing)
                 result.error?.let(onError)
             }
@@ -143,7 +178,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     }
 
     fun registerAnimalApplication(
-        lotName: String,
+        animalExceptionId: String,
         earCode: String,
         medicineName: String,
         dose: BigDecimal,
@@ -159,17 +194,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
                 val token = requireToken()
                 val medicines = medicineStorage.getAll().filter { it.medicineName == medicineName }
                 require(medicines.size == 1) { "Medicamento não encontrado ou possui lotes ambíguos." }
-                val matches = mutableListOf<com.android.argosapp.data.dto.AnimalExceptionDto>()
-                var pageNumber = 0
-                while (true) {
-                    val page = repository.getAnimalExceptionsPage(token, true, pageNumber, 100)
-                    matches += page.data.filter { it.earTag == earCode && it.currentLotCode == lotName }
-                    if (page.last) break
-                    check(page.data.isNotEmpty() && pageNumber < page.totalPages - 1) { "Paginação de exceções inválida." }
-                    pageNumber++
-                }
-                require(matches.size == 1) { "Animal não encontrado no lote selecionado ou brinco duplicado." }
-                repository.registerAnimalApplication(token, matches.single().id, RegisterAnimalApplicationDto(
+                repository.registerAnimalApplication(token, animalExceptionId, RegisterAnimalApplicationDto(
                     earCode = earCode,
                     medicineBatchId = medicines.single().medicineBatchId,
                     dose = dose,
@@ -196,5 +221,9 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     private fun requireToken(): String = tokenStorage.getArgosApiToken()
         ?.takeIf(String::isNotBlank)
         ?: throw SecurityException("Bearer token is unavailable.")
+
+    private companion object {
+        const val PAGE_SIZE = 100
+    }
 
 }

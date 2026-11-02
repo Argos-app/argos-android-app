@@ -30,6 +30,10 @@ class MedicineStorage(context: Context) {
     suspend fun getNamesForSelect(): List<String> = dao.getNamesForSelect()
     suspend fun getPaginationState(): MedicineCacheMetadata? = dao.getPaginationState()
 
+    suspend fun invalidate() {
+        dao.getPaginationState()?.let { dao.saveMetadata(it.copy(createdAt = 0L)) }
+    }
+
     suspend fun saveFirstPage(page: MedicinePageDto) {
         dao.replaceFirstPage(
             page.data.mapIndexed { index, medicine ->

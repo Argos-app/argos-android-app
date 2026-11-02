@@ -62,7 +62,6 @@ class OnboardingFragment : Fragment() {
 
     private fun renderStep() = with(binding) {
         val content = STEP_CONTENTS[step]
-        onboardingBackdrop.showStep(step)
         onboardingIllustration.setImageResource(content.illustration)
         onboardingIllustration.scaleX = content.scale
         onboardingIllustration.scaleY = content.scale

@@ -6,8 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="16dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="30dp"
+    app:cardBackgroundColor="#FFFBFAF9"
+    app:cardCornerRadius="24dp"
     app:cardElevation="0dp"
     app:strokeColor="#FFE3DCCF"
     app:strokeWidth="1dp">
@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="16dp"
         android:paddingTop="20dp"
         android:paddingBottom="20dp">
 
@@ -33,7 +33,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 tools:text="Brinco: 075" />
 
@@ -57,7 +57,7 @@
                     android:layout_marginStart="5dp"
                     android:fontFamily="@font/dm_sans"
                     android:textColor="@color/argos_accent"
-                    android:textSize="12sp"
+                    android:textSize="9sp"
                     android:textStyle="bold"
                     tools:text="Inapto" />
             </LinearLayout>
@@ -70,7 +70,7 @@
             android:layout_marginTop="4dp"
             android:fontFamily="@font/dm_sans"
             android:textColor="@color/argos_text_secondary"
-            android:textSize="14sp"
+            android:textSize="10sp"
             tools:text="Lote atual: Sub Engorda 001" />
 
         <View
@@ -87,8 +87,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:contentDescription="@null"
                 android:src="@drawable/warning_icon" />
 
@@ -100,14 +100,14 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="14sp"
+                android:textSize="10sp"
                 tools:text="Motivo: Animal com suspeita de febre aftosa." />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal">
 
             <TextView
@@ -116,7 +116,7 @@
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_record_date_label"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="14sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/exceptionStartDate"
@@ -124,7 +124,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="14sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 tools:text="04/06/2026" />
         </LinearLayout>
@@ -132,7 +132,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal">
 
             <TextView
@@ -141,7 +141,7 @@
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_slaughter_release_label"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="14sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/exceptionEndDate"
@@ -149,7 +149,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="14sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 tools:text="04/08/2026" />
         </LinearLayout>
@@ -157,7 +157,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -168,7 +168,7 @@
                 android:fontFamily="@font/dm_sans"
                 android:text="@string/exceptions_return_fitness"
                 android:textColor="@color/argos_text_secondary"
-                android:textSize="14sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/exceptionReturnProgressLabel"
@@ -176,7 +176,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/dm_sans"
                 android:textColor="@color/argos_green"
-                android:textSize="14sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 tools:text="60%" />
         </LinearLayout>
@@ -184,14 +184,14 @@
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/exceptionReturnProgress"
             android:layout_width="match_parent"
-            android:layout_height="12dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="6dp"
             android:max="100"
             android:progress="0"
             app:indicatorColor="@color/argos_nav_selected"
             app:trackColor="#FFE3DCCF"
-            app:trackCornerRadius="6dp"
-            app:trackThickness="12dp"
+            app:trackCornerRadius="4dp"
+            app:trackThickness="8dp"
             tools:progress="60" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

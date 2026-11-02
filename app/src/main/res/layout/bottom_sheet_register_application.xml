@@ -185,21 +185,65 @@
             android:textSize="11sp"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/applicationEarTagField"
+        <LinearLayout
+            android:id="@+id/applicationAnimalField"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="48dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/application_field_background"
-            android:fontFamily="@font/dm_sans"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center_vertical"
-            android:hint="@string/applications_register_ear_tag_hint"
-            android:inputType="text"
-            android:maxLines="1"
-            android:paddingHorizontal="14dp"
-            android:textColor="#FF000000"
-            android:textColorHint="@color/argos_placeholder"
-            android:textSize="12sp" />
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:id="@+id/applicationAnimalValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/dm_sans"
+                android:text="@string/applications_register_ear_tag_hint"
+                android:textColor="@color/argos_placeholder"
+                android:textSize="12sp" />
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/applicationAnimalLoadingIndicator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/applications_register_options_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="20dp"
+                    app:trackThickness="2dp" />
+
+                <ImageView
+                    android:id="@+id/applicationAnimalErrorIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/error_icon"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/applicationAnimalDropdownIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/application_dropdown_icon"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

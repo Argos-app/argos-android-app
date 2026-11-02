@@ -60,6 +60,7 @@ class CreateLotBottomSheetFragment : BottomSheetDialogFragment() {
         var herdRefreshErrorShown = false
         herdNameField.doAfterTextChanged { herdNameField.error = null }
         breedField.doAfterTextChanged { breedField.error = null }
+
         fun loadHerds(force: Boolean = false) {
             viewModel.loadHerds(
                 force = force,

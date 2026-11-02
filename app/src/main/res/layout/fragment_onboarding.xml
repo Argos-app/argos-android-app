@@ -14,11 +14,12 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.52" />
 
-    <com.android.argosapp.view.component.OnboardingBackdropView
-        android:id="@+id/onboardingBackdrop"
+    <View
+        android:id="@+id/onboardingHeroBackdrop"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:importantForAccessibility="no"
+        android:background="@color/argos_green"
         app:layout_constraintBottom_toTopOf="@id/onboardingHeroGuide"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
