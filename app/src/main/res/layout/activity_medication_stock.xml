@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/argos_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="84dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/backButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="16dp"
+                android:clickable="true"
+                android:contentDescription="@string/stock_back"
+                android:focusable="true"
+                android:translationY="8dp"
+                app:cardBackgroundColor="@color/argos_icon"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/go_back" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/dm_sans"
+                android:gravity="center"
+                android:text="@string/stock_title"
+                android:textColor="@color/argos_green"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:translationY="8dp" />
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginHorizontal="20dp"
+            app:cardBackgroundColor="#FFFBFAF9"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="14dp"
+                android:paddingEnd="8dp">
+
+                <EditText
+                    android:id="@+id/searchInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="38dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/dm_sans"
+                    android:hint="@string/stock_search_hint"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:padding="0dp"
+                    android:textColor="@color/argos_green"
+                    android:textColorHint="#FFC2B59B"
+                    android:textSize="12sp" />
+
+                <ImageButton
+                    android:id="@+id/searchButton"
+                    android:layout_width="36dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/stock_search"
+                    android:padding="8dp"
+                    android:src="@drawable/search_icon"
+                    android:tint="#FFC2B59B" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <FrameLayout
+            android:id="@+id/filterContainer"
+            android:layout_width="300dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardBackgroundColor="@color/argos_icon"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/filterIndicator"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:cardBackgroundColor="@color/argos_nav_selected"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/filterAllButton"
+                    style="@style/ApplicationsFilterTab"
+                    android:text="@string/stock_filter_all"
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
+
+                <TextView
+                    android:id="@+id/filterVaccinesButton"
+                    style="@style/ApplicationsFilterTab"
+                    android:text="@string/stock_filter_vaccines"
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
+
+                <TextView
+                    android:id="@+id/filterMedicationsButton"
+                    style="@style/ApplicationsFilterTab"
+                    android:text="@string/stock_filter_medications"
+                    android:textSize="12sp"
+                    android:textFontWeight="400" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/stockSwipeRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/stockRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="110dp"
+                    android:scrollbars="none"
+                    tools:listitem="@layout/item_medication_stock" />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/loadingIndicator"
+                    style="@style/Widget.Material3.CircularProgressIndicator"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/stock_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="48dp"
+                    app:trackColor="@color/argos_loading_track"
+                    app:trackCornerRadius="2dp"
+                    app:trackThickness="4dp" />
+
+                <TextView
+                    android:id="@+id/stateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dm_sans"
+                    android:gravity="center"
+                    android:paddingHorizontal="24dp"
+                    android:textColor="@color/argos_text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Nenhum medicamento encontrado." />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/paginationIndicator"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:contentDescription="@string/stock_loading"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/argos_green"
+                    app:indicatorSize="24dp"
+                    app:trackThickness="2dp" />
+            </FrameLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/addStockButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="48dp"
+        android:clickable="true"
+        android:contentDescription="@string/stock_add"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/argos_green"
+        app:cardCornerRadius="25dp"
+        app:cardElevation="4dp"
+        app:rippleColor="@color/argos_calendar_ripple"
+        app:strokeWidth="0dp">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/add_icon" />
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>

@@ -8,6 +8,9 @@ import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.LotAnimalExceptionDto
 import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicineCatalogDto
+import com.android.argosapp.data.dto.MedicineCatalogPageDto
+import com.android.argosapp.data.dto.RegisterMedicineDto
 import com.android.argosapp.data.dto.AnimalExceptionDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
@@ -159,7 +162,7 @@ class MockedArgosApiRepository(
         deletedLotIds.add(lotId)
     }
 
-    private val medicines = listOf(
+    private val medicines = (listOf(
         MedicineDto("00000000-0000-0000-0000-000000000001", "Vacina A", "Fornecedor mock", null, null, "500", "2.5", 0, "VAC-001", "Vacina A", "Vacina"),
         MedicineDto("00000000-0000-0000-0000-000000000002", "Vermífugo Y", "Fornecedor mock", null, null, "300", "5.0", 28, "VER-001", "Ivermectina", "Antiparasitário"),
     ) + List(63) { index ->
@@ -176,7 +179,7 @@ class MockedArgosApiRepository(
             activeIngredient = "Princípio ativo mock",
             therapeuticCategory = "Teste",
         )
-    }
+    }).toMutableList()
 
     override suspend fun getAnimalExceptionsPage(
         bearerToken: String,
@@ -288,7 +291,8 @@ class MockedArgosApiRepository(
         delay(600)
         registeredAnimalExceptions.add(data)
     }
-    override suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto {
+    override suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int, therapeuticCategoryId: String?): MedicinePageDto {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
         val fromIndex = (page * size).coerceAtMost(medicines.size)
         val toIndex = (fromIndex + size).coerceAtMost(medicines.size)
         return MedicinePageDto(
@@ -300,6 +304,48 @@ class MockedArgosApiRepository(
             first = page == 0,
             last = toIndex >= medicines.size,
         )
+    }
+
+    override suspend fun getMedicineCatalogPage(bearerToken: String, page: Int, size: Int): MedicineCatalogPageDto {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        val products = medicines.distinctBy { it.batch }.map {
+            MedicineCatalogDto(
+                productRegistration = it.batch.orEmpty(),
+                medicineName = it.medicineName,
+                activeIngredient = it.activeIngredient,
+                therapeuticCategory = it.therapeuticCategory,
+            )
+        }
+        val fromIndex = (page * size).coerceAtMost(products.size)
+        val toIndex = (fromIndex + size).coerceAtMost(products.size)
+        return MedicineCatalogPageDto(
+            data = products.subList(fromIndex, toIndex), page = page, size = size,
+            totalElements = products.size.toLong(),
+            totalPages = if (products.isEmpty()) 0 else (products.size + size - 1) / size,
+            first = page == 0, last = toIndex >= products.size,
+        )
+    }
+
+    override suspend fun registerMedicine(bearerToken: String, data: RegisterMedicineDto): String {
+        require(bearerToken.isNotBlank()) { "Bearer token is unavailable." }
+        require(data.productRegistration.isNotBlank() && data.batchNumber.isNotBlank()) { "Product and batch are required." }
+        require(data.quantity.signum() > 0) { "Quantity must be positive." }
+        val id = UUID.randomUUID().toString()
+        val product = medicines.firstOrNull { it.batch == data.productRegistration }
+        medicines.add(0, MedicineDto(
+            medicineBatchId = id,
+            medicineName = product?.medicineName ?: data.productRegistration,
+            supplier = data.supplierName,
+            manufactureDate = data.manufactureDate,
+            expiryDate = data.expiryDate,
+            quantity = data.quantity.stripTrailingZeros().toPlainString(),
+            dose = product?.dose,
+            withdrawalDays = product?.withdrawalDays,
+            batch = data.batchNumber,
+            activeIngredient = product?.activeIngredient,
+            therapeuticCategory = product?.therapeuticCategory,
+        ))
+        return id
     }
 
     init {

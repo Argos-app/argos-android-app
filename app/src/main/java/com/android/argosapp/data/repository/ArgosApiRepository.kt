@@ -9,6 +9,8 @@ import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicineCatalogPageDto
+import com.android.argosapp.data.dto.RegisterMedicineDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
 import com.android.argosapp.data.dto.RegisterAnimalExceptionDto
@@ -44,7 +46,16 @@ interface ArgosApiRepository {
 
     suspend fun deleteLot(bearerToken: String, lotId: String)
 
-    suspend fun getMedicinesPage(bearerToken: String, page: Int, size: Int): MedicinePageDto
+    suspend fun getMedicinesPage(
+        bearerToken: String,
+        page: Int,
+        size: Int,
+        therapeuticCategoryId: String? = null,
+    ): MedicinePageDto
+
+    suspend fun getMedicineCatalogPage(bearerToken: String, page: Int, size: Int): MedicineCatalogPageDto
+
+    suspend fun registerMedicine(bearerToken: String, data: RegisterMedicineDto): String
 
     suspend fun getAnimalExceptionsPage(bearerToken: String, active: Boolean?, page: Int, size: Int): AnimalExceptionPageDto
 

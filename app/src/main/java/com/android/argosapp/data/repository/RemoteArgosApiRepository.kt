@@ -6,6 +6,9 @@ import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.RegisterLotDto
 import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicineCatalogPageDto
+import com.android.argosapp.data.dto.RegisterMedicineDto
+import com.android.argosapp.data.dto.RegisterMedicineResponseDto
 import com.android.argosapp.data.dto.AnimalExceptionPageDto
 import com.android.argosapp.data.dto.ApplicationWithdrawalDto
 import com.android.argosapp.data.dto.DeviceRegisterDto
@@ -49,9 +52,23 @@ private interface ArgosApiService {
     @GET("medicines")
     suspend fun listMedicines(
         @Header("Authorization") authorization: String,
+        @Query("therapeuticCategoryId") therapeuticCategoryId: String?,
         @Query("page") page: Int,
         @Query("size") size: Int,
     ): Response<MedicinePageDto>
+
+    @GET("medicines/catalog")
+    suspend fun listMedicineCatalog(
+        @Header("Authorization") authorization: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): Response<MedicineCatalogPageDto>
+
+    @POST("medicines")
+    suspend fun registerMedicine(
+        @Header("Authorization") authorization: String,
+        @Body data: RegisterMedicineDto,
+    ): Response<RegisterMedicineResponseDto>
 
     @GET("animal-exceptions")
     suspend fun listAnimalExceptions(
@@ -233,6 +250,7 @@ class RemoteArgosApiRepository(
         bearerToken: String,
         page: Int,
         size: Int,
+        therapeuticCategoryId: String?,
     ): MedicinePageDto = logger.runSuspending(
         operation = "get_medicines_page",
         startFields = arrayOf(
@@ -241,13 +259,42 @@ class RemoteArgosApiRepository(
             "endpoint" to "medicines",
             "page" to page,
             "size" to size,
+            "therapeutic_category_id" to therapeuticCategoryId,
         ),
         failureFields = ::httpFailureFields,
     ) {
-        val response = api.listMedicines("Bearer $bearerToken", page, size)
+        val response = api.listMedicines("Bearer $bearerToken", therapeuticCategoryId, page, size)
         logResponse("get_medicines_page", response.code(), response.isSuccessful)
         if (!response.isSuccessful) throw HttpException(response)
         requireNotNull(response.body()) { "Successful medicine page response contained no body." }
+    }
+
+    override suspend fun getMedicineCatalogPage(
+        bearerToken: String,
+        page: Int,
+        size: Int,
+    ): MedicineCatalogPageDto = logger.runSuspending(
+        operation = "get_medicine_catalog_page",
+        startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "medicines/catalog", "page" to page, "size" to size),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.listMedicineCatalog("Bearer $bearerToken", page, size)
+        logResponse("get_medicine_catalog_page", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()) { "Successful medicine catalog response contained no body." }
+    }
+
+    override suspend fun registerMedicine(bearerToken: String, data: RegisterMedicineDto): String = logger.runSuspending(
+        operation = "register_medicine",
+        startFields = arrayOf("environment" to environment, "method" to "POST", "endpoint" to "medicines", "has_product_registration" to data.productRegistration.isNotBlank(), "has_batch_number" to data.batchNumber.isNotBlank()),
+        failureFields = ::httpFailureFields,
+    ) {
+        val response = api.registerMedicine("Bearer $bearerToken", data)
+        logResponse("register_medicine", response.code(), response.isSuccessful)
+        if (!response.isSuccessful) throw HttpException(response)
+        requireNotNull(response.body()?.medicineBatchId?.takeIf(String::isNotBlank)) {
+            "Successful medicine registration response contained no medicineBatchId."
+        }
     }
 
     override suspend fun getAnimalExceptionsPage(

@@ -517,8 +517,8 @@
         </FrameLayout>
 
         <ImageView
-            android:layout_width="330dp"
-            android:layout_height="330dp"
+            android:layout_width="292dp"
+            android:layout_height="292dp"
             android:layout_gravity="top|center_horizontal"
             android:layout_marginTop="23dp"
             android:contentDescription="@string/home_mascot_description"

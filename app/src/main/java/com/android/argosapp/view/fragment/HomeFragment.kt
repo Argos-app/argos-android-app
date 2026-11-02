@@ -1,5 +1,6 @@
 package com.android.argosapp.view.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -16,6 +17,7 @@ import com.android.argosapp.view.adapter.HomeFragmentApplication
 import com.android.argosapp.view.adapter.HomeFragmentApplicationsAdapter
 import com.android.argosapp.view.componentmanager.CalendarManager
 import com.android.argosapp.view.activity.HomeActivity
+import com.android.argosapp.view.activity.MedicationStockActivity
 import com.android.argosapp.viewmodel.HomeViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -43,6 +45,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         _binding = FragmentHomeBinding.bind(view)
 
         binding.homeGreeting.setText(R.string.home_greeting_fallback)
+        binding.homeManageMedication.setOnClickListener {
+            startActivity(Intent(requireContext(), MedicationStockActivity::class.java))
+        }
         loadUserGreeting(UserStorage(requireContext()))
 
         val currentMonth = YearMonth.now()
