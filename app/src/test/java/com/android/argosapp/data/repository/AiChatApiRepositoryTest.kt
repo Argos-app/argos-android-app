@@ -1,5 +1,12 @@
 package com.android.argosapp.data.repository
 
+import com.android.argosapp.data.dto.AiAnswerDto
+import com.android.argosapp.data.dto.AiAnswerInputDto
+import com.android.argosapp.data.dto.AiInteractionInputDto
+import com.android.argosapp.data.dto.AiQuestionOptionDto
+import com.android.argosapp.data.dto.AiResponseDto
+import com.android.argosapp.data.dto.AiSessionMessageDto
+import com.android.argosapp.data.dto.AiSessionMessagesPageDto
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
