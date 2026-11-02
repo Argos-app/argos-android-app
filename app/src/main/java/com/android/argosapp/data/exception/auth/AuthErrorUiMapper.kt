@@ -1,13 +1,7 @@
-<<<<<<<< HEAD:app/src/main/java/com/android/argosapp/data/exception/auth/AuthErrorUiMapper.kt
 package com.android.argosapp.data.exception.auth
-========
-package com.android.argosapp.exception.auth
->>>>>>>> origin/develop:app/src/main/java/com/android/argosapp/exception/auth/AuthErrorUiMapper.kt
 
-import androidx.annotation.StringRes
 import com.android.argosapp.R
 
-@StringRes
 fun AuthErrorCode.messageRes(): Int = when (this) {
     AuthErrorCode.EMPTY_FIELDS -> R.string.auth_error_empty_fields
     AuthErrorCode.INVALID_CREDENTIALS -> R.string.auth_error_invalid_credentials

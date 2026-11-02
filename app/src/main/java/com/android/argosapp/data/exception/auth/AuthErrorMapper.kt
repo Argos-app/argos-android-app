@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:app/src/main/java/com/android/argosapp/data/exception/auth/AuthErrorMapper.kt
 package com.android.argosapp.data.exception.auth
-========
-package com.android.argosapp.exception.auth
->>>>>>>> origin/develop:app/src/main/java/com/android/argosapp/exception/auth/AuthErrorMapper.kt
 
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.firebase.auth.FirebaseAuthException

@@ -20,6 +20,7 @@ import com.android.argosapp.R
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.databinding.FragmentApplicationsManagementBinding
 import com.android.argosapp.model.Application
+import com.android.argosapp.model.AnimalExceptionRecord
 import com.android.argosapp.util.validation.ApplicationFormValidator
 import com.android.argosapp.view.adapter.ApplicationsManagementFragmentAdapter
 import com.android.argosapp.util.navigation.FragmentNavHelper
@@ -219,10 +220,18 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
 
         val animalLots = mutableListOf<String>()
         val animalMedicines = mutableListOf<String>()
-        setupAnimalOptionSelectors(content, animalLots, animalMedicines)
+        var selectedAnimalException: AnimalExceptionRecord? = null
+        setupAnimalOptionSelectors(
+            content,
+            animalLots,
+            animalMedicines,
+            onLotSelected = { selectedAnimalException = null },
+            onAnimalSelected = { selectedAnimalException = it },
+            onCacheRefreshError = { showRefreshError() },
+        )
 
         val doseField = content.findViewById<EditText>(R.id.applicationDoseField)
-        val earTagField = content.findViewById<EditText>(R.id.applicationEarTagField)
+        val animalValue = content.findViewById<TextView>(R.id.applicationAnimalValue)
         val lotValue = content.findViewById<TextView>(R.id.applicationLotValue)
         val medicineValue = content.findViewById<TextView>(R.id.applicationMedicineValue)
 
@@ -240,17 +249,25 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             }
             doseField.error = null
         }
-        earTagField.doAfterTextChanged { earTagField.error = null }
-
         val registerButton = content.findViewById<com.google.android.material.button.MaterialButton>(R.id.applicationRegisterButton)
         registerButton.setOnClickListener {
-            if (!validateAnimalApplication(doseField, earTagField, lotValue, medicineValue, animalLots, animalMedicines)) {
+            if (!validateAnimalApplication(
+                    doseField,
+                    animalValue,
+                    selectedAnimalException,
+                    lotValue,
+                    medicineValue,
+                    animalLots,
+                    animalMedicines,
+                )
+            ) {
                 return@setOnClickListener
             }
+            val animal = selectedAnimalException ?: return@setOnClickListener
             val dose = doseField.text.toString().removeSuffix(" ml")
             registrationOptionsViewModel.registerAnimalApplication(
-                lotName = lotValue.text.toString(),
-                earCode = earTagField.text.toString().trim(),
+                animalExceptionId = animal.id,
+                earCode = animal.earTag,
                 medicineName = medicineValue.text.toString(),
                 dose = dose.toBigDecimal(),
                 onLoading = { loading ->
@@ -286,15 +303,90 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
         dialog.show()
     }
 
-    private fun setupAnimalOptionSelectors(content: View, lots: MutableList<String>, medicines: MutableList<String>) {
+    private fun setupAnimalOptionSelectors(
+        content: View,
+        lots: MutableList<String>,
+        medicines: MutableList<String>,
+        onLotSelected: (String) -> Unit,
+        onAnimalSelected: (AnimalExceptionRecord?) -> Unit,
+        onCacheRefreshError: () -> Unit,
+    ) {
         var medicineHasMore = false
         val lotField = content.findViewById<View>(R.id.applicationLotField)
         val medicineField = content.findViewById<View>(R.id.applicationMedicineField)
         val lotValue = content.findViewById<TextView>(R.id.applicationLotValue)
         val medicineValue = content.findViewById<TextView>(R.id.applicationMedicineValue)
+        val animalField = content.findViewById<View>(R.id.applicationAnimalField)
+        val animalValue = content.findViewById<TextView>(R.id.applicationAnimalValue)
+        val animalExceptions = mutableListOf<AnimalExceptionRecord>()
 
         var lotLoadFailed = false
         var medicineLoadFailed = false
+        var animalLoadFailed = false
+        var animalLoading = false
+        var selectedLot: String? = null
+        var selectedAnimal: AnimalExceptionRecord? = null
+
+        fun animalOptions() = selectedLot?.let { lot -> animalExceptions.filter { it.currentLotCode == lot } }.orEmpty()
+
+        fun animalLabel(exception: AnimalExceptionRecord, duplicateTag: Boolean): String =
+            if (duplicateTag) "${exception.earTag} · ${exception.id.takeLast(6)}" else exception.earTag
+
+        fun updateAnimalField() {
+            val availableAnimals = animalOptions()
+            val selected = selectedAnimal?.takeIf { item -> availableAnimals.any { it.id == item.id } }
+            if (selectedAnimal != null && selected == null) onAnimalSelected(null)
+            selectedAnimal = selected
+            animalValue.error = null
+            val canOpen = selectedLot != null && availableAnimals.isNotEmpty() && !animalLoading
+            animalField.isEnabled = canOpen || (selectedLot != null && animalLoadFailed && !animalLoading)
+            animalField.findViewById<View>(R.id.applicationAnimalLoadingIndicator).visibility =
+                if (animalLoading) View.VISIBLE else View.GONE
+            animalField.findViewById<View>(R.id.applicationAnimalErrorIcon).visibility =
+                if (animalLoadFailed) View.VISIBLE else View.GONE
+            animalField.findViewById<View>(R.id.applicationAnimalDropdownIcon).visibility =
+                if (canOpen && !animalLoadFailed) View.VISIBLE else View.GONE
+            animalValue.setTextColor(
+                requireContext().getColor(
+                    if (selected != null) R.color.argos_text_primary
+                    else if (animalLoadFailed) R.color.argos_error
+                    else R.color.argos_placeholder,
+                ),
+            )
+            animalValue.text = when {
+                animalLoading -> getString(R.string.applications_register_options_loading)
+                animalLoadFailed -> getString(R.string.applications_register_options_error)
+                selected != null -> {
+                    val repeatedTag = availableAnimals.count { it.earTag == selected.earTag } > 1
+                    animalLabel(selected, repeatedTag)
+                }
+                selectedLot == null -> getString(R.string.applications_register_select_lot_first)
+                availableAnimals.isEmpty() -> getString(R.string.applications_register_options_empty)
+                else -> getString(R.string.applications_register_ear_tag_hint)
+            }
+        }
+
+        fun loadAnimalExceptions() {
+            registrationOptionsViewModel.loadAnimalExceptions(
+                onLoading = { loading ->
+                    animalLoading = loading
+                    if (loading) animalLoadFailed = false
+                    updateAnimalField()
+                },
+                onLoaded = { records ->
+                    animalExceptions.clear()
+                    animalExceptions.addAll(records)
+                    animalLoadFailed = false
+                    updateAnimalField()
+                },
+                onError = {
+                    animalLoadFailed = animalExceptions.isEmpty()
+                    animalLoading = false
+                    if (animalExceptions.isNotEmpty()) onCacheRefreshError()
+                    updateAnimalField()
+                },
+            )
+        }
 
         fun setOptionIndicatorState(
             field: View,
@@ -381,7 +473,13 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
 
         loadLots()
         loadMedicines()
-        fun showOptions(anchor: View, value: TextView, options: MutableList<String>, isMedicine: Boolean) {
+        fun showOptions(
+            anchor: View,
+            value: TextView,
+            options: MutableList<String>,
+            isMedicine: Boolean,
+            onSelected: ((String) -> Unit)? = null,
+        ) {
             if (options.isEmpty()) return
             fun dp(size: Int) = (size * resources.displayMetrics.density).toInt()
             val dropdownIcon = anchor.findViewById<View>(
@@ -418,6 +516,7 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                     value.error = null
                     value.text = selected
                     value.setTextColor(requireContext().getColor(R.color.argos_text_primary))
+                    onSelected?.invoke(selected)
                 },
             )
             val list = dropdown.list
@@ -476,7 +575,12 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
                 if (lotLoadFailed) loadLots()
                 return@setOnClickListener
             }
-            showOptions(lotField, lotValue, lots, false)
+            showOptions(lotField, lotValue, lots, false) { lot ->
+                selectedLot = lot
+                selectedAnimal = null
+                onLotSelected(lot)
+                updateAnimalField()
+            }
         }
         medicineField.setOnClickListener {
             if (medicines.isEmpty()) {
@@ -485,25 +589,60 @@ class ApplicationsManagementFragment : Fragment(R.layout.fragment_applications_m
             }
             showOptions(medicineField, medicineValue, medicines, true)
         }
+
+        animalField.setOnClickListener {
+            if (animalLoading) return@setOnClickListener
+            if (selectedLot == null) {
+                animalValue.error = getString(R.string.applications_register_lot_required)
+                return@setOnClickListener
+            }
+            if (animalLoadFailed) {
+                loadAnimalExceptions()
+                return@setOnClickListener
+            }
+
+            val availableAnimals = animalOptions()
+            if (availableAnimals.isEmpty()) return@setOnClickListener
+            val tagCounts = availableAnimals.groupingBy { it.earTag }.eachCount()
+            val labels = availableAnimals.map { animal ->
+                animalLabel(animal, tagCounts.getValue(animal.earTag) > 1)
+            }
+            val animalsByLabel = labels.zip(availableAnimals).toMap()
+            selectManager.showOptions(
+                anchor = animalField,
+                options = labels,
+                dropdownIcon = animalField.findViewById(R.id.applicationAnimalDropdownIcon),
+                onSelected = { label ->
+                    val animal = animalsByLabel[label] ?: return@showOptions
+                    selectedAnimal = animal
+                    onAnimalSelected(animal)
+                    animalValue.error = null
+                    updateAnimalField()
+                },
+            )
+        }
+
+        loadAnimalExceptions()
     }
     private fun validateAnimalApplication(
         doseField: EditText,
-        earTagField: EditText,
+        animalValue: TextView,
+        animal: AnimalExceptionRecord?,
         lotValue: TextView,
         medicineValue: TextView,
         lots: List<String>,
         medicines: List<String>,
     ): Boolean {
         val validDose = applicationFormValidator.isValidDose(doseField.text.toString().removeSuffix(" ml"))
-        val validEarTag = earTagField.text.toString().isNotBlank()
         val validLot = lotValue.text.toString() in lots
+        val validAnimal = animal != null && animal.currentLotCode == lotValue.text.toString()
         val validMedicine = medicineValue.text.toString() in medicines
 
         if (!validDose) doseField.error = getString(R.string.applications_register_dose_invalid)
-        if (!validEarTag) earTagField.error = getString(R.string.applications_register_ear_tag_invalid)
+        if (!validAnimal) animalValue.error = getString(R.string.applications_register_ear_tag_invalid)
         if (!validLot) lotValue.error = getString(R.string.applications_register_lot_required)
         if (!validMedicine) medicineValue.error = getString(R.string.applications_register_medicine_required)
-        return validDose && validEarTag && validLot && validMedicine
+        return validDose && validAnimal && validLot && validMedicine
     }
     private var selectedStatus: String? = null
 

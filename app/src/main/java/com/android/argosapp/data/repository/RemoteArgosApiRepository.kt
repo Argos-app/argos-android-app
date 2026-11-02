@@ -193,6 +193,7 @@ class RemoteArgosApiRepository(
         logResponse("register_lot", response.code(), response.isSuccessful)
         if (!response.isSuccessful) throw HttpException(response)
     }
+
     override suspend fun listHerds(bearerToken: String): List<Herd> = logger.runSuspending(
         operation = "list_herds",
         startFields = arrayOf("environment" to environment, "method" to "GET", "endpoint" to "herd/list-all"),
