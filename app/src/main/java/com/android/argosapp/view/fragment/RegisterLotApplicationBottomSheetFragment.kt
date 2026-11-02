@@ -16,6 +16,7 @@ import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.R
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.util.validation.ApplicationFormValidator
+import com.android.argosapp.view.componentmanager.showCalendarSized
 import com.android.argosapp.view.componentmanager.SelectManager
 import com.android.argosapp.viewmodel.RegisterLotApplicationBottomSheetViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -148,11 +149,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 today.monthValue - 1,
                 today.dayOfMonth,
             )
-            datePicker.show()
-            datePicker.window?.setLayout(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
+            datePicker.showCalendarSized()
         }
 
         var formattingDose = false
