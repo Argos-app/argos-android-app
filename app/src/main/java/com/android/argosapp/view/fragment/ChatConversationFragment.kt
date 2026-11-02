@@ -2,6 +2,8 @@ package com.android.argosapp.view.fragment
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -28,6 +30,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import android.text.InputFilter
 
 class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
     private var _binding: FragmentChatConversationBinding? = null
@@ -38,12 +41,16 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
     private var anchorOffset = 0
     private var displayedSessionId: String? = null
     private val locale = Locale("pt", "BR")
+    private val expirationHandler = Handler(Looper.getMainLooper())
+    private var expirationTask: Runnable? = null
+    private var lastRenderedState: ChatbotUiState? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChatConversationBinding.bind(view)
         binding.chatbotMessages.layoutManager = LinearLayoutManager(requireContext())
         binding.chatbotMessages.adapter = messageAdapter
+        binding.chatbotInput.filters = arrayOf(InputFilter.LengthFilter(MAX_CHAT_TEXT_LENGTH))
         binding.chatbotInput.setText(viewModel.draft)
         binding.chatbotInput.setSelection(binding.chatbotInput.length())
         binding.chatbotInput.doAfterTextChanged { viewModel.draft = it?.toString().orEmpty() }
@@ -68,6 +75,9 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
 
     override fun onDestroyView() {
         binding.chatbotMessages.adapter = null
+        expirationTask?.let(expirationHandler::removeCallbacks)
+        expirationTask = null
+        lastRenderedState = null
         displayedSessionId = null
         _binding = null
         super.onDestroyView()
@@ -83,8 +93,11 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
     }
 
     private fun render(state: ChatbotUiState) {
+        lastRenderedState = state
+        scheduleExpirationRefresh(state)
         val conversation = state.page == ChatbotPage.CONVERSATION
         binding.chatbotSending.isVisible = state.isSending
+        binding.chatbotSending.text = if (state.isSending) getString(R.string.chatbot_sending) else ""
         binding.chatbotInput.hint = state.composerHint
         state.answerDraftToRestore?.let { draft ->
             if (binding.chatbotInput.text.isNullOrEmpty()) {
@@ -94,7 +107,7 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
             viewModel.consumeAnswerDraft()
         }
         binding.chatbotInput.isEnabled = true
-        binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading && state.userKey.isNotBlank()
+        binding.chatbotSend.isEnabled = !state.isSending && !state.isLoading && !state.isRecoveryBlocked && state.userKey.isNotBlank()
         binding.chatbotSend.alpha = if (binding.chatbotSend.isEnabled) 1f else 0.45f
         binding.chatbotLoadEarlier.isVisible = state.hasEarlierMessages
         binding.chatbotLoadEarlier.isEnabled = !state.isLoading
@@ -142,6 +155,18 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
         }
     }
 
+    private fun scheduleExpirationRefresh(state: ChatbotUiState) {
+        expirationTask?.let(expirationHandler::removeCallbacks)
+        expirationTask = null
+        val now = System.currentTimeMillis()
+        val nextExpiration = state.messages.mapNotNull { it.questionExpiresAt }
+            .filter { it > now }
+            .minOrNull() ?: return
+        expirationTask = Runnable { lastRenderedState?.let(::render) }.also {
+            expirationHandler.postDelayed(it, (nextExpiration - now).coerceAtLeast(1L))
+        }
+    }
+
     private fun sessionDate(timestamp: Long): String {
         val dateTime = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault())
         val time = dateTime.format(DateTimeFormatter.ofPattern("HH:mm", locale))
@@ -151,4 +176,6 @@ class ChatConversationFragment : Fragment(R.layout.fragment_chat_conversation) {
             else -> dateTime.format(DateTimeFormatter.ofPattern("d 'de' MMMM", locale)) + " • $time"
         }
     }
+
+    private companion object { const val MAX_CHAT_TEXT_LENGTH = 8000 }
 }

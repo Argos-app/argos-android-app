@@ -56,6 +56,7 @@ fun List<ChatMessage>.latestUnansweredPrompt(
     val lastUserMessage = indexOfLast { it.sender == ChatSender.USER }
     return drop(lastUserMessage + 1).lastOrNull {
         it.sender == ChatSender.ASSISTANT &&
+            !it.redacted &&
             it.inputType in setOf("free_text", "single_choice", "confirmation")
     }?.takeIf { includeExpired || it.questionExpiresAt == null || it.questionExpiresAt > nowMillis }
 }

@@ -56,13 +56,14 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
             state.pendingSessionTitle ?: state.sessions.firstOrNull { it.id == state.currentSessionId }?.title
                 ?: getString(R.string.chatbot_title)
         } else getString(R.string.chatbot_title)
-        binding.chatbotTabs.isVisible = state.page != ChatbotPage.CONVERSATION
+        binding.chatbotTabs.isVisible = true
         binding.chatbotNewTab.isEnabled = !state.isSending
         binding.chatbotHistoryTab.isEnabled = !state.isSending
         binding.chatbotLoading.isVisible = state.isLoading
         binding.chatbotErrorCard.isVisible = state.errorMessage != null
         binding.chatbotError.text = state.errorMessage.orEmpty()
-        binding.chatbotRetry.setText(if (history || state.userKey.isBlank()) R.string.chatbot_retry else R.string.chatbot_dismiss_error)
+        binding.chatbotRetry.setText(if (history || state.userKey.isBlank() || state.canRetryPendingRecovery || state.page == ChatbotPage.CONVERSATION && state.currentSessionId != null) R.string.chatbot_retry else R.string.chatbot_dismiss_error)
+        if (state.canContinueAfterInterruption) binding.chatbotRetry.setText(R.string.chatbot_continue_after_review)
         styleTab(binding.chatbotNewTab, binding.chatbotNewTabLabel, state.page == ChatbotPage.NEW_SESSION)
         styleTab(binding.chatbotHistoryTab, binding.chatbotHistoryTabLabel, history)
         val existing = childFragmentManager.findFragmentById(R.id.chatbotPageContainer)

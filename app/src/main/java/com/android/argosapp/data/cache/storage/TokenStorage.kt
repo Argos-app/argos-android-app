@@ -10,11 +10,7 @@ class TokenStorage(context: Context) {
 
     init {
         synchronized(aiTokenLock) {
-            if (inMemoryAiToken == null) {
-                val uid = cipher.readSecureValue(preferences, AI_UID_KEY)
-                val token = cipher.readSecureValue(preferences, AI_TOKEN_KEY)
-                if (uid != null && token != null) inMemoryAiToken = uid to token
-            }
+            preferences.edit { remove(AI_TOKEN_KEY); remove(AI_UID_KEY) }
         }
         if (inMemoryFirebaseIdToken == null) {
             inMemoryFirebaseIdToken = cipher.readSecureValue(preferences, FIREBASE_TOKEN_KEY)
@@ -29,15 +25,7 @@ class TokenStorage(context: Context) {
 
     fun saveAiToken(uid: String, token: String) = synchronized(aiTokenLock) {
         inMemoryAiToken = uid to token
-        preferences.edit {
-            if (isRememberMeEnabled()) {
-                putString(AI_TOKEN_KEY, cipher.encrypt(token))
-                putString(AI_UID_KEY, cipher.encrypt(uid))
-            } else {
-                remove(AI_TOKEN_KEY)
-                remove(AI_UID_KEY)
-            }
-        }
+        preferences.edit { remove(AI_TOKEN_KEY); remove(AI_UID_KEY) }
     }
 
     fun clearAiToken() = synchronized(aiTokenLock) {

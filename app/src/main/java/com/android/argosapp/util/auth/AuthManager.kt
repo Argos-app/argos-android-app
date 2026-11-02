@@ -16,6 +16,7 @@ import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.repository.ArgosApiRepository
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.data.dto.ArgosApiAuthResponse
 import com.android.argosapp.data.dto.UpdateCurrentUserDto
 import com.android.argosapp.model.User
@@ -37,6 +38,7 @@ class AuthManager(
     private val animalExceptionStorage: AnimalExceptionStorage,
     private val herdStorage: HerdStorage,
     private val chatCacheStorage: ChatCacheStorage,
+    private val pendingInteractionStore: EncryptedPendingInteractionStore,
 ) {
     init {
         AppLogger.info(
@@ -48,7 +50,8 @@ class AuthManager(
 
     suspend fun loginWithCredentials(email: String, password: String): String =
         loggedSuspend(AppLogger.AUTH_TAG, "auth_credentials") {
-            firebaseRepository.loginWithCredentials(email, password)
+            val previousUid = firebaseRepository.currentFirebaseUid()
+            firebaseRepository.loginWithCredentials(email, password).also { clearPendingAfterAccountChange(previousUid) }
         }
 
     fun launchGoogleSignIn(
@@ -100,7 +103,8 @@ class AuthManager(
 
     suspend fun loginWithGoogle(idToken: String): String =
         loggedSuspend(AppLogger.AUTH_TAG, "auth_google_firebase") {
-            firebaseRepository.loginWithGoogle(idToken)
+            val previousUid = firebaseRepository.currentFirebaseUid()
+            firebaseRepository.loginWithGoogle(idToken).also { clearPendingAfterAccountChange(previousUid) }
         }
 
     suspend fun authenticate(firebaseIdToken: String, rememberMe: Boolean): ArgosApiAuthResponse =
@@ -229,6 +233,7 @@ class AuthManager(
 
     suspend fun clearSession() =
         loggedSuspend(AppLogger.SESSION_TAG, "session_clear") {
+            clearPendingAfterAccountChange(firebaseRepository.currentFirebaseUid(), force = true)
             tokenStorage.clearTokens()
             userStorage.clearUser()
             monthApplicationsStorage.clear()
@@ -241,6 +246,20 @@ class AuthManager(
     fun signOut() {
         loggedSync(AppLogger.SESSION_TAG, "session_sign_out") {
             firebaseRepository.signOut()
+        }
+    }
+
+    private suspend fun clearPendingAfterAccountChange(previousUid: String?, force: Boolean = false) {
+        if (previousUid != null && (force || previousUid != firebaseRepository.currentFirebaseUid())) {
+            listOf(previousUid, "mock:$previousUid").forEach { key ->
+                try {
+                    pendingInteractionStore.clear(key)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    AppLogger.error(AppLogger.SESSION_TAG, "chatbot_pending_logout_clear_failed", error)
+                }
+            }
         }
     }
 

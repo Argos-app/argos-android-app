@@ -1,7 +1,6 @@
 package com.android.argosapp.data.repository
 
 import com.android.argosapp.data.dto.*
-import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.util.logging.RepositoryAppLogger
 import org.json.JSONObject
 import org.json.JSONArray
@@ -14,6 +13,7 @@ import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.OkHttpClient
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -61,52 +61,92 @@ private interface AiChatApi {
 
 
 class AiChatApiRepository(
-    private val firebaseRepository: FirebaseRepository,
+    private val firebaseRepository: FirebaseIdTokenProvider,
     baseUrl: String,
-    private val tokenStorage: TokenStorage,
-) {
+) : AiChatRepository {
+    private val logger = RepositoryAppLogger("AiChatApiRepository")
     private val api = Retrofit.Builder()
         .baseUrl(baseUrl.ensureTrailingSlash())
+        .client(OkHttpClient.Builder().addInterceptor { chain ->
+            val response = chain.proceed(chain.request())
+            response.header("X-Argos-Correlation-ID")?.let { correlationId ->
+                logger.info("ai_response_correlation", "correlation_id" to correlationId)
+            }
+            response
+        }.build())
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(AiChatApi::class.java)
 
-    private val logger = RepositoryAppLogger("AiChatApiRepository")
     private val tokenMutex = Mutex()
+    private var memoryTokenUid: String? = null
+    private var memoryToken: String? = null
 
-    suspend fun createSession(): AiSessionDto = logger.runSuspending(
+    suspend fun createSession(): AiSessionDto = createSession(currentUserKey())
+    suspend fun listSessions(): List<AiSessionDto> = listSessions(currentUserKey())
+    suspend fun getMessages(sessionId: String, cursor: String? = null): AiSessionMessagesPageDto =
+        getMessages(currentUserKey(), sessionId, cursor)
+    suspend fun interact(
+        sessionId: String,
+        input: AiInteractionInputDto,
+        operationId: String? = null,
+        pollAfterMs: Long = 1000,
+        onAccepted: suspend (AiInteractionAcceptedDto) -> Unit = {},
+    ): AiInteractionResultDto = interact(currentUserKey(), sessionId, input, operationId, pollAfterMs, onAccepted)
+
+    override suspend fun createSession(userKey: String): AiSessionDto {
+        requireCurrentUser(userKey)
+        return logger.runSuspending(
         operation = "ai_create_session",
         startFields = arrayOf("method" to "POST", "endpoint" to "v1/sessions"),
         failureFields = ::httpFailureFields,
-    ) { authorized { api.createSession(it).requiredBody() } }
+        ) { authorized(userKey) { api.createSession(it).requiredBody() } }
+    }
 
-    suspend fun listSessions(): List<AiSessionDto> = logger.runSuspending(
+    override suspend fun listSessions(userKey: String): List<AiSessionDto> {
+        requireCurrentUser(userKey)
+        return logger.runSuspending(
         operation = "ai_list_sessions",
         startFields = arrayOf("method" to "GET", "endpoint" to "v1/sessions"),
         successFields = { arrayOf("count" to it.size) },
         failureFields = ::httpFailureFields,
-    ) { authorized { api.listSessions(it).requiredBody() } }
+        ) { authorized(userKey) { api.listSessions(it).requiredBody() } }
+    }
 
-    suspend fun getMessages(sessionId: String, cursor: String? = null): AiSessionMessagesPageDto =
-        logger.runSuspending(
+    override suspend fun getMessages(userKey: String, sessionId: String, cursor: String?): AiSessionMessagesPageDto {
+        requireCurrentUser(userKey)
+        return logger.runSuspending(
             operation = "ai_get_messages",
             startFields = arrayOf("method" to "GET", "endpoint" to "v1/sessions/{session_id}/messages", "has_cursor" to (cursor != null)),
             successFields = { arrayOf("count" to it.items.size, "has_more" to it.hasMore) },
             failureFields = ::httpFailureFields,
-        ) { authorized { api.getMessages(it, sessionId, cursor = cursor).requiredBody() } }
+        ) { authorized(userKey) { api.getMessages(it, sessionId, cursor = cursor).requiredBody() } }
+    }
 
-    suspend fun interact(sessionId: String, input: AiInteractionInputDto): AiInteractionResultDto = logger.runSuspending(
+    override suspend fun interact(
+        userKey: String,
+        sessionId: String,
+        input: AiInteractionInputDto,
+        operationId: String?,
+        pollAfterMs: Long,
+        onAccepted: suspend (AiInteractionAcceptedDto) -> Unit,
+    ): AiInteractionResultDto {
+        requireCurrentUser(userKey)
+        input.validateContract()
+        return logger.runSuspending(
         operation = "ai_interact",
         startFields = arrayOf("method" to "POST", "endpoint" to "v1/sessions/{session_id}/interactions/async", "kind" to input.kind),
         successFields = { arrayOf("status" to it.status) },
         failureFields = ::httpFailureFields,
     ) {
-        val accepted = authorized { api.startInteraction(it, sessionId, input).requiredBody() }
+        val accepted = if (operationId == null) {
+            authorized(userKey) { api.startInteraction(it, sessionId, input).requiredBody() }.also { onAccepted(it) }
+        } else AiInteractionAcceptedDto(operationId, pollAfterMs)
         withTimeoutOrNull(MAX_INTERACTION_WAIT_MS) {
             var pollDelayMs = accepted.pollAfterMs.coerceIn(MIN_POLL_DELAY_MS, MAX_POLL_DELAY_MS)
             while (true) {
                 delay(pollDelayMs)
-                val operation = authorized {
+                val operation = authorized(userKey) {
                     api.getInteractionOperation(it, sessionId, accepted.operationId).requiredBody()
                 }
                 when (operation.status) {
@@ -114,12 +154,9 @@ class AiChatApiRepository(
                         "A API de IA concluiu a interação sem retornar o resultado."
                     }
                     "failed" -> {
-                        operation.result?.let { return@withTimeoutOrNull it }
-                        throw IllegalStateException("Não foi possível concluir a interação com a IA.")
+                        throw FailedInteractionException()
                     }
-                    "interrupted" -> throw IllegalStateException(
-                        "A interação foi interrompida e precisa ser enviada novamente.",
-                    )
+                    "interrupted" -> throw InterruptedInteractionException()
                     "accepted", "running" -> {
                         pollDelayMs = (pollDelayMs * 2).coerceAtMost(MAX_POLL_DELAY_MS)
                     }
@@ -129,16 +166,19 @@ class AiChatApiRepository(
             @Suppress("UNREACHABLE_CODE")
             error("unreachable")
         } ?: throw TimeoutException("A resposta da IA demorou mais que o limite esperado.")
+        }
     }
 
-    suspend fun clearCachedToken() = tokenMutex.withLock {
-        tokenStorage.clearAiToken()
+    override suspend fun clearCachedToken() = tokenMutex.withLock {
+        memoryTokenUid = null
+        memoryToken = null
     }
 
-    private suspend fun <T> authorized(request: suspend (String) -> T): T {
+    private suspend fun <T> authorized(expectedUid: String, request: suspend (String) -> T): T {
         val uid = requireNotNull(firebaseRepository.currentFirebaseUid()) {
             "A sessão do Firebase não está ativa."
         }
+        check(uid == expectedUid) { "A conta Firebase foi alterada antes da requisição do ChatTobby." }
         val token = accessToken(uid, forceRefresh = false)
         return try {
             requestForCurrentUser(uid, token, request)
@@ -148,6 +188,19 @@ class AiChatApiRepository(
             val renewed = accessToken(uid, forceRefresh = true, rejectedToken = token)
             requestForCurrentUser(uid, renewed, request)
         }
+    }
+
+    private fun requireCurrentUser(userKey: String) {
+        check(userKey.isNotBlank() && !userKey.startsWith("mock:")) {
+            "A sessão remota do ChatTobby exige um usuário autenticado."
+        }
+        check(firebaseRepository.currentFirebaseUid() == userKey) {
+            "A conta Firebase mudou antes da operação do ChatTobby."
+        }
+    }
+
+    private fun currentUserKey(): String = requireNotNull(firebaseRepository.currentFirebaseUid()) {
+        "A sessão do Firebase não está ativa."
     }
 
     private suspend fun <T> requestForCurrentUser(
@@ -170,10 +223,13 @@ class AiChatApiRepository(
         forceRefresh: Boolean,
         rejectedToken: String? = null,
     ): String = tokenMutex.withLock {
-        val cached = tokenStorage.getAiToken(uid)
+        val cached = memoryToken?.takeIf { memoryTokenUid == uid }
         if (forceRefresh && cached != null && cached != rejectedToken) return@withLock cached
         if (!forceRefresh && cached != null) return@withLock cached
-        if (forceRefresh) tokenStorage.clearAiToken()
+        if (forceRefresh) {
+            memoryTokenUid = null
+            memoryToken = null
+        }
 
         val firebaseIdToken = firebaseRepository.getCurrentIdToken(forceRefresh)
         val response = logger.runSuspending(
@@ -184,8 +240,9 @@ class AiChatApiRepository(
         check(firebaseRepository.currentFirebaseUid() == uid) {
             "A conta Firebase foi alterada durante a autenticação da IA."
         }
-        response.accessToken.also {
-            tokenStorage.saveAiToken(uid, it)
+        response.accessToken.also { token ->
+            memoryTokenUid = uid
+            memoryToken = token
         }
     }
 
@@ -196,8 +253,12 @@ class AiChatApiRepository(
         val body = runCatching { response?.errorBody()?.source()?.peek()?.readUtf8() }.getOrNull()
         return arrayOf(
             "http_status" to response?.code(),
-            "response_message" to (body?.let(::parseAiErrorMessage) ?: response?.message()),
             "error_type" to error.javaClass.simpleName,
+            "response_message" to (
+                body?.let(::parseAiErrorMessage)?.take(500)
+                    ?: response?.message()?.replace(Regex("[\\r\\n\\t]+"), " ")?.take(500)
+                ),
+            "correlation_id" to response?.headers()?.get("X-Argos-Correlation-ID"),
         )
     }
 
@@ -211,8 +272,13 @@ class AiChatApiRepository(
         private const val MAX_POLL_DELAY_MS = 5000L
         private const val MAX_INTERACTION_WAIT_MS = 6 * 60 * 1000L
 
-        fun newClient(firebaseRepository: FirebaseRepository, tokenStorage: TokenStorage): AiChatApiRepository =
-            AiChatApiRepository(firebaseRepository, com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL, tokenStorage)
+        fun newClient(firebaseRepository: FirebaseIdTokenProvider): AiChatApiRepository {
+            val baseUrl = com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL
+            require(baseUrl.startsWith("https://") || baseUrl.startsWith("http://10.0.2.2:")) {
+                "Configure argosAiBaseUrl com um endpoint HTTPS para builds release."
+            }
+            return AiChatApiRepository(firebaseRepository, baseUrl)
+        }
 
         fun newClientMessageId(): String = UUID.randomUUID().toString()
     }

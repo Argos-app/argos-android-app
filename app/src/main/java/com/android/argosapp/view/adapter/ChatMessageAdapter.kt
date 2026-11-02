@@ -52,7 +52,11 @@ class ChatMessageAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = getItem(position)
         when (holder) {
-            is UserHolder -> holder.binding.messageText.text = message.text
+            is UserHolder -> with(holder.binding) {
+                messageText.isVisible = !message.redacted
+                messageRedacted.isVisible = message.redacted
+                messageText.text = message.text
+            }
             is AssistantHolder -> holder.bind(message, message.id == activePromptId)
         }
     }
@@ -68,11 +72,15 @@ class ChatMessageAdapter(
             messageHeading.text = context.getString(
                 if (isConfirmation) R.string.chatbot_confirmation_heading else R.string.chatbot_question_heading,
             )
+            messageText.isVisible = !message.redacted
+            messageRedacted.isVisible = message.redacted
             messageText.text = message.text
             messageText.typeface = Typeface.create(context.resources.getFont(R.font.dm_sans), if (isConfirmation || isPrompt) Typeface.BOLD else Typeface.NORMAL)
             messageDescription.isVisible = interactive && (isConfirmation || message.kind == ChatMessageKind.SINGLE_CHOICE)
             messageDescription.setText(if (isConfirmation) R.string.chatbot_confirmation_description else R.string.chatbot_choice_description)
-            messageExpiration.isVisible = message.kind == ChatMessageKind.SINGLE_CHOICE && interactive
+            val expired = message.questionExpiresAt?.let { it <= System.currentTimeMillis() } == true
+            messageExpiration.isVisible = expired || message.kind == ChatMessageKind.SINGLE_CHOICE && interactive
+            messageExpiration.setText(if (expired) R.string.chatbot_question_expired else R.string.chatbot_choice_expiration)
             messagePartial.isVisible = message.responseState == ChatResponseState.PARTIAL
             messageOptions.removeAllViews()
             fun addOption(label: String, selected: Boolean, enabled: Boolean, centered: Boolean = false, click: () -> Unit) {
@@ -87,13 +95,13 @@ class ChatMessageAdapter(
                 option.root.setOnClickListener(if (enabled) android.view.View.OnClickListener { click() } else null)
                 messageOptions.addView(option.root)
             }
-            if (message.kind == ChatMessageKind.SINGLE_CHOICE) {
+            if (!message.redacted && message.kind == ChatMessageKind.SINGLE_CHOICE) {
                 message.options.forEachIndexed { index, label ->
                     val id = message.optionIds.getOrNull(index).orEmpty()
-                    addOption(label, id.isNotBlank() && id == message.selectedOptionId, interactive && id.isNotBlank()) { onOption(label, id) }
+                    addOption(label, id.isNotBlank() && id == message.selectedOptionId, interactive && !expired && id.isNotBlank()) { onOption(label, id) }
                 }
             }
-            if (isConfirmation && interactive) {
+            if (!message.redacted && isConfirmation && interactive && !expired) {
                 addOption(context.getString(R.string.chatbot_confirmation_confirm), true, true, true) { onConfirm(true) }
                 addOption(context.getString(R.string.chatbot_confirmation_cancel), false, true, true) { onConfirm(false) }
             }

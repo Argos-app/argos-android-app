@@ -17,6 +17,18 @@ fun escapeBuildConfigValue(value: String) = value
 val cloudinaryCloudName = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_CLOUD_NAME", ""))
 val cloudinaryUploadPreset = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", ""))
 val googleMapsApiKey = escapeBuildConfigValue(localProperties.getProperty("MAPS_API_KEY", ""))
+val configuredArgosAiBaseUrl = providers.gradleProperty("argosAiBaseUrl").orNull
+val argosAiReleaseBaseUrl = configuredArgosAiBaseUrl
+    ?.takeIf { it.startsWith("https://") }
+    ?.let(::escapeBuildConfigValue)
+    .orEmpty()
+val argosAiDebugBaseUrl = escapeBuildConfigValue(
+    configuredArgosAiBaseUrl ?: "https://argos-ai-main-api-hm.onrender.com/",
+)
+require(configuredArgosAiBaseUrl == null || configuredArgosAiBaseUrl.startsWith("https://") ||
+    configuredArgosAiBaseUrl == "http://10.0.2.2/" || configuredArgosAiBaseUrl.startsWith("http://10.0.2.2:")) {
+    "argosAiBaseUrl must use HTTPS, except for the Android emulator's local 10.0.2.2 endpoint."
+}
 
 android {
     namespace = "com.android.argosapp"
@@ -36,12 +48,17 @@ android {
         buildConfigField("String", "MAPS_API_KEY", "\"$googleMapsApiKey\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
+        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiDebugBaseUrl\"")
+        }
         release {
+            buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiReleaseBaseUrl\"")
             optimization {
                 enable = false
             }

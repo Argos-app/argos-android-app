@@ -331,6 +331,16 @@
     <string name="chatbot_session_date_yesterday">Ontem • %1$s</string>
     <string name="chatbot_retry">Tentar novamente</string>
     <string name="chatbot_dismiss_error">Entendi</string>
+    <string name="chatbot_sending">Tobby está preparando a resposta…</string>
+    <string name="chatbot_redacted_message">Conteúdo ocultado para proteger informações sensíveis.</string>
+    <string name="chatbot_text_too_long">Use no máximo 8.000 caracteres.</string>
+    <string name="chatbot_continue_after_review">Conferi o histórico, continuar</string>
+    <string name="chatbot_recovery_interrupted">A API interrompeu a operação. O histórico foi atualizado; confira a conversa antes de continuar.</string>
+    <string name="chatbot_answer_uncertain">O resultado da resposta é incerto. Atualize o histórico antes de tentar novamente.</string>
+    <string name="chatbot_continue_uncertain">O resultado anterior é incerto. Confira o histórico antes de iniciar outra solicitação.</string>
+    <string name="chatbot_error_state_changed">O estado desta conversa mudou. Confira o histórico atualizado antes de continuar.</string>
+    <string name="chatbot_error_invalid_input">A mensagem ou resposta não foi aceita. Revise os dados e o limite de 8.000 caracteres.</string>
+    <string name="chatbot_error_rate_limited">Muitas solicitações em sequência. Aguarde um pouco e tente novamente.</string>
     <string name="chatbot_question_heading">Tobby precisa de uma informação</string>
     <string name="chatbot_choice_description">Escolha uma das opções abaixo.</string>
     <string name="stock_title">Medicamentos</string>
