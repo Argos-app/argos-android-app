@@ -1,6 +1,9 @@
-package com.android.argosapp.view.activity
+package com.android.argosapp.view.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
@@ -10,20 +13,21 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.FragmentActivity
-import androidx.activity.viewModels
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.argosapp.R
-import com.android.argosapp.databinding.ActivityMedicationStockBinding
+import com.android.argosapp.databinding.FragmentMedicationStockBinding
 import com.android.argosapp.model.MedicationStockItem
+import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.view.adapter.MedicationStockAdapter
-import com.android.argosapp.view.fragment.MedicationStockRegistrationBottomSheet
 import com.android.argosapp.viewmodel.MedicationStockViewModel
 
-class MedicationStockActivity : FragmentActivity() {
-    private lateinit var binding: ActivityMedicationStockBinding
-    private val viewModel: MedicationStockViewModel by viewModels()
+class MedicationStockFragment : Fragment(R.layout.fragment_medication_stock) {
+    private var _binding: FragmentMedicationStockBinding? = null
+    private val binding get() = requireNotNull(_binding)
+    private val viewModel: MedicationStockViewModel by activityViewModels()
     private val adapter = MedicationStockAdapter()
     private var items = emptyList<MedicationStockItem>()
     private var category = StockCategoryFilter.ALL
@@ -32,14 +36,13 @@ class MedicationStockActivity : FragmentActivity() {
     private var hasMore = false
     private var failed = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMedicationStockBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentMedicationStockBinding.bind(view)
         applySystemBarInsets()
 
-        binding.backButton.setOnClickListener { finish() }
-        binding.stockRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.backButton.setOnClickListener { FragmentNavHelper(parentFragmentManager).popBackStack() }
+        binding.stockRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.stockRecyclerView.adapter = adapter
         binding.stockRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(view: RecyclerView, dx: Int, dy: Int) {
@@ -49,7 +52,7 @@ class MedicationStockActivity : FragmentActivity() {
         binding.searchInput.doAfterTextChanged { renderItems() }
         binding.searchButton.setOnClickListener {
             binding.searchInput.clearFocus()
-            (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)
+            (requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
                 ?.hideSoftInputFromWindow(binding.searchInput.windowToken, 0)
             renderItems()
         }
@@ -60,15 +63,21 @@ class MedicationStockActivity : FragmentActivity() {
         binding.filterMedicationsButton.setOnClickListener { selectFilter(binding.filterMedicationsButton, StockCategoryFilter.MEDICATION, true) }
         selectFilter(binding.filterAllButton, StockCategoryFilter.ALL, false)
         binding.addStockButton.setOnClickListener {
-            if (supportFragmentManager.findFragmentByTag(MedicationStockRegistrationBottomSheet.TAG) == null) {
-                MedicationStockRegistrationBottomSheet().show(supportFragmentManager, MedicationStockRegistrationBottomSheet.TAG)
+            if (parentFragmentManager.findFragmentByTag(MedicationStockRegistrationBottomSheet.TAG) == null) {
+                MedicationStockRegistrationBottomSheet().show(parentFragmentManager, MedicationStockRegistrationBottomSheet.TAG)
             }
         }
-        supportFragmentManager.setFragmentResultListener(
+        parentFragmentManager.setFragmentResultListener(
             MedicationStockRegistrationBottomSheet.REGISTERED_RESULT,
-            this,
+            viewLifecycleOwner,
         ) { _, _ -> refresh() }
         render()
+    }
+
+    override fun onDestroyView() {
+        _binding?.stockRecyclerView?.adapter = null
+        _binding = null
+        super.onDestroyView()
     }
 
     private fun render() {
@@ -76,14 +85,16 @@ class MedicationStockActivity : FragmentActivity() {
             onLoading = { loading = it; renderState() },
             onRefreshing = { refreshing = it; renderState() },
             onLoaded = { data, more ->
+                if (_binding == null) return@render
                 items = data
                 hasMore = more
                 failed = false
                 renderItems()
             },
             onError = { _, hadData ->
+                if (_binding == null) return@render
                 failed = !hadData
-                if (hadData) Toast.makeText(this, R.string.refresh_failed, Toast.LENGTH_SHORT).show()
+                if (hadData) Toast.makeText(requireContext(), R.string.refresh_failed, Toast.LENGTH_SHORT).show()
                 renderState()
             },
         )
@@ -94,10 +105,17 @@ class MedicationStockActivity : FragmentActivity() {
             forceRefresh = true,
             onLoading = { loading = it; renderState() },
             onRefreshing = { refreshing = it; renderState() },
-            onLoaded = { data, more -> items = data; hasMore = more; failed = false; renderItems() },
+            onLoaded = { data, more ->
+                if (_binding == null) return@render
+                items = data
+                hasMore = more
+                failed = false
+                renderItems()
+            },
             onError = { _, hadData ->
+                if (_binding == null) return@render
                 failed = !hadData
-                if (hadData) Toast.makeText(this, R.string.refresh_failed, Toast.LENGTH_SHORT).show()
+                if (hadData) Toast.makeText(requireContext(), R.string.refresh_failed, Toast.LENGTH_SHORT).show()
                 renderState()
             },
         )
@@ -115,14 +133,16 @@ class MedicationStockActivity : FragmentActivity() {
         viewModel.loadNextPage(
             onLoading = { loading = it; renderState() },
             onLoaded = { page, more ->
+                if (_binding == null) return@loadNextPage
                 items = (items + page).distinctBy { it.id }
                 hasMore = more
                 failed = false
                 renderItems()
             },
             onError = {
+                if (_binding == null) return@loadNextPage
                 failed = true
-                Toast.makeText(this, R.string.stock_error, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.stock_error, Toast.LENGTH_SHORT).show()
                 renderState()
             },
         )
@@ -134,13 +154,13 @@ class MedicationStockActivity : FragmentActivity() {
             tab.isSelected = tab == target
             tab.setTextColor(
                 ContextCompat.getColor(
-                    this,
+                    requireContext(),
                     if (tab == target) R.color.argos_background else R.color.argos_text_primary,
                 ),
             )
         }
         binding.filterContainer.post {
-            if (target.width == 0) return@post
+            if (_binding == null || target.width == 0) return@post
             val indicator = binding.filterIndicator
             if (indicator.layoutParams.width != target.width) {
                 indicator.layoutParams = indicator.layoutParams.apply { width = target.width }
@@ -176,12 +196,14 @@ class MedicationStockActivity : FragmentActivity() {
         adapter.submitList(filtered)
         renderState(filtered.isEmpty())
         binding.stockRecyclerView.post {
+            if (_binding == null) return@post
             if (filtered.isEmpty() && hasMore && !loading && !refreshing && !failed) loadNextPage()
             else loadNextPageIfNeeded()
         }
     }
 
     private fun renderState(noFilteredItems: Boolean = false) {
+        val binding = _binding ?: return
         binding.loadingIndicator.isVisible = loading && items.isEmpty()
         binding.paginationIndicator.isVisible = loading && items.isNotEmpty()
         val showMessage = !loading && (failed || noFilteredItems || items.isEmpty())
@@ -189,7 +211,7 @@ class MedicationStockActivity : FragmentActivity() {
         if (showMessage) {
             binding.stateMessage.setText(if (failed) R.string.stock_error else R.string.stock_empty)
             binding.stateMessage.setTextColor(
-                ContextCompat.getColor(this, if (failed) R.color.argos_notice_important else R.color.argos_text_secondary),
+                ContextCompat.getColor(requireContext(), if (failed) R.color.argos_notice_important else R.color.argos_text_secondary),
             )
         }
         binding.stockSwipeRefresh.isRefreshing = refreshing
@@ -207,4 +229,8 @@ class MedicationStockActivity : FragmentActivity() {
     }
 
     private enum class StockCategoryFilter { ALL, VACCINE, MEDICATION }
+
+    companion object {
+        const val TAG = "medication_stock"
+    }
 }

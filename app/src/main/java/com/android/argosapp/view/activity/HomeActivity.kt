@@ -28,6 +28,7 @@ import com.android.argosapp.view.fragment.ProfileEditFragment
 import com.android.argosapp.view.fragment.MapLocationPickerFragment
 import com.android.argosapp.view.fragment.ProfileFragment
 import com.android.argosapp.view.fragment.ProfileNotificationsFragment
+import com.android.argosapp.view.fragment.MedicationStockFragment
 import com.android.argosapp.util.navigation.FragmentNavHelper
 import com.android.argosapp.viewmodel.HomeViewModel
 
@@ -238,6 +239,17 @@ class HomeActivity : FragmentActivity() {
         binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
     }
 
+    fun showMedicationStockManagement() {
+        setNavigationBarVisible(false)
+        fragmentNavHelper.navigate(
+            fragment = MedicationStockFragment(),
+            tag = MedicationStockFragment.TAG,
+            addToBackStack = true,
+            animations = overlayAnimations(),
+        )
+        binding.homeFragmentContainer.post { navBarBlurEffect.bindSource() }
+    }
+
     private fun updateNavigationBarVisibility() {
         val currentFragment = fragmentNavHelper.currentFragment()
         val showingOverlay = currentFragment is HomeApplicationDetailsFragment ||
@@ -246,7 +258,8 @@ class HomeActivity : FragmentActivity() {
             currentFragment is MapLocationPickerFragment ||
             currentFragment is ApplicationsManagementFragment ||
             currentFragment is ExceptionsManagementFragment ||
-            currentFragment is LotsManagementFragment
+            currentFragment is LotsManagementFragment ||
+            currentFragment is MedicationStockFragment
         setNavigationBarVisible(!showingOverlay)
     }
 

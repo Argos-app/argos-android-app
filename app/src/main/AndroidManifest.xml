@@ -52,10 +52,6 @@
             android:exported="false"
             android:theme="@style/Theme.Argosapp.Home" />
         <activity
-            android:name=".view.activity.MedicationStockActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
             android:name=".view.activity.FirstAccessChangePasswordActivity"
             android:screenOrientation="portrait"
             android:exported="false"
