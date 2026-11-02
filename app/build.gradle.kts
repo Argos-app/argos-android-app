@@ -18,6 +18,8 @@ val cloudinaryCloudName = escapeBuildConfigValue(localProperties.getProperty("CL
 val cloudinaryUploadPreset = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", ""))
 val googleMapsApiKey = escapeBuildConfigValue(localProperties.getProperty("MAPS_API_KEY", ""))
 val configuredArgosAiBaseUrl = providers.gradleProperty("argosAiBaseUrl").orNull
+    ?.takeIf(String::isNotBlank)
+    ?: localProperties.getProperty("ARGOS_AI_BASE_URL")?.takeIf(String::isNotBlank)
 val defaultArgosAiBaseUrl = "https://argos-ai-main-api-hm.onrender.com/"
 val argosAiDebugBaseUrl = escapeBuildConfigValue(
     configuredArgosAiBaseUrl ?: defaultArgosAiBaseUrl,

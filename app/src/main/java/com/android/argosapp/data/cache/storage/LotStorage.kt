@@ -34,6 +34,7 @@ class LotStorage(context: Context) {
 
     suspend fun getNamesForSelect(): List<String> = dao.getNamesForSelect()
     suspend fun getCreatedAt(): Long? = dao.getCreatedAt()
+    suspend fun invalidateCache() = dao.invalidateCache()
     suspend fun deleteById(lotId: String) = dao.deleteById(lotId)
 
     suspend fun replaceAll(items: List<LotDto>) {
