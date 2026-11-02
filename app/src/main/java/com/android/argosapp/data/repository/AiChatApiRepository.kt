@@ -21,6 +21,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.UUID
 
@@ -67,7 +68,7 @@ class AiChatApiRepository(
     private val logger = RepositoryAppLogger("AiChatApiRepository")
     private val api = Retrofit.Builder()
         .baseUrl(baseUrl.ensureTrailingSlash())
-        .client(OkHttpClient.Builder().addInterceptor { chain ->
+        .client(OkHttpClient.Builder().readTimeout(90, TimeUnit.SECONDS).addInterceptor { chain ->
             val response = chain.proceed(chain.request())
             response.header("X-Argos-Correlation-ID")?.let { correlationId ->
                 logger.info("ai_response_correlation", "correlation_id" to correlationId)
