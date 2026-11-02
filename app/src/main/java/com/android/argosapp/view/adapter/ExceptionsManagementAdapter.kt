@@ -63,12 +63,13 @@ class ExceptionsManagementAdapter :
                 exception.exceptionReason ?: context.getString(R.string.home_calendar_unknown_value),
             )
             binding.exceptionStartDate.text = exception.exceptionDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
-            binding.exceptionEndDate.text = exception.slaughterReleaseDate.toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
-            val elapsedPercentage = exception.elapsedReturnPercentage(LocalDate.now())
-            binding.exceptionReturnProgressLabel.text = elapsedPercentage?.let {
-                context.getString(R.string.exceptions_progress_percent, it)
-            } ?: context.getString(R.string.home_calendar_unknown_value)
-            binding.exceptionReturnProgress.progress = elapsedPercentage ?: 0
+            binding.exceptionEndDate.text = (exception.slaughterReleaseDate ?: exception.latestMedicineWithdrawalEnd)
+                .toDisplayDate(context.getString(R.string.home_calendar_unknown_value))
+            binding.exceptionReturnProgressLabel.text = context.getString(
+                R.string.exceptions_progress_percent,
+                exception.returnFitnessPercentage,
+            )
+            binding.exceptionReturnProgress.progress = exception.returnFitnessPercentage
         }
 
         private fun String?.toDisplayDate(fallback: String): String = this?.let { value ->

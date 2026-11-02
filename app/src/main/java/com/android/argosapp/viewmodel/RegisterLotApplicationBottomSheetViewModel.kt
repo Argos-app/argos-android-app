@@ -15,6 +15,7 @@ import com.android.argosapp.util.logging.AppLogger
 import java.math.BigDecimal
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.dto.MedicinePageDto
+import com.android.argosapp.data.dto.MedicineDto
 import com.android.argosapp.model.AnimalExceptionRecord
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -29,13 +30,13 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     private var loadingMoreMedicines = false
     private var refreshingMedicines = false
     private val lotsCache = CacheDailyRefreshHelper(
-        getCachedData = { lotStorage.getNamesForSelect() },
+        getCachedData = { lotStorage.getAll() },
         getCacheUpdatedAt = { lotStorage.getCreatedAt() },
         updateCache = { lotStorage.replaceAll(repository.listLots(requireToken())) },
     )
     private val medicinesCache = CacheDailyRefreshHelper(
         getCachedData = {
-            medicineStorage.getNamesForSelect() to
+            medicineStorage.getAll() to
                 (medicineStorage.getPaginationState()?.isLastPage == false)
         },
         getCacheUpdatedAt = { medicineStorage.getPaginationState()?.createdAt },
@@ -72,10 +73,35 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
         onLoading: (Boolean) -> Unit,
         onLoaded: (List<String>) -> Unit,
         onError: (Exception) -> Unit,
+    ) = loadLotOptions(force, exceptionLotsOnly = false, onLoading, onLoaded, onError)
+
+    fun loadExceptionLots(
+        force: Boolean = false,
+        onLoading: (Boolean) -> Unit,
+        onLoaded: (List<String>) -> Unit,
+        onError: (Exception) -> Unit,
+    ) = loadLotOptions(force, exceptionLotsOnly = true, onLoading, onLoaded, onError)
+
+    private fun loadLotOptions(
+        force: Boolean,
+        exceptionLotsOnly: Boolean,
+        onLoading: (Boolean) -> Unit,
+        onLoaded: (List<String>) -> Unit,
+        onError: (Exception) -> Unit,
     ) {
         viewModelScope.launch {
             lotsCache.getData(force).collect { result ->
-                result.data?.let(onLoaded)
+                result.data?.let { cachedLots ->
+                    onLoaded(
+                        cachedLots.asSequence()
+                            .filter { (it.animalExceptionOutList != null) == exceptionLotsOnly }
+                            .map { lot ->
+                                if (exceptionLotsOnly) lot.lotName.substringBeforeLast("-") else lot.lotName
+                            }
+                            .distinct()
+                            .toList(),
+                    )
+                }
                 onLoading(result.refreshing)
                 result.error?.let(onError)
             }
@@ -85,13 +111,29 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     fun loadMedicines(
         force: Boolean = false,
         onLoading: (Boolean) -> Unit,
-        onLoaded: (List<String>, Boolean) -> Unit,
+        onLoaded: (List<MedicineDto>, Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         viewModelScope.launch {
             medicinesCache.getData(force).collect { result ->
                 refreshingMedicines = result.refreshing
-                result.data?.let { (names, hasMore) -> onLoaded(names, hasMore) }
+                result.data?.let { (items, hasMore) -> onLoaded(items, hasMore) }
+                onLoading(result.refreshing)
+                result.error?.let(onError)
+            }
+        }
+    }
+
+    fun loadAnimalMedicines(
+        force: Boolean = false,
+        onLoading: (Boolean) -> Unit,
+        onLoaded: (List<MedicineDto>, Boolean) -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        viewModelScope.launch {
+            medicinesCache.getData(force).collect { result ->
+                refreshingMedicines = result.refreshing
+                result.data?.let { (items, hasMore) -> onLoaded(items, hasMore) }
                 onLoading(result.refreshing)
                 result.error?.let(onError)
             }
@@ -115,7 +157,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
 
     fun loadMoreMedicines(
         onLoading: (Boolean) -> Unit,
-        onLoaded: (List<String>, Boolean) -> Unit,
+        onLoaded: (List<MedicineDto>, Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         if (loadingMoreMedicines || refreshingMedicines) {
@@ -138,7 +180,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
                     size = MedicineStorage.PAGE_SIZE,
                 )
                 medicineStorage.appendPage(page, pagination.createdAt)
-                onLoaded(page.data.map { it.medicineName }, !page.last)
+                onLoaded(page.data, !page.last)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -180,7 +222,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     fun registerAnimalApplication(
         animalExceptionId: String,
         earCode: String,
-        medicineName: String,
+        medicineBatchId: String,
         dose: BigDecimal,
         onLoading: (Boolean) -> Unit,
         onSuccess: () -> Unit,
@@ -192,11 +234,9 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
             onLoading(true)
             try {
                 val token = requireToken()
-                val medicines = medicineStorage.getAll().filter { it.medicineName == medicineName }
-                require(medicines.size == 1) { "Medicamento não encontrado ou possui lotes ambíguos." }
                 repository.registerAnimalApplication(token, animalExceptionId, RegisterAnimalApplicationDto(
                     earCode = earCode,
-                    medicineBatchId = medicines.single().medicineBatchId,
+                    medicineBatchId = medicineBatchId,
                     dose = dose,
                 ))
                 try {

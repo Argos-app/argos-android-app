@@ -23,6 +23,9 @@ interface LotDao {
     @Query("SELECT createdAt FROM lot_cache_metadata WHERE id = 1 LIMIT 1")
     suspend fun getCreatedAt(): Long?
 
+    @Query("UPDATE lot_cache_metadata SET createdAt = 0 WHERE id = 1")
+    suspend fun invalidateCache()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLots(items: List<LotEntity>): List<Long>
 

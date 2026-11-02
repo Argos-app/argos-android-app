@@ -36,6 +36,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
     private val selectManager = SelectManager()
     private val validator = MedicationStockFormValidator()
     private val catalog = mutableListOf<MedicineCatalogDto>()
+    private var displayedCatalogItems = emptyList<MedicineCatalogDto>()
     private var dropdown: SelectManager.Dropdown? = null
     private var updatingProductText = false
     private var selectedProduct: MedicineCatalogDto? = null
@@ -75,11 +76,17 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
                 binding.registrationCodeInput.text.clear()
                 binding.productInput.error = null
             }
-            if (catalog.isNotEmpty()) showCatalogSuggestions(editable?.toString().orEmpty())
+            dropdown?.takeIf { it.popup.isShowing }?.let {
+                updateCatalogDropdown(it, editable?.toString().orEmpty())
+            }
         }
         binding.productInput.setOnClickListener {
             if (catalog.isEmpty() && catalogFailed) loadCatalogPage(0)
             else if (catalog.isNotEmpty()) showCatalogSuggestions(binding.productInput.text.toString())
+        }
+        binding.productDropdownIcon.setOnClickListener {
+            if (catalog.isEmpty()) loadCatalogPage(0)
+            else showCatalogSuggestions("")
         }
         binding.manufactureInput.setOnClickListener {
             selectDate(manufactureDate) { manufactureDate = it; binding.manufactureInput.error = null; renderSelection() }
@@ -141,7 +148,11 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
             }
             catalogFailed = false
             if (page == 0) catalog.clear()
-            catalog += products.filter { product -> catalog.none { it.productRegistration == product.productRegistration } }
+            catalog += products.filter { product ->
+                !product.medicineName.isNullOrBlank() &&
+                    !product.productRegistration.isNullOrBlank() &&
+                    catalog.none { it.productRegistration == product.productRegistration }
+            }
             nextCatalogPage = page + 1
             hasMoreCatalog = more
             if (page == 0 && catalog.isEmpty()) binding.productInput.error = getString(R.string.stock_products_empty)
@@ -174,13 +185,15 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         }
         footer.addView(spinner)
         footer.addView(label)
+        displayedCatalogItems = matchingCatalogItems(query)
         val dropdown = selectManager.showOptions(
             anchor = binding.productInput,
-            options = matchingCatalog(query),
+            options = catalogLabels(displayedCatalogItems),
             dropdownIcon = binding.productDropdownIcon,
             footer = footer.takeIf { hasMoreCatalog },
             onSelected = { selected ->
-                selectedProduct = catalog.firstOrNull { catalogLabel(it) == selected }
+                selectedProduct = displayedCatalogItems.zip(catalogLabels(displayedCatalogItems))
+                    .firstOrNull { it.second == selected }?.first
                 binding.productInput.error = null
                 updatingProductText = true
                 binding.productInput.setText(selectedProduct?.medicineName.orEmpty())
@@ -221,12 +234,22 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun matchingCatalog(query: String): List<String> = catalog
-        .filter { it.medicineName.contains(query.trim(), ignoreCase = true) || it.productRegistration.contains(query.trim(), ignoreCase = true) }
-        .map(::catalogLabel)
+    private fun matchingCatalogItems(query: String): List<MedicineCatalogDto> = catalog.filter {
+        it.medicineName?.contains(query.trim(), ignoreCase = true) == true ||
+            it.productRegistration?.contains(query.trim(), ignoreCase = true) == true
+    }
+
+    private fun catalogLabels(items: List<MedicineCatalogDto>): List<String> = items.map { item ->
+        if (items.count { it.medicineName == item.medicineName } > 1) {
+            "${item.medicineName.orEmpty()} · ${item.productRegistration.orEmpty()}"
+        } else {
+            item.medicineName.orEmpty()
+        }
+    }
 
     private fun updateCatalogDropdown(dropdown: SelectManager.Dropdown, query: String = binding.productInput.text.toString()) {
-        dropdown.replaceOptions(matchingCatalog(query))
+        displayedCatalogItems = matchingCatalogItems(query)
+        dropdown.replaceOptions(catalogLabels(displayedCatalogItems))
     }
 
     private fun register() {
@@ -265,7 +288,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
         viewModel.register(
             RegisterMedicineDto(
-                productRegistration = requireNotNull(product).productRegistration,
+                productRegistration = requireNotNull(product?.productRegistration),
                 batchNumber = batch,
                 manufactureDate = requireNotNull(manufacture).toString(),
                 expiryDate = requireNotNull(expiry).toString(),
@@ -295,9 +318,14 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
 
     private fun selectDate(current: LocalDate?, onSelected: (LocalDate) -> Unit) {
         val date = current ?: LocalDate.now()
-        DatePickerDialog(requireContext(), R.style.Theme_Argosapp_DatePickerDialog, { _, year, month, day ->
+        val datePicker = DatePickerDialog(requireContext(), R.style.Theme_Argosapp_DatePickerDialog, { _, year, month, day ->
             onSelected(LocalDate.of(year, month + 1, day))
-        }, date.year, date.monthValue - 1, date.dayOfMonth).show()
+        }, date.year, date.monthValue - 1, date.dayOfMonth)
+        datePicker.show()
+        datePicker.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
     }
 
     private fun renderSelection() {
@@ -336,7 +364,6 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         super.onDestroyView()
     }
 
-    private fun catalogLabel(item: MedicineCatalogDto) = "${item.medicineName} • ${item.productRegistration}"
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     companion object {
