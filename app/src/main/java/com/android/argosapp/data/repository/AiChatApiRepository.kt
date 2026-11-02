@@ -275,8 +275,9 @@ class AiChatApiRepository(
 
         fun newClient(firebaseRepository: FirebaseIdTokenProvider): AiChatApiRepository {
             val baseUrl = com.android.argosapp.BuildConfig.ARGOS_AI_BASE_URL
-            require(baseUrl.startsWith("https://") || baseUrl.startsWith("http://10.0.2.2:")) {
-                "Configure argosAiBaseUrl com um endpoint HTTPS para builds release."
+            require(baseUrl.startsWith("https://") || baseUrl == "http://10.0.2.2/" ||
+                baseUrl.startsWith("http://10.0.2.2:")) {
+                "Configure argosAiBaseUrl com um endpoint HTTPS ou o endpoint local do emulador."
             }
             return AiChatApiRepository(firebaseRepository, baseUrl)
         }

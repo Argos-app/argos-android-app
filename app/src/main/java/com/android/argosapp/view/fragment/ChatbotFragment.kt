@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentChatbotBinding
-import com.android.argosapp.view.activity.HomeActivity
 import com.android.argosapp.viewmodel.ChatbotPage
 import com.android.argosapp.viewmodel.ChatbotUiState
 import com.android.argosapp.viewmodel.ChatbotViewModel
@@ -32,10 +31,6 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChatbotBinding.bind(view)
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, conversationBack)
-        binding.chatbotBack.setOnClickListener {
-            if (conversationBack.isEnabled) viewModel.startNewConversation()
-            else (activity as? HomeActivity)?.navigateToHome()
-        }
         binding.chatbotNewTab.setOnClickListener { viewModel.startNewConversation() }
         binding.chatbotHistoryTab.setOnClickListener { viewModel.showHistory() }
         binding.chatbotRetry.setOnClickListener { viewModel.retryOrDismissError() }
@@ -52,7 +47,7 @@ class ChatbotFragment : Fragment(R.layout.fragment_chatbot) {
     private fun render(state: ChatbotUiState) {
         val history = state.page == ChatbotPage.HISTORY
         conversationBack.isEnabled = state.page == ChatbotPage.CONVERSATION
-        binding.chatbotTitle.text = if (conversationBack.isEnabled) {
+        binding.chatbotTitle.text = if (state.page == ChatbotPage.CONVERSATION) {
             state.pendingSessionTitle ?: state.sessions.firstOrNull { it.id == state.currentSessionId }?.title
                 ?: getString(R.string.chatbot_title)
         } else getString(R.string.chatbot_title)
