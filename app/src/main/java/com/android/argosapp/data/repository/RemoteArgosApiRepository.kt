@@ -65,11 +65,18 @@ private data class MedicineCatalogItemDto(
     fun toModel() = mapMedicineCatalogItem(medicineId, medicineName, productRegistration)
 }
 
-private data class StockMedicineListItemDto(
+internal data class StockMedicineListItemDto(
     val medicineBatchId: String,
     val medicineName: String,
+    val supplier: String? = null,
+    val manufactureDate: String? = null,
     val expiryDate: String,
     val quantity: BigDecimal,
+    val dose: BigDecimal? = null,
+    val doseUnit: String? = null,
+    val withdrawalDays: Int? = null,
+    val batch: String? = null,
+    val activeIngredient: String? = null,
     val therapeuticCategory: String? = null,
 ) {
     fun toModel() = MedicationStockItem(
@@ -82,6 +89,14 @@ private data class StockMedicineListItemDto(
         } else {
             StockCategory.MEDICATION
         },
+        supplierName = supplier,
+        manufactureDate = manufactureDate?.takeIf(String::isNotBlank)?.let(LocalDate::parse),
+        batchNumber = batch,
+        dose = dose,
+        doseUnit = doseUnit,
+        withdrawalDays = withdrawalDays,
+        activeIngredient = activeIngredient,
+        therapeuticCategory = therapeuticCategory,
     )
 }
 

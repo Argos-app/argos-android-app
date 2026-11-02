@@ -68,8 +68,17 @@ class MockedArgosApiRepositoryTest {
         repository.registerMedicationStock(registration)
         val page = repository.getMedicationStockPage("hipocalcemia", null, null, 20)
 
-        assertEquals("Cálcio intravenoso (hipocalcemia)", page.items.first().medicationName)
-        assertEquals("12.5", page.items.first().quantity)
-        assertFalse(page.items.first().id.isBlank())
+        val registeredItem = page.items.first()
+        assertEquals("Cálcio intravenoso (hipocalcemia)", registeredItem.medicationName)
+        assertEquals("12.5", registeredItem.quantity)
+        assertEquals("Distribuidora Teste", registeredItem.supplierName)
+        assertEquals(LocalDate.of(2026, 1, 10), registeredItem.manufactureDate)
+        assertEquals("LOTE-TESTE-001", registeredItem.batchNumber)
+        assertEquals("mL", registeredItem.doseUnit)
+        assertNotNull(registeredItem.dose)
+        assertNotNull(registeredItem.withdrawalDays)
+        assertNotNull(registeredItem.activeIngredient)
+        assertNotNull(registeredItem.therapeuticCategory)
+        assertFalse(registeredItem.id.isBlank())
     }
 }

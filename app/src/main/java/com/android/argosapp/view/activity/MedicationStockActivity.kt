@@ -60,7 +60,7 @@ class MedicationStockActivity : FragmentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    stockAdapter.submitList(state.items) { binding.stockRecyclerView.post { loadIfAtEnd() } }
+                    stockAdapter.submitItems(state.items) { binding.stockRecyclerView.post { loadIfAtEnd() } }
                     binding.loadingIndicator.isVisible = state.loading && state.items.isEmpty()
                     binding.paginationIndicator.isVisible = state.loading && state.items.isNotEmpty()
                     binding.stateContainer.isVisible = !state.loading && (state.items.isEmpty() || state.error)

@@ -11,6 +11,14 @@ data class MedicationStockItem(
     val expirationDate: LocalDate,
     val quantity: String,
     val category: StockCategory,
+    val supplierName: String? = null,
+    val manufactureDate: LocalDate? = null,
+    val batchNumber: String? = null,
+    val dose: BigDecimal? = null,
+    val doseUnit: String? = null,
+    val withdrawalDays: Int? = null,
+    val activeIngredient: String? = null,
+    val therapeuticCategory: String? = null,
 )
 
 data class StockProduct(val id: String, val name: String, val registrationCode: String)

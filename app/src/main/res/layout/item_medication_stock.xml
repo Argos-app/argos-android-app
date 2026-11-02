@@ -86,5 +86,30 @@
                 tools:text="Quantidade: 30" />
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/detailsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/argos_border" />
+
+            <TextView
+                android:id="@+id/detailsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/dm_sans"
+                android:lineSpacingExtra="3dp"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="12sp"
+                tools:text="Fornecedor: Distribuidora Demo\nLote: LOTE-DEMO-001\nData de fabricação: 23/06/2027" />
+        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

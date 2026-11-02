@@ -387,4 +387,10 @@
     <string name="stock_registration_success">Estoque registrado com sucesso.</string>
     <string name="stock_registration_error">Não foi possível registrar o estoque. Tente novamente.</string>
     <string name="stock_cancel">Cancelar</string>
+    <string name="stock_details_format">Fornecedor: %1$s\nLote: %2$s\nData de fabricação: %3$s\nPrincípio ativo: %4$s\nDose: %5$s\nCarência: %6$s\nCategoria terapêutica: %7$s</string>
+    <string name="stock_detail_not_informed">Não informado</string>
+    <string name="stock_detail_withdrawal_day_one">1 dia</string>
+    <string name="stock_detail_withdrawal_days">%1$d dias</string>
+    <string name="stock_card_accessibility_expand">%1$s. Toque para expandir os detalhes.</string>
+    <string name="stock_card_accessibility_collapse">%1$s. Detalhes expandidos. Toque para recolher. %2$s</string>
 </resources>
