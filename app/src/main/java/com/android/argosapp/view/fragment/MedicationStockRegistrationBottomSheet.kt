@@ -21,6 +21,7 @@ import com.android.argosapp.data.dto.RegisterMedicineDto
 import com.android.argosapp.databinding.BottomSheetMedicationStockRegistrationBinding
 import com.android.argosapp.view.componentmanager.SelectManager
 import com.android.argosapp.util.validation.MedicationStockFormValidator
+import com.android.argosapp.view.componentmanager.showCalendarSized
 import com.android.argosapp.viewmodel.MedicationStockViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -321,11 +322,7 @@ class MedicationStockRegistrationBottomSheet : BottomSheetDialogFragment() {
         val datePicker = DatePickerDialog(requireContext(), R.style.Theme_Argosapp_DatePickerDialog, { _, year, month, day ->
             onSelected(LocalDate.of(year, month + 1, day))
         }, date.year, date.monthValue - 1, date.dayOfMonth)
-        datePicker.show()
-        datePicker.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        )
+        datePicker.showCalendarSized()
     }
 
     private fun renderSelection() {
