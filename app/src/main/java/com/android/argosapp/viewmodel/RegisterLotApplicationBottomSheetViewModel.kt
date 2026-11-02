@@ -155,6 +155,21 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
         }
     }
 
+    fun loadAnimalExceptions(
+        force: Boolean = false,
+        onLoading: (Boolean) -> Unit,
+        onLoaded: (List<AnimalExceptionRecord>) -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        viewModelScope.launch {
+            animalExceptionsCache.getData(force).collect { result ->
+                result.data?.let(onLoaded)
+                onLoading(result.refreshing)
+                result.error?.let(onError)
+            }
+        }
+    }
+
     fun loadMoreMedicines(
         onLoading: (Boolean) -> Unit,
         onLoaded: (List<MedicineDto>, Boolean) -> Unit,
