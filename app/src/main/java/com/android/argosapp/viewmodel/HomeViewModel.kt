@@ -1,0 +1,175 @@
+package com.android.argosapp.viewmodel
+
+import android.app.Application
+import android.os.Build
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.android.argosapp.ArgosApplication
+import com.android.argosapp.data.cache.CacheDailyRefreshHelper
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.DeviceStorage
+import com.android.argosapp.data.cache.storage.UserStorage
+import com.android.argosapp.data.dto.DeviceRegisterDto
+import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.model.ApplicationWithdrawal
+import com.android.argosapp.model.Application as HerdApplication
+import com.android.argosapp.util.logging.AppLogger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.temporal.ChronoUnit
+
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val monthApplicationsStorage = MonthApplicationsStorage(application)
+    private val applicationsStorage = ApplicationsStorage(application)
+    private val tokenStorage = TokenStorage(application)
+    private val deviceStorage = DeviceStorage(application)
+    private val userStorage = UserStorage(application)
+    private val repository = (application as ArgosApplication).argosApiRepository
+    private val firebase = FirebaseRepository()
+    private val applicationsCache = CacheDailyRefreshHelper(
+        getCachedData = { applicationsStorage.listAll(null, null) },
+        getCacheUpdatedAt = { applicationsStorage.getCreatedAt() },
+        updateCache = {
+            val token = tokenStorage.getArgosApiToken()?.takeIf(String::isNotBlank)
+                ?: throw SecurityException("Bearer token is unavailable.")
+            applicationsStorage.replaceAll(repository.listAllApplications(token))
+        },
+    )
+
+    fun mustOnboarding() = userStorage.mustOnboarding()
+
+    fun completeOnboarding() = userStorage.setMustOnboarding(false)
+
+    private var requestedMonth: YearMonth? = null
+
+    fun loadActiveWithdrawals(onResult: (Int?) -> Unit) {
+        viewModelScope.launch {
+            applicationsCache.getData().collect { result ->
+                result.data?.let { onResult(countActiveWithdrawals(it, LocalDate.now())) }
+                result.error?.let { error ->
+                    AppLogger.error(AppLogger.REPOSITORY_TAG, "home_withdrawal_count_failed", error)
+                    if (result.data == null) onResult(null)
+                }
+            }
+        }
+    }
+
+    fun loadMonthThrough(
+        month: YearMonth,
+        throughDate: LocalDate,
+        onLoading: (Boolean) -> Unit,
+        onApplicationsLoaded: (List<ApplicationWithdrawal>) -> Unit,
+        onError: (Exception) -> Unit = {},
+    ) {
+        val coverageEnd = minOf(throughDate, month.atEndOfMonth())
+        if (YearMonth.from(coverageEnd) != month || requestedMonth == month) return
+        requestedMonth = month
+
+        viewModelScope.launch {
+            try {
+                onLoading(true)
+                val cached = monthApplicationsStorage.getMonth(month)
+                val cachedApplications = cached?.applications.orEmpty()
+                onApplicationsLoaded(cachedApplications)
+                val coveredThrough = cached?.coveredThrough
+                    ?.takeIf { YearMonth.from(it) == month }
+
+                if (coveredThrough != null && coveredThrough >= coverageEnd) {
+                    return@launch
+                }
+
+                val bearerToken = tokenStorage.getArgosApiToken()
+                if (bearerToken.isNullOrBlank()) {
+                    AppLogger.error(
+                        AppLogger.REPOSITORY_TAG,
+                        "home_application_withdrawal_window_skipped",
+                        SecurityException("Bearer token is unavailable."),
+                    )
+                    onError(SecurityException("Bearer token is unavailable."))
+                    return@launch
+                }
+
+                val missingStart = coveredThrough?.plusDays(1) ?: month.atDay(1)
+                if (missingStart > coverageEnd) {
+                    return@launch
+                }
+
+                val missingDays = ChronoUnit.DAYS.between(missingStart, coverageEnd).toInt()
+                val newApplications = repository.getApplicationWithdrawalWindow(
+                    bearerToken = bearerToken,
+                    referenceDate = missingStart,
+                    daysBefore = 0,
+                    daysAfter = missingDays,
+                )
+                val mergedApplications = monthApplicationsStorage.appendMonth(
+                    month = month,
+                    coveredThrough = coverageEnd,
+                    newApplications = newApplications,
+                )
+                onApplicationsLoaded(mergedApplications)
+            } catch (error: CancellationException) {
+                throw error
+
+            } catch (error: Exception) {
+                AppLogger.error(
+                    AppLogger.REPOSITORY_TAG,
+                    "home_application_withdrawal_window_load_failed",
+                    error,
+                    "endpoint" to "application/withdrawal-window",
+                    "month" to month,
+                )
+                onError(error)
+
+            } finally {
+                requestedMonth = null
+                onLoading(false)
+            }
+        }
+
+    }
+
+    fun registerDevice() {
+        viewModelScope.launch {
+            try {
+                val bearerToken = requireNotNull(tokenStorage.getArgosApiToken()?.takeIf { it.isNotBlank() }) {
+                    "Bearer token is unavailable."
+                }
+                val pushToken = firebase.getMessagingToken()
+                val userId = requireNotNull(userStorage.getUser()?.userId) { "User is unavailable." }.toString()
+                val deviceId = repository.registerDevice(
+                    bearerToken = bearerToken,
+                    data = DeviceRegisterDto(
+                        deviceId = deviceStorage.getDeviceId(userId),
+                        pushToken = pushToken,
+                        platform = "ANDROID",
+                        model = Build.MODEL.take(60),
+                    ),
+                )
+                deviceStorage.saveDeviceId(userId, deviceId)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                AppLogger.error(AppLogger.REPOSITORY_TAG, "home_device_registration_failed", error)
+            }
+        }
+    }
+}
+
+internal fun countActiveWithdrawals(applications: List<HerdApplication>, today: LocalDate): Int? {
+    var count = 0
+    for (application in applications) {
+        val start = application.applicationDate?.toLocalDate()
+        val end = application.meatWithdrawalEnd
+        if (start != null && end != null && end.isBefore(start)) return null
+        if (start != null && start.isAfter(today)) continue
+        if (end != null && !end.isAfter(today)) continue
+        if (start == null || end == null) return null
+        count++
+    }
+    return count
+}

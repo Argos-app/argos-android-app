@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="16dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="#FFFBFAF9"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:rippleColor="@color/argos_icon"
+    app:strokeColor="#FFE3DCCF"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/medicationName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:maxLines="1"
+                android:textColor="@color/argos_green"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Cálcio intravenoso (hipocalcemia)" />
+
+            <TextView
+                android:id="@+id/stockCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/dm_sans"
+                android:maxWidth="110dp"
+                android:maxLines="1"
+                android:textColor="@color/argos_accent"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="Antibiótico" />
+
+            <ImageView
+                android:id="@+id/expandIcon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/application_dropdown_icon"
+                android:tint="#FF9A7D5E" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/supplier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/dm_sans"
+            android:textColor="@color/argos_text_secondary"
+            android:textSize="10sp"
+            tools:text="Fornecedor: Enzo Neves" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="#FFE3DCCF"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:id="@+id/summaryRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/summaryExpirationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Validade: 23/06/2028" />
+
+            <TextView
+                android:id="@+id/summaryQuantity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:gravity="end"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Quantidade: 30" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detailsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/batch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Lote Medicamento: O3339423423SP" />
+
+            <TextView
+                android:id="@+id/activeIngredient"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Princípio ativo: gluconato de cálcio e cloreto de cálcio" />
+
+            <TextView
+                android:id="@+id/manufactureDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Fabricação: 23/06/2026" />
+
+            <TextView
+                android:id="@+id/expirationDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Validade: 23/06/2028" />
+
+            <TextView
+                android:id="@+id/dose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Dose: 50 ml" />
+
+            <TextView
+                android:id="@+id/quantity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Quantidade: 30" />
+
+            <TextView
+                android:id="@+id/withdrawalDays"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/argos_text_secondary"
+                android:textSize="10sp"
+                tools:text="Carência: 7 dias" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,238 @@
+package com.android.argosapp.view.activity
+
+import android.content.Intent
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.net.Uri
+import android.view.View
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.android.argosapp.ArgosApplication
+import com.android.argosapp.R
+import com.android.argosapp.data.cache.storage.MonthApplicationsStorage
+import com.android.argosapp.data.cache.storage.ApplicationsStorage
+import com.android.argosapp.data.cache.storage.AnimalExceptionStorage
+import com.android.argosapp.data.cache.storage.HerdStorage
+import com.android.argosapp.data.cache.storage.ChatCacheStorage
+import com.android.argosapp.data.cache.storage.TokenStorage
+import com.android.argosapp.data.cache.storage.UserStorage
+import com.android.argosapp.util.auth.AuthManager
+import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
+import com.android.argosapp.databinding.ActivityPasswordResetBinding
+import com.android.argosapp.view.fragment.PasswordChangedFragment
+import com.android.argosapp.view.fragment.ResetChangePasswordFragment
+import com.android.argosapp.view.fragment.ResetEmailSentFragment
+import com.android.argosapp.view.fragment.ResetRequestFragment
+import com.android.argosapp.util.navigation.FragmentNavHelper
+import com.android.argosapp.viewmodel.RedefinePasswordViewModel
+
+class PasswordResetActivity : FragmentActivity() {
+    private lateinit var binding: ActivityPasswordResetBinding
+    private val fragmentNavHelper by lazy {
+        FragmentNavHelper(supportFragmentManager, R.id.passwordResetContainer)
+    }
+    private val authManager by lazy {
+        AuthManager(
+            (application as ArgosApplication).argosApiRepository,
+            FirebaseRepository(),
+            TokenStorage(applicationContext),
+            UserStorage(applicationContext),
+            MonthApplicationsStorage(applicationContext),
+            ApplicationsStorage(applicationContext),
+            AnimalExceptionStorage(applicationContext),
+            HerdStorage(applicationContext),
+            ChatCacheStorage(applicationContext),
+            EncryptedPendingInteractionStore(applicationContext),
+        )
+    }
+    val viewModel: RedefinePasswordViewModel by viewModels {
+        viewModelFactory {
+            initializer { RedefinePasswordViewModel(authManager, applicationContext) }
+        }
+    }
+    private var resetCode = ""
+    private var resetEmail = ""
+    private var displayedStep: Step? = null
+    private var resendAvailableAtMillis = 0L
+    private val resendTimerHandler = Handler(Looper.getMainLooper())
+    private val resendTimerTick = object : Runnable {
+        override fun run() = refreshResendCountdown()
+    }
+
+    enum class Step { REQUEST, EMAIL_SENT, CHANGE_PASSWORD, SUCCESS }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        resendAvailableAtMillis = savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
+        resetEmail = savedInstanceState?.getString(STATE_RESET_EMAIL).orEmpty()
+        binding = ActivityPasswordResetBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.loadingMessage.text = "Carregando..."
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = goBack()
+        })
+        if (savedInstanceState == null) {
+            showStep(Step.REQUEST)
+        } else {
+            displayedStep = when (fragmentNavHelper.currentFragment()) {
+                is ResetRequestFragment -> Step.REQUEST
+                is ResetEmailSentFragment -> Step.EMAIL_SENT
+                is ResetChangePasswordFragment -> Step.CHANGE_PASSWORD
+                is PasswordChangedFragment -> Step.SUCCESS
+                else -> null
+            }
+        }
+        refreshResendCountdown()
+        authManager.extractPasswordResetCode(intent)?.let(::verifyCode)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
+        outState.putString(STATE_RESET_EMAIL, resetEmail)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        resendTimerHandler.removeCallbacks(resendTimerTick)
+        super.onDestroy()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        authManager.extractPasswordResetCode(intent)?.let(::verifyCode)
+    }
+
+    fun goBack() {
+        when (displayedStep) {
+            Step.REQUEST, null -> finish()
+            Step.SUCCESS -> finishResetFlow()
+            else -> {
+                fragmentNavHelper.popBackStack()
+                displayedStep = when (displayedStep) { Step.CHANGE_PASSWORD -> Step.EMAIL_SENT; else -> Step.REQUEST }
+                refreshResendCountdown()
+            }
+        }
+    }
+
+    fun navigateToLogin() {
+        startActivity(
+            Intent(this, LoginActivity::class.java).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK,
+            ),
+        )
+        finish()
+    }
+
+    fun finishResetFlow() {
+        if (isProfileFlow) {
+            startActivity(HomeActivity.createProfileIntent(this))
+            finish()
+        } else {
+            navigateToLogin()
+        }
+    }
+
+    fun requestEmail(email: String) {
+        resetEmail = email
+        viewModel.sendResetEmail(email, isProfileFlow, ::showLoading, {
+            startResendCooldown()
+            showStep(Step.EMAIL_SENT)
+        }, ::showError)
+    }
+
+    fun resendEmail() {
+        if (System.currentTimeMillis() < resendAvailableAtMillis) {
+            refreshResendCountdown()
+            return
+        }
+
+        viewModel.sendResetEmail(resetEmail, isProfileFlow, ::showLoading, {
+            startResendCooldown()
+            showStep(Step.EMAIL_SENT)
+        }, ::showError)
+    }
+
+    fun changePassword(password: String, confirmation: String) = viewModel.changePassword(resetCode, password, confirmation, ::showLoading, { showStep(Step.SUCCESS) }, ::showError)
+    fun openEmailApp() = viewModel.openEmailApp(::showError)
+
+    private fun verifyCode(code: String) = viewModel.verifyResetCode(code, ::showLoading, {
+        resetCode = it
+        showStep(Step.CHANGE_PASSWORD)
+    }, ::showError)
+
+    private fun showStep(step: Step) {
+        val fragment = fragmentNavHelper.currentFragment()
+        if (displayedStep != step || fragment == null) {
+            fragmentNavHelper.navigate(
+                fragment = fragmentFor(step),
+                tag = step.name,
+                addToBackStack = displayedStep != null && step != Step.REQUEST,
+            )
+            displayedStep = step
+        }
+    }
+
+    private fun showLoading(loading: Boolean) {
+        binding.loadingOverlay.visibility = if (loading) View.VISIBLE else View.GONE
+    }
+
+    fun refreshResendCountdown() {
+        resendTimerHandler.removeCallbacks(resendTimerTick)
+
+        val remainingMillis = (resendAvailableAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
+        val remainingSeconds = ((remainingMillis + 999L) / 1_000L).toInt()
+        val emailSentFragment = fragmentNavHelper.currentFragment() as? ResetEmailSentFragment
+        if (emailSentFragment != null && emailSentFragment.view != null) {
+            emailSentFragment.updateResendCountdown(remainingSeconds)
+        }
+
+        if (remainingMillis > 0L) {
+            resendTimerHandler.postDelayed(resendTimerTick, minOf(remainingMillis, 1_000L))
+        }
+    }
+
+    private fun startResendCooldown() {
+        resendAvailableAtMillis = System.currentTimeMillis() + RESEND_COOLDOWN_MILLIS
+        refreshResendCountdown()
+    }
+
+    private fun showError(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+
+    private fun fragmentFor(step: Step): Fragment = when (step) {
+        Step.REQUEST -> ResetRequestFragment()
+        Step.EMAIL_SENT -> ResetEmailSentFragment()
+        Step.CHANGE_PASSWORD -> ResetChangePasswordFragment()
+        Step.SUCCESS -> PasswordChangedFragment()
+    }
+
+    val isProfileFlow: Boolean
+        get() = intent.getBooleanExtra(EXTRA_PROFILE_FLOW, false) || intent.data?.let(::isProfileResetLink) == true
+
+    private fun isProfileResetLink(data: Uri): Boolean {
+        val actionLink = data.getQueryParameter("link")?.let(Uri::parse) ?: data
+        val continueUrl = actionLink.getQueryParameter("continueUrl")?.let(Uri::parse) ?: actionLink
+        return continueUrl.getQueryParameter(RESET_SOURCE_PARAMETER) == PROFILE_RESET_SOURCE
+    }
+
+    companion object {
+        private const val EXTRA_PROFILE_FLOW = "profile_flow"
+        private const val RESET_SOURCE_PARAMETER = "source"
+        private const val PROFILE_RESET_SOURCE = "profile"
+        private const val RESEND_COOLDOWN_MILLIS = 60_000L
+        private const val STATE_RESEND_AVAILABLE_AT = "resend_available_at_millis"
+        private const val STATE_RESET_EMAIL = "reset_email"
+
+        fun createProfileIntent(context: android.content.Context): Intent =
+            Intent(context, PasswordResetActivity::class.java)
+                .putExtra(EXTRA_PROFILE_FLOW, true)
+    }
+
+}

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/argos_background"
+    tools:context=".view.activity.HomeActivity">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/homeFragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_home" />
+
+    <ImageView
+        android:id="@+id/navigationBlurBackdrop"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="14dp"
+        android:background="@drawable/navigation_blur_clip"
+        android:clipToOutline="true"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleX="0.935"
+        android:scaleY="0.8925"
+        android:scaleType="fitXY" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/homeBottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="14dp"
+        android:clipToOutline="true"
+        android:scaleX="0.935"
+        android:scaleY="0.8925"
+        app:cardBackgroundColor="@color/argos_nav_glass"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="12dp"
+        app:strokeWidth="0dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/navigationIndicator"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:scaleX="0.9545"
+                app:cardBackgroundColor="@color/argos_nav_selected"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="0dp">
+
+                <FrameLayout
+                    android:id="@+id/navigationProfile"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="@string/navigation_profile"
+                    android:focusable="true"
+                    android:importantForAccessibility="yes">
+
+                    <ImageView
+                        android:id="@+id/navigationProfileIcon"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/profile_home_nav_placeholder" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/navigationHome"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="@string/navigation_home"
+                    android:focusable="true"
+                    android:importantForAccessibility="yes">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:scaleX="0.9545"
+                        android:src="@drawable/home_nav_home_icon" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/navigationChatbot"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="@string/navigation_chatbot"
+                    android:focusable="true"
+                    android:importantForAccessibility="yes">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:scaleX="0.9545"
+                        android:src="@drawable/chatbot_home_nav_icon" />
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/onboardingOverlayContainer"
+        android:elevation="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+</FrameLayout>
