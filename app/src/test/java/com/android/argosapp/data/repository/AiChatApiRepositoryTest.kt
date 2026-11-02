@@ -1,5 +1,12 @@
 package com.android.argosapp.data.repository
 
+import com.android.argosapp.data.dto.AiAnswerDto
+import com.android.argosapp.data.dto.AiAnswerInputDto
+import com.android.argosapp.data.dto.AiInteractionInputDto
+import com.android.argosapp.data.dto.AiQuestionOptionDto
+import com.android.argosapp.data.dto.AiResponseDto
+import com.android.argosapp.data.dto.AiSessionMessageDto
+import com.android.argosapp.data.dto.AiSessionMessagesPageDto
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -7,9 +14,21 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class AiChatApiRepositoryTest {
+    @Test
+    fun rejectsMessageIdsThatDoNotMatchTheUuidContract() {
+        val input = AiInteractionInputDto(
+            kind = "message",
+            clientMessageId = "message-1",
+            message = "Olá",
+        )
+
+        assertThrows(IllegalArgumentException::class.java) { input.validateContract() }
+    }
+
     @Test
     fun submitsInteractionAndPollsWithoutChangingStructuredResult() = runBlocking {
         MockWebServer().use { server ->
@@ -35,7 +54,7 @@ class AiChatApiRepositoryTest {
                 "session-1",
                 AiInteractionInputDto(
                     kind = "message",
-                    clientMessageId = "message-1",
+                    clientMessageId = "00000000-0000-4000-8000-000000000001",
                     message = "Olá",
                 ),
             )

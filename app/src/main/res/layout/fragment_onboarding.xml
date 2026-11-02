@@ -42,6 +42,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/onboardingBack"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="@string/navigate_back"
+        app:cardBackgroundColor="@color/argos_divider"
+        app:cardCornerRadius="23dp"
+        app:cardElevation="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="13dp"
+            android:contentDescription="@null"
+            android:src="@drawable/go_back" />
+    </com.google.android.material.card.MaterialCardView>
+
     <ScrollView
         android:id="@+id/onboardingContentScroll"
         android:layout_width="0dp"

@@ -23,6 +23,7 @@ import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.exception.auth.AuthErrorCode
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.databinding.ActivityLoginBinding
 import com.android.argosapp.data.exception.auth.messageRes
 import com.android.argosapp.viewmodel.LoginViewModel
@@ -40,6 +41,7 @@ class LoginActivity : ComponentActivity() {
             AnimalExceptionStorage(applicationContext),
             HerdStorage(applicationContext),
             ChatCacheStorage(applicationContext),
+            EncryptedPendingInteractionStore(applicationContext),
         )
     }
     private val viewModel: LoginViewModel by viewModels {

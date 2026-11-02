@@ -22,5 +22,16 @@
             android:fontFamily="@font/dm_sans"
             android:textColor="@color/argos_background"
             android:textSize="13sp" />
+        <TextView
+            android:id="@+id/messageRedacted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="15dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="@string/chatbot_redacted_message"
+            android:textColor="@color/argos_divider"
+            android:textSize="13sp"
+            android:visibility="gone" />
     </com.google.android.material.card.MaterialCardView>
 </FrameLayout>

@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.text.InputFilter
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -26,6 +27,7 @@ class ChatNewConversationFragment : Fragment(R.layout.fragment_chat_new_conversa
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChatNewConversationBinding.bind(view)
+        binding.chatbotInput.filters = arrayOf(InputFilter.LengthFilter(MAX_CHAT_TEXT_LENGTH))
         binding.chatbotInput.setText(viewModel.draft)
         binding.chatbotInput.setSelection(binding.chatbotInput.length())
         binding.chatbotInput.doAfterTextChanged { viewModel.draft = it?.toString().orEmpty() }
@@ -67,4 +69,6 @@ class ChatNewConversationFragment : Fragment(R.layout.fragment_chat_new_conversa
         _binding = null
         super.onDestroyView()
     }
+
+    private companion object { const val MAX_CHAT_TEXT_LENGTH = 8000 }
 }

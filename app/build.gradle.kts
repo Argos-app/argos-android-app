@@ -17,7 +17,20 @@ fun escapeBuildConfigValue(value: String) = value
 val cloudinaryCloudName = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_CLOUD_NAME", ""))
 val cloudinaryUploadPreset = escapeBuildConfigValue(localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", ""))
 val googleMapsApiKey = escapeBuildConfigValue(localProperties.getProperty("MAPS_API_KEY", ""))
-val argosAiBaseUrl = escapeBuildConfigValue(localProperties.getProperty("ARGOS_AI_BASE_URL", ""))
+val configuredArgosAiBaseUrl = providers.gradleProperty("argosAiBaseUrl").orNull
+    ?.takeIf(String::isNotBlank)
+    ?: localProperties.getProperty("ARGOS_AI_BASE_URL")?.takeIf(String::isNotBlank)
+val defaultArgosAiBaseUrl = "https://argos-ai-main-api-hm.onrender.com/"
+val argosAiDebugBaseUrl = escapeBuildConfigValue(
+    configuredArgosAiBaseUrl ?: defaultArgosAiBaseUrl,
+)
+val argosAiReleaseBaseUrl = escapeBuildConfigValue(
+    configuredArgosAiBaseUrl?.takeIf { it.startsWith("https://") } ?: defaultArgosAiBaseUrl,
+)
+require(configuredArgosAiBaseUrl == null || configuredArgosAiBaseUrl.startsWith("https://") ||
+    configuredArgosAiBaseUrl == "http://10.0.2.2/" || configuredArgosAiBaseUrl.startsWith("http://10.0.2.2:")) {
+    "argosAiBaseUrl must use HTTPS, except for the Android emulator's local 10.0.2.2 endpoint."
+}
 
 android {
     namespace = "com.android.argosapp"
@@ -37,13 +50,17 @@ android {
         buildConfigField("String", "MAPS_API_KEY", "\"$googleMapsApiKey\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
-        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiBaseUrl\"")
+        buildConfigField("String", "ARGOS_AI_BASE_URL", "\"\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiDebugBaseUrl\"")
+        }
         release {
+            buildConfigField("String", "ARGOS_AI_BASE_URL", "\"$argosAiReleaseBaseUrl\"")
             optimization {
                 enable = false
             }
@@ -92,6 +109,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.firebase:firebase-messaging")
     testImplementation(libs.junit)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

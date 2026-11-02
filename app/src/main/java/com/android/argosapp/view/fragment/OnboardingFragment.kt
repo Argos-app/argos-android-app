@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.activity.OnBackPressedCallback
 import com.android.argosapp.viewmodel.HomeViewModel
 import com.android.argosapp.R
 import com.android.argosapp.databinding.FragmentOnboardingBinding
@@ -17,6 +18,9 @@ class OnboardingFragment : Fragment() {
     private val binding get() = requireNotNull(_binding)
     private val viewModel: HomeViewModel by activityViewModels()
     private var step = 0
+    private val backCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() = goBack()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,7 +35,9 @@ class OnboardingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         step = savedInstanceState?.getInt(STATE_STEP, FIRST_STEP)?.coerceIn(FIRST_STEP, LAST_STEP)
             ?: FIRST_STEP
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
         renderStep()
+        binding.onboardingBack.setOnClickListener { goBack() }
         binding.onboardingNextButton.setOnClickListener {
             if (step < LAST_STEP) {
                 showStep(step + 1)
@@ -48,6 +54,10 @@ class OnboardingFragment : Fragment() {
     private fun showStep(newStep: Int) {
         step = newStep.coerceIn(FIRST_STEP, LAST_STEP)
         renderStep()
+    }
+
+    private fun goBack() {
+        if (step > FIRST_STEP) showStep(step - 1) else closeOverlay()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -72,6 +82,7 @@ class OnboardingFragment : Fragment() {
             if (step == LAST_STEP) R.string.onboarding_complete else R.string.onboarding_next,
         )
         onboardingLaterButton.visibility = if (step == LAST_STEP) View.VISIBLE else View.GONE
+        onboardingBack.contentDescription = getString(R.string.navigate_back)
         updateIndicator(onboardingStepOne, onboardingStepOneDot, 0)
         updateIndicator(onboardingStepTwo, onboardingStepTwoDot, 1)
         updateIndicator(onboardingStepThree, onboardingStepThreeDot, 2)

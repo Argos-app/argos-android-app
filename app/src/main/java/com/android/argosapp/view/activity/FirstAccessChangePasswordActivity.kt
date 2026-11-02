@@ -23,6 +23,7 @@ import com.android.argosapp.data.cache.storage.TokenStorage
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.util.auth.AuthManager
 import com.android.argosapp.data.repository.FirebaseRepository
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
 import com.android.argosapp.databinding.ActivityFirstAccessChangePasswordBinding
 import com.android.argosapp.data.exception.auth.messageRes
 import com.android.argosapp.viewmodel.FirstAccessChangePasswordViewModel
@@ -44,6 +45,7 @@ class FirstAccessChangePasswordActivity : ComponentActivity() {
             AnimalExceptionStorage(applicationContext),
             HerdStorage(applicationContext),
             ChatCacheStorage(applicationContext),
+            EncryptedPendingInteractionStore(applicationContext),
         )
     }
     private val viewModel: FirstAccessChangePasswordViewModel by viewModels {

@@ -57,6 +57,15 @@
                     android:textColor="@color/argos_green"
                     android:textSize="14sp" />
                 <TextView
+                    android:id="@+id/messageRedacted"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dm_sans"
+                    android:text="@string/chatbot_redacted_message"
+                    android:textColor="@color/argos_text_secondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+                <TextView
                     android:id="@+id/messageDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

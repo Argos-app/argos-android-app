@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.argosapp.ArgosApplication
+import com.android.argosapp.R
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.cache.storage.ChatCacheStorage
 import com.android.argosapp.util.logging.AppLogger
@@ -13,6 +14,9 @@ import com.android.argosapp.data.dto.AiInteractionResultDto
 import com.android.argosapp.data.dto.AiSessionDto
 import com.android.argosapp.data.repository.toEpochMillis
 import com.android.argosapp.data.repository.toMessages
+import com.android.argosapp.data.repository.EncryptedPendingInteractionStore
+import com.android.argosapp.data.repository.PendingInteraction
+import com.android.argosapp.data.repository.PendingInteractionRunner
 import com.android.argosapp.model.ChatMessage
 import com.android.argosapp.model.ChatMessageKind
 import com.android.argosapp.model.ChatResponseState
@@ -51,13 +55,22 @@ data class ChatbotUiState(
     val answerDraftToRestore: String? = null,
     val messagesCursor: String? = null,
     val hasEarlierMessages: Boolean = false,
+    val isRecoveryBlocked: Boolean = false,
+    val canRetryPendingRecovery: Boolean = false,
+    val canContinueAfterInterruption: Boolean = false,
 )
 
 class ChatbotViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as ArgosApplication
     private val userStorage = UserStorage(application)
     private val chatCache = ChatCacheStorage(application)
-    private val aiRepository = app.aiChatApiRepository
+    private val aiRepository = app.aiChatRepository
+    private val pendingStore = EncryptedPendingInteractionStore(application) { key ->
+        firebaseAuthUid() == key.removePrefix("mock:")
+    }
+    private val pendingRunner = PendingInteractionRunner(pendingStore) { pending, onAccepted ->
+        aiRepository.interact(pending.userKey, pending.sessionId, pending.input, pending.operationId, pending.pollAfterMs, onAccepted)
+    }
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val mutableState = MutableSharedFlow<ChatbotUiState>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val state = mutableState.asSharedFlow()
@@ -70,21 +83,27 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
 
     private var historyJob: Job? = null
     private var requestInFlight = false
+    private var interactionJob: Job? = null
     private var accountGeneration = 0
     private var conversationGeneration = 0
     private var observedUid: String? = firebaseAuth.currentUser?.uid
     private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
         val uid = auth.currentUser?.uid
         if (uid != observedUid) {
+            val previousStorageKey = observedUid?.let(::storageUserKey)
             observedUid = uid
             historyJob?.cancel()
             accountGeneration += 1
             draft = ""
             val generation = accountGeneration
             requestInFlight = false
-            currentState = ChatbotUiState(isLoading = uid != null, userKey = uid.orEmpty())
+            interactionJob?.cancel()
+            interactionJob = null
+            currentState = ChatbotUiState(isLoading = uid != null, userKey = uid?.let(::storageUserKey).orEmpty())
             viewModelScope.launch {
+                previousStorageKey?.let { runCatching { pendingStore.clear(it) } }
                 aiRepository.clearCachedToken()
+                if (generation != accountGeneration) return@launch
                 if (uid == null) {
                     currentState = ChatbotUiState(
                         isLoading = false,
@@ -92,6 +111,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                     )
                 } else {
                     loadUser(uid, generation)
+                    startPendingRecovery(storageUserKey(uid), generation)
                 }
             }
         }
@@ -100,7 +120,10 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
     init {
         mutableState.tryEmit(currentState)
         firebaseAuth.addAuthStateListener(authStateListener)
-        viewModelScope.launch { loadUser(observedUid) }
+        viewModelScope.launch {
+            loadUser(observedUid)
+            observedUid?.let { startPendingRecovery(storageUserKey(it), accountGeneration) }
+        }
     }
 
     override fun onCleared() {
@@ -122,7 +145,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             currentState = ChatbotUiState(
                 isLoading = false,
                 userName = user?.userName.orEmpty(),
-                userKey = uid,
+                userKey = storageUserKey(uid),
             )
         } catch (error: CancellationException) {
             throw error
@@ -130,20 +153,26 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             if (generation != accountGeneration) return
             currentState = ChatbotUiState(
                 isLoading = false,
-                userKey = uid,
+                userKey = storageUserKey(uid),
                 errorMessage = error.toUserMessage(),
             )
         }
     }
 
     fun retryOrDismissError() {
-        if (currentState.page == ChatbotPage.HISTORY && currentState.userKey.isNotBlank()) {
+        if (currentState.canContinueAfterInterruption) {
+            continueAfterInterruption()
+        } else if (currentState.canRetryPendingRecovery) {
+            retryPendingRecovery()
+        } else if (currentState.page == ChatbotPage.HISTORY && currentState.userKey.isNotBlank()) {
             showHistory()
         } else if (currentState.userKey.isBlank()) {
             currentState = currentState.copy(isLoading = true, errorMessage = null)
             viewModelScope.launch { loadUser(firebaseAuth.currentUser?.uid) }
+        } else if (currentState.page == ChatbotPage.CONVERSATION && currentState.currentSessionId != null) {
+            openSession(requireNotNull(currentState.currentSessionId))
         } else {
-            currentState = currentState.copy(errorMessage = null)
+            currentState = currentState.copy(errorMessage = null, isRecoveryBlocked = false)
         }
     }
 
@@ -168,7 +197,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                 if (generation != accountGeneration) return@launch
                 currentState = currentState.copy(sessions = cached)
                 val titles = cached.associate { it.id to it.title }
-                val sessions = aiRepository.listSessions().map { it.toModel(current.userKey).copy(title = titles[it.sessionId]) }
+                val sessions = aiRepository.listSessions(current.userKey).map { it.toModel(current.userKey).copy(title = titles[it.sessionId]) }
                 coroutineContext.ensureActive()
                 if (generation != accountGeneration) return@launch
                 currentState = currentState.copy(isLoading = false, sessions = sessions)
@@ -196,6 +225,9 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             messagesCursor = null,
             hasEarlierMessages = false,
             errorMessage = null,
+            isRecoveryBlocked = false,
+            canRetryPendingRecovery = false,
+            canContinueAfterInterruption = false,
         )
     }
 
@@ -219,7 +251,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                         composerHint = cachedMessages.lastOrNull()?.composerHint() ?: "Peça ao Tobby",
                     )
                 }
-                val page = aiRepository.getMessages(sessionId)
+                val page = aiRepository.getMessages(current.userKey, sessionId)
                 coroutineContext.ensureActive()
                 if (generation != accountGeneration) return@launch
                 val messages = page.toMessages(current.userKey)
@@ -253,7 +285,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             val generation = accountGeneration
             currentState = current.copy(isLoading = true, errorMessage = null)
             try {
-                val page = aiRepository.getMessages(sessionId, cursor)
+                val page = aiRepository.getMessages(current.userKey, sessionId, cursor)
                 coroutineContext.ensureActive()
                 if (generation != accountGeneration) return@launch
                 val messages = page.toMessages(current.userKey)
@@ -281,6 +313,10 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
     fun sendText(text: String) {
         val trimmed = text.trim()
         if (trimmed.isBlank()) return
+        if (trimmed.length > MAX_CHAT_TEXT_LENGTH) {
+            currentState = currentState.copy(errorMessage = getApplication<Application>().getString(R.string.chatbot_text_too_long))
+            return
+        }
         val prompt = currentState.messages.latestUnansweredPrompt()
         when (prompt?.inputType) {
             "free_text" -> {
@@ -367,7 +403,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         previousPrompt: ChatMessage?,
         makeInput: () -> AiInteractionInputDto,
     ) {
-        if (requestInFlight || currentState.isSending) return
+        if (requestInFlight || currentState.isSending || currentState.isRecoveryBlocked) return
         val generation = accountGeneration
         val screenGeneration = conversationGeneration
         requestInFlight = true
@@ -390,7 +426,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             errorMessage = null,
         )
         currentState = sendState
-        viewModelScope.launch {
+        interactionJob = viewModelScope.launch {
             var pendingAnswerMessageId: String? = null
             var pendingAnswerSessionId: String? = null
             try {
@@ -398,7 +434,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                 if (current.userKey.isBlank()) return@launch
                 var sessionId = current.currentSessionId
                 if (sessionId == null) {
-                    val session = aiRepository.createSession().toModel(current.userKey).copy(title = chatSessionTitle(text))
+                    val session = aiRepository.createSession(current.userKey).toModel(current.userKey).copy(title = chatSessionTitle(text))
                     if (generation != accountGeneration) return@launch
                     sessionId = session.id
                     current = current.copy(
@@ -429,7 +465,18 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                     pendingAnswerSessionId = activeSessionId
                 }
 
-                val response = aiRepository.interact(activeSessionId, makeInput())
+                val response = if (isMockMode()) {
+                    aiRepository.interact(current.userKey, activeSessionId, makeInput())
+                } else {
+                    val oldPending = pendingStore.get(current.userKey)
+                    if (oldPending != null) {
+                        if (oldPending.rejectionCode == null) throw IllegalStateException("Consulte ou recupere a interação pendente antes de enviar outra.")
+                        pendingStore.clear(current.userKey)
+                    }
+                    pendingStore.save(PendingInteraction(current.userKey, activeSessionId, makeInput()))
+                    runPending(current.userKey, generation, allowUnacceptedAnswerPost = true)
+                        ?: throw IllegalStateException("A interação precisa ser reconciliada antes de continuar.")
+                }
                 if (generation != accountGeneration) return@launch
                 val assistantMessage = response.toAssistantMessage(current.userKey, (current.messages.lastOrNull()?.position ?: 0) + 1)
                 current = current.copy(
@@ -456,6 +503,8 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                     return@launch
                 }
                 val current = currentState
+                val storedPending = if (isMockMode()) null else runCatching { pendingStore.get(current.userKey) }.getOrNull()
+                if (generation != accountGeneration) return@launch
                 val answerId = pendingAnswerMessageId
                 val restoreQuestion = previousPrompt != null && answerId != null &&
                     current.currentSessionId == pendingAnswerSessionId
@@ -467,7 +516,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                         else -> current.messages
                     },
                     composerHint = if (restoreQuestion) previousPrompt!!.composerHint() else current.composerHint,
-                    answerDraftToRestore = if (current.currentSessionId == null || (restoreQuestion && previousPrompt!!.inputType == "free_text")) {
+                    answerDraftToRestore = if (current.currentSessionId == null || storedPending == null || storedPending.rejectionCode != null || (restoreQuestion && previousPrompt!!.inputType == "free_text")) {
                         text
                     } else {
                         current.answerDraftToRestore
@@ -477,10 +526,14 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
                         previousPrompt!!.isExpired() -> "Esta pergunta expirou. Envie uma nova mensagem."
                         else -> "${error.toUserMessage()} Tente novamente com a mesma resposta ou reabra a conversa."
                     },
+                    isRecoveryBlocked = !isMockMode(),
+                    canRetryPendingRecovery = !isMockMode(),
+                    canContinueAfterInterruption = storedPending?.let { it.interrupted || it.rejectionCode != null } == true,
                 )
             } finally {
                 if (generation == accountGeneration) {
                     requestInFlight = false
+                    interactionJob = null
                     currentState = currentState.copy(isSending = false)
                 }
             }
@@ -495,6 +548,165 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         AppLogger.error(AppLogger.REPOSITORY_TAG, "chat_cache_read_failed", error)
         null
     }
+
+    private fun startPendingRecovery(userKey: String, generation: Int) {
+        if (isMockMode() || requestInFlight || generation != accountGeneration || userKey.isBlank()) return
+        requestInFlight = true
+        currentState = currentState.copy(isSending = true, isRecoveryBlocked = false, canRetryPendingRecovery = false)
+        interactionJob = viewModelScope.launch {
+            try {
+                val pending = pendingStore.get(userKey)
+                if (generation != accountGeneration) return@launch
+                if (pending == null) return@launch
+                currentState = currentState.copy(page = ChatbotPage.CONVERSATION, currentSessionId = pending.sessionId)
+                if (pending.interrupted || pending.rejectionCode != null) {
+                    refreshPendingSession(pending.sessionId, userKey, generation)
+                    currentState = currentState.copy(
+                        isSending = false,
+                        isRecoveryBlocked = true,
+                        canContinueAfterInterruption = true,
+                        errorMessage = getApplication<Application>().getString(R.string.chatbot_recovery_interrupted),
+                    )
+                    return@launch
+                }
+                if (pending.input.kind == "answer" && pending.operationId == null) {
+                    if (reconcilePendingAnswer(pending, generation)) {
+                        pendingStore.clear(userKey)
+                        refreshPendingSession(pending.sessionId, userKey, generation)
+                        currentState = currentState.copy(errorMessage = null, isRecoveryBlocked = false)
+                    } else {
+                        currentState = currentState.copy(
+                            isSending = false,
+                            isRecoveryBlocked = true,
+                            canRetryPendingRecovery = true,
+                            canContinueAfterInterruption = true,
+                            answerDraftToRestore = pending.input.answer?.text,
+                            errorMessage = getApplication<Application>().getString(R.string.chatbot_answer_uncertain),
+                        )
+                    }
+                    return@launch
+                }
+                runPending(userKey, generation, allowUnacceptedAnswerPost = false)
+                    ?.let { if (generation == accountGeneration) refreshPendingSession(pending.sessionId, userKey, generation) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (generation == accountGeneration) {
+                    currentState = currentState.copy(
+                        isSending = false,
+                        isRecoveryBlocked = true,
+                        canRetryPendingRecovery = true,
+                        errorMessage = error.toUserMessage(),
+                    )
+                }
+            } finally {
+                if (generation == accountGeneration) {
+                    requestInFlight = false
+                    currentState = currentState.copy(isSending = false)
+                }
+            }
+        }
+    }
+
+    fun retryPendingRecovery() {
+        val current = currentState
+        if (!current.canRetryPendingRecovery || requestInFlight || current.userKey.isBlank()) return
+        startPendingRecovery(current.userKey, accountGeneration)
+    }
+
+    private fun continueAfterInterruption() {
+        val current = currentState
+        if (!current.canContinueAfterInterruption || requestInFlight) return
+        val generation = accountGeneration
+        requestInFlight = true
+        viewModelScope.launch {
+            try {
+                val pending = pendingStore.get(current.userKey)
+                if (generation != accountGeneration) return@launch
+                if (pending != null) pendingStore.save(pending.copy(rejectionCode = pending.rejectionCode ?: -1))
+                if (generation != accountGeneration) return@launch
+                currentState = currentState.copy(
+                    isSending = false, isRecoveryBlocked = false, canContinueAfterInterruption = false,
+                    canRetryPendingRecovery = false,
+                    errorMessage = getApplication<Application>().getString(R.string.chatbot_continue_uncertain),
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (generation == accountGeneration) currentState = currentState.copy(isSending = false, errorMessage = error.toUserMessage())
+            } finally {
+                if (generation == accountGeneration) requestInFlight = false
+            }
+        }
+    }
+
+    private suspend fun runPending(
+        userKey: String,
+        generation: Int,
+        allowUnacceptedAnswerPost: Boolean,
+    ): AiInteractionResultDto? {
+        val pending = requireNotNull(pendingStore.get(userKey)) { "A interação pendente não foi encontrada." }
+        if (generation != accountGeneration) throw CancellationException()
+        if (pending.input.kind == "answer" && pending.operationId == null && !allowUnacceptedAnswerPost) {
+            if (!reconcilePendingAnswer(pending, generation)) return null
+            pendingStore.clear(userKey)
+            return null
+        }
+        return try {
+            val result = pendingRunner.run(pending)
+            if (generation != accountGeneration) throw CancellationException()
+            pendingStore.clear(userKey)
+            result
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            val status = (error as? HttpException)?.code()
+            if (error is com.android.argosapp.data.repository.FailedInteractionException || status != null && status in 400..499 && status !in setOf(408, 409, 429)) {
+                runCatching { pendingStore.save((pendingStore.get(userKey) ?: pending).copy(rejectionCode = status ?: -1)) }
+            }
+            throw error
+        }
+    }
+
+    private suspend fun reconcilePendingAnswer(pending: PendingInteraction, generation: Int): Boolean {
+        val questionId = pending.input.questionId ?: return false
+        val page = aiRepository.getMessages(pending.userKey, pending.sessionId)
+        if (generation != accountGeneration) throw CancellationException()
+        val expected = pending.input.answer ?: return false
+        return page.items.any { item ->
+            item.role == "user" && item.questionId == questionId && item.answer?.let { answer ->
+                answer.kind == expected.kind && answer.text == expected.text &&
+                    answer.optionId == expected.optionId && answer.confirm == expected.confirm
+            } == true
+        }
+    }
+
+    private suspend fun refreshPendingSession(sessionId: String, userKey: String, generation: Int) {
+        if (currentState.currentSessionId != sessionId) return
+        val page = aiRepository.getMessages(userKey, sessionId)
+        if (generation != accountGeneration) return
+        val messages = page.toMessages(userKey)
+        currentState = currentState.copy(
+            messages = messages, messagesCursor = page.nextCursor, hasEarlierMessages = page.hasMore,
+            isSending = false, isRecoveryBlocked = false, canRetryPendingRecovery = false,
+        )
+        writeCache { chatCache.savePage(userKey, sessionId, messages, page.nextCursor, page.hasMore, replace = true) }
+    }
+
+    private fun storageUserKey(uid: String): String = when (app.runMode) {
+        ArgosApplication.ArgosRunMode.RUN_MOCKED,
+        ArgosApplication.ArgosRunMode.RUN_MOCKED_WITH_FIRST_ACCESS,
+        ArgosApplication.ArgosRunMode.RUN_MOCKED_WITH_NOT_FOUND -> "mock:$uid"
+        else -> uid
+    }
+
+    private fun isMockMode() = app.runMode in setOf(
+        ArgosApplication.ArgosRunMode.RUN_MOCKED,
+        ArgosApplication.ArgosRunMode.RUN_MOCKED_WITH_FIRST_ACCESS,
+        ArgosApplication.ArgosRunMode.RUN_MOCKED_WITH_NOT_FOUND,
+    )
+
+    private fun firebaseAuthUid(): String? = firebaseAuth.currentUser?.uid
 
     private suspend fun writeCache(action: suspend () -> Unit) {
         try {
@@ -540,6 +752,7 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
             inputType = inputType,
             optionIds = response.options.orEmpty().map { it.optionId },
             degradationReasons = degradationReasons.orEmpty(),
+            redacted = response.reasonCode == "redacted",
             questionExpiresAt = response.expiresAt?.let { Instant.parse(it).toEpochMilli() },
         )
     }
@@ -563,7 +776,12 @@ class ChatbotViewModel(application: Application) : AndroidViewModel(application)
         401 -> "Sua sessão do ChatTobby expirou. Entre novamente para continuar."
         403 -> "Sua conta não tem fazendas autorizadas para usar o ChatTobby."
         404 -> "Esta conversa não está mais disponível."
+        409 -> getApplication<Application>().getString(R.string.chatbot_error_state_changed)
+        413, 422 -> getApplication<Application>().getString(R.string.chatbot_error_invalid_input)
+        429 -> getApplication<Application>().getString(R.string.chatbot_error_rate_limited)
         503 -> "O serviço do ChatTobby está temporariamente indisponível. Tente novamente."
         else -> "Não foi possível concluir a operação do ChatTobby. Verifique sua conexão e tente novamente."
     }
+
+    private companion object { const val MAX_CHAT_TEXT_LENGTH = 8000 }
 }
