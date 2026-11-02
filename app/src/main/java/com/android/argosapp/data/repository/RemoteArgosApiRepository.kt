@@ -89,7 +89,7 @@ internal data class StockMedicineListItemDto(
         } else {
             StockCategory.MEDICATION
         },
-        supplierName = supplier,
+        supplierName = supplier?.takeIf(String::isNotBlank)?.trim().orEmpty(),
         manufactureDate = manufactureDate?.takeIf(String::isNotBlank)?.let(LocalDate::parse),
         batchNumber = batch,
         dose = dose,

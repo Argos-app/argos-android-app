@@ -28,7 +28,7 @@ class MedicationStockExpansionTest {
         }
         val recyclerView = parentReference.get()
         val adapter = MedicationStockAdapter()
-        val first = item("batch-1", supplier = null)
+        val first = item("batch-1", supplier = "")
         val second = item("batch-2", supplier = "Fornecedor B")
         val loaded = CountDownLatch(1)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -80,7 +80,7 @@ class MedicationStockExpansionTest {
         }
     }
 
-    private fun item(id: String, supplier: String?) = MedicationStockItem(
+    private fun item(id: String, supplier: String) = MedicationStockItem(
         id = id,
         medicationName = "Mesmo produto",
         expirationDate = LocalDate.of(2027, 1, 2),

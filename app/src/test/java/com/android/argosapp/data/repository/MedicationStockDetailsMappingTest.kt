@@ -2,7 +2,6 @@ package com.android.argosapp.data.repository
 
 import java.math.BigDecimal
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class MedicationStockDetailsMappingTest {
@@ -38,7 +37,7 @@ class MedicationStockDetailsMappingTest {
     }
 
     @Test
-    fun stockListItemAllowsMissingBatchSupplier() {
+    fun stockListItemMapsMissingSupplierToRequiredEmptyValue() {
         val item = StockMedicineListItemDto(
             medicineBatchId = "batch-43",
             medicineName = "Vacina",
@@ -54,6 +53,6 @@ class MedicationStockDetailsMappingTest {
             therapeuticCategory = "Vacina",
         ).toModel()
 
-        assertNull(item.supplierName)
+        assertEquals("", item.supplierName)
     }
 }

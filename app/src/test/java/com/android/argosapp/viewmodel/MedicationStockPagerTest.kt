@@ -8,7 +8,7 @@ import org.junit.Test
 import java.time.LocalDate
 
 class MedicationStockPagerTest {
-    private fun item(id: String) = MedicationStockItem(id, "Produto $id", LocalDate.of(2028, 6, 23), "30", StockCategory.MEDICATION)
+    private fun item(id: String) = MedicationStockItem(id, "Produto $id", LocalDate.of(2028, 6, 23), "30", StockCategory.MEDICATION, "Fornecedor de teste")
 
     @Test fun `only one request is allowed and last page stops pagination`() {
         val pager = MedicationStockPager()

@@ -57,7 +57,7 @@ class MockedArgosApiRepository(
                         expirationDate = LocalDate.of(2028, 6, 23).plusDays(index.toLong()),
                         quantity = (30 + index).toString(),
                         category = category,
-                        supplierName = if (index % 5 == 0) null else "Distribuidora Demo ${(index % 4) + 1}",
+                        supplierName = supplierForMedicine(name),
                         manufactureDate = LocalDate.of(2027, 6, 23).plusDays(index.toLong()),
                         batchNumber = "LOTE-DEMO-${(index + 1).toString().padStart(3, '0')}",
                         dose = BigDecimal("1.5"),
@@ -118,6 +118,13 @@ class MockedArgosApiRepository(
         } else {
             StockCategory.MEDICATION
         }
+        val supplierName = registration.supplierName.trim()
+        stockItems.indices.forEach { index ->
+            val current = stockItems[index]
+            if (current.item.medicationName == product.name) {
+                stockItems[index] = current.copy(item = current.item.copy(supplierName = supplierName))
+            }
+        }
         stockItems.add(
             0,
             StockRecord(
@@ -127,7 +134,7 @@ class MockedArgosApiRepository(
                     expirationDate = registration.expiryDate,
                     quantity = registration.quantity.stripTrailingZeros().toPlainString(),
                     category = category,
-                    supplierName = registration.supplierName,
+                    supplierName = supplierName,
                     manufactureDate = registration.manufactureDate,
                     batchNumber = registration.batchNumber,
                     dose = BigDecimal("1.0"),
@@ -550,6 +557,12 @@ class MockedArgosApiRepository(
                     .any { date -> date in windowStart..windowEnd }
             }
         }
+
+    private fun supplierForMedicine(medicineName: String): String = when (medicineName) {
+        "Cálcio intravenoso (hipocalcemia)" -> "Distribuidora Demo 1"
+        "Vacina contra clostridioses" -> "Distribuidora Demo 2"
+        else -> "Distribuidora Demo 3"
+    }
 
     private data class StockRecord(
         val item: MedicationStockItem,

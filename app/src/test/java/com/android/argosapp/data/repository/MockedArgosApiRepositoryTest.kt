@@ -52,6 +52,19 @@ class MockedArgosApiRepositoryTest {
     }
 
     @Test
+    fun `every mock stock item has a supplier for the expanded details`() = runBlocking {
+        val page = MockedArgosApiRepository().getMedicationStockPage("", null, null, 100)
+
+        assertTrue(page.items.isNotEmpty())
+        assertTrue(page.items.all { it.supplierName.isNotBlank() })
+        assertTrue(
+            page.items.groupBy { it.medicationName }.values.all { productItems ->
+                productItems.map { it.supplierName }.distinct().size == 1
+            },
+        )
+    }
+
+    @Test
     fun `registration inserts an item visible in the first page`() = runBlocking {
         val repository = MockedArgosApiRepository()
         val registration = MedicationStockRegistration(
@@ -66,7 +79,7 @@ class MockedArgosApiRepositoryTest {
         )
 
         repository.registerMedicationStock(registration)
-        val page = repository.getMedicationStockPage("hipocalcemia", null, null, 20)
+        val page = repository.getMedicationStockPage("hipocalcemia", null, null, 100)
 
         val registeredItem = page.items.first()
         assertEquals("Cálcio intravenoso (hipocalcemia)", registeredItem.medicationName)
@@ -80,5 +93,6 @@ class MockedArgosApiRepositoryTest {
         assertNotNull(registeredItem.activeIngredient)
         assertNotNull(registeredItem.therapeuticCategory)
         assertFalse(registeredItem.id.isBlank())
+        assertTrue(page.items.all { it.supplierName == "Distribuidora Teste" })
     }
 }

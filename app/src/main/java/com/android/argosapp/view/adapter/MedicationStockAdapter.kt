@@ -26,7 +26,7 @@ class MedicationStockAdapter : ListAdapter<MedicationStockItem, MedicationStockA
             binding.quantity.text = context.getString(R.string.stock_quantity, item.quantity)
             binding.detailsText.text = context.getString(
                 R.string.stock_details_format,
-                item.supplierName ?: context.getString(R.string.stock_detail_not_informed),
+                item.supplierName.takeIf(String::isNotBlank) ?: context.getString(R.string.stock_detail_not_informed),
                 item.batchNumber ?: context.getString(R.string.stock_detail_not_informed),
                 item.manufactureDate?.format(DATE_FORMAT) ?: context.getString(R.string.stock_detail_not_informed),
                 item.activeIngredient ?: context.getString(R.string.stock_detail_not_informed),
