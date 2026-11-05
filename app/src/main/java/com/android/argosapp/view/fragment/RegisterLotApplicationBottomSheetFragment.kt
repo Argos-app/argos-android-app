@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.android.argosapp.data.dto.RegisterLotApplicationDto
 import com.android.argosapp.data.dto.MedicineDto
+import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.R
 import androidx.core.widget.doAfterTextChanged
 import com.android.argosapp.util.validation.ApplicationFormValidator
@@ -30,10 +31,10 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     private val applicationFormValidator = ApplicationFormValidator()
     private val selectManager = SelectManager()
     private val optionsViewModel: RegisterLotApplicationBottomSheetViewModel by viewModels()
-    private var lots: List<String> = emptyList()
+    private var lots: List<LotDto> = emptyList()
     private var medicines: List<MedicineDto> = emptyList()
     private var medicineHasMore = false
-    private var selectedLot: String? = null
+    private var selectedLot: LotDto? = null
     private var selectedMedicine: MedicineDto? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
@@ -48,6 +49,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val doseField = view.findViewById<EditText>(R.id.applicationDoseField)
+        val goalField = view.findViewById<EditText>(R.id.applicationGoalField)
         val dateValue = view.findViewById<TextView>(R.id.applicationDateValue)
         val lotValue = view.findViewById<TextView>(R.id.applicationLotValue)
         val medicineValue = view.findViewById<TextView>(R.id.applicationMedicineValue)
@@ -69,7 +71,7 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 onLoaded = { items ->
                     lots = items
                     lotLoadFailed = false
-                    lotValue.text = selectedLot ?: if (items.isEmpty()) getString(R.string.applications_register_options_empty) else getString(R.string.applications_register_lot_hint)
+                    lotValue.text = selectedLot?.lotName ?: if (items.isEmpty()) getString(R.string.applications_register_options_empty) else getString(R.string.applications_register_lot_hint)
                     setOptionFieldReady(lotField, lotValue, R.id.applicationLotLoadingIndicator, R.id.applicationLotDropdownIcon, R.id.applicationLotErrorIcon, items.isNotEmpty(), items.isEmpty())
                 },
                 onError = {
@@ -109,10 +111,10 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
                 if (lotLoadFailed) loadLots()
                 return@setOnClickListener
             }
-            showOptions(lotField, lots) { lot ->
+            showOptions(lotField, lots.map { it.lotName }) { name ->
                 lotValue.error = null
-                selectedLot = lot
-                lotValue.text = selectedLot
+                selectedLot = lots.firstOrNull { it.lotName == name }
+                lotValue.text = selectedLot?.lotName
                 lotValue.setTextColor(requireContext().getColor(R.color.argos_text_primary))
             }
         }
@@ -167,19 +169,21 @@ class RegisterLotApplicationBottomSheetFragment : BottomSheetDialogFragment() {
         }
         val registerButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.applicationRegisterButton)
         registerButton.setOnClickListener {
-            val lot = selectedLot?.takeIf { it in lots }
+            val lot = selectedLot?.takeIf { selected -> selected.lotId != null && lots.any { it.lotId == selected.lotId } }
             val medicine = selectedMedicine?.takeIf { selected -> medicines.any { it.medicineBatchId == selected.medicineBatchId } }
             val dose = doseField.text.toString().removeSuffix(" ml")
             val validDose = applicationFormValidator.isValidDose(dose)
+            val goal = goalField.text.toString().trim()
             if (lot == null) lotValue.error = getString(R.string.applications_register_lot_required)
             if (medicine == null) medicineValue.error = getString(R.string.applications_register_medicine_required)
             if (!validDose) doseField.error = getString(R.string.applications_register_dose_invalid)
-            if (lot == null || medicine == null || !validDose) {
+            if (goal.isBlank()) goalField.error = getString(R.string.applications_register_goal_required)
+            if (lot == null || medicine == null || !validDose || goal.isBlank()) {
                 return@setOnClickListener
             }
 
             optionsViewModel.registerApplication(
-                data = RegisterLotApplicationDto(lot, medicine.medicineName, selectedDate.toString(), dose.toBigDecimal()),
+                data = RegisterLotApplicationDto(medicine.medicineBatchId, lot.lotId!!, lot.lotName, medicine.medicineName, selectedDate.toString(), dose.toBigDecimal(), goal),
                 onLoading = { loading ->
                     registerButton.isEnabled = !loading
                     registerButton.isClickable = !loading
