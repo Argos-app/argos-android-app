@@ -70,9 +70,9 @@ class MockedArgosApiRepository(
     ): Unit = logger.runSuspending("register_lot_application") {
         if (bearerToken.isBlank() || userId.isBlank()) throw SecurityException("User session is unavailable.")
         require(data.dose.signum() > 0) { "Dose must be positive." }
-        require(data.earCode == null || (data.earCode.length >= 2 && data.earCode.all(Char::isDigit))) { "Ear code is invalid." }
-        require(listLots(bearerToken).any { it.lotName == data.lotName }) { "Lot not found." }
-        val medicine = medicines.firstOrNull { it.medicineName == data.medicineName }
+        require(data.goal.isNotBlank()) { "Application goal is required." }
+        require(listLots(bearerToken).any { it.lotId == data.lotId && it.lotName == data.lotName }) { "Lot not found." }
+        val medicine = medicines.firstOrNull { it.medicineBatchId == data.medicineBatchId && it.medicineName == data.medicineName }
             ?: throw NoSuchElementException("Medicine not found.")
         val date = LocalDate.parse(data.applicationDate)
         val time = LocalTime.now()
@@ -81,18 +81,18 @@ class MockedArgosApiRepository(
         registeredApplications.add(0, Application(
             lotName = data.lotName,
             lotCode = null,
-            earCode = data.earCode,
+            earCode = null,
             medicineName = data.medicineName,
             applicationDate = date.atTime(time),
             applicationTime = time,
             dose = data.dose,
             unit = data.unit,
-            route = null,
-            headCountApplied = if (data.earCode == null) null else 1,
-            headCount = if (data.earCode == null) null else 1,
+            route = data.route,
+            headCountApplied = null,
+            headCount = null,
             meatWithdrawalEnd = withdrawalEnd,
             status = if (withdrawalEnd.isAfter(LocalDate.now())) "Pendente" else "Concluida",
-            goal = null,
+            goal = data.goal,
             notes = null,
         ))
         Unit
