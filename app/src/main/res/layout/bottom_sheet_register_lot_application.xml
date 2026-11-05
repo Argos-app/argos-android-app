@@ -266,11 +266,40 @@
             </LinearLayout>
         </LinearLayout>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="14dp"
+            android:fontFamily="@font/dm_sans"
+            android:text="@string/applications_register_goal_label"
+            android:textColor="@color/argos_green"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/applicationGoalField"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/application_field_background"
+            android:fontFamily="@font/dm_sans"
+            android:gravity="top|start"
+            android:hint="@string/applications_register_goal_hint"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLines="4"
+            android:minLines="3"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="12dp"
+            android:textColor="#FF000000"
+            android:textColorHint="@color/argos_placeholder"
+            android:textSize="12sp" />
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginHorizontal="42dp"
-            android:layout_marginTop="88dp">
+            android:layout_marginTop="20dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/applicationRegisterButton"

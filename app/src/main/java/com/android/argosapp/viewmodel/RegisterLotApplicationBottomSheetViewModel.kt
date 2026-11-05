@@ -16,6 +16,7 @@ import java.math.BigDecimal
 import com.android.argosapp.data.cache.storage.UserStorage
 import com.android.argosapp.data.dto.MedicinePageDto
 import com.android.argosapp.data.dto.MedicineDto
+import com.android.argosapp.data.dto.LotDto
 import com.android.argosapp.model.AnimalExceptionRecord
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
     fun loadLots(
         force: Boolean = false,
         onLoading: (Boolean) -> Unit,
-        onLoaded: (List<String>) -> Unit,
+        onLoaded: (List<LotDto>) -> Unit,
         onError: (Exception) -> Unit,
     ) = loadLotOptions(force, exceptionLotsOnly = false, onLoading, onLoaded, onError)
 
@@ -80,13 +81,15 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
         onLoading: (Boolean) -> Unit,
         onLoaded: (List<String>) -> Unit,
         onError: (Exception) -> Unit,
-    ) = loadLotOptions(force, exceptionLotsOnly = true, onLoading, onLoaded, onError)
+    ) = loadLotOptions(force, exceptionLotsOnly = true, onLoading, { lots ->
+        onLoaded(lots.map { it.lotName.substringBeforeLast("-") }.distinct())
+    }, onError)
 
     private fun loadLotOptions(
         force: Boolean,
         exceptionLotsOnly: Boolean,
         onLoading: (Boolean) -> Unit,
-        onLoaded: (List<String>) -> Unit,
+        onLoaded: (List<LotDto>) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         viewModelScope.launch {
@@ -95,10 +98,6 @@ class RegisterLotApplicationBottomSheetViewModel(application: Application) : And
                     onLoaded(
                         cachedLots.asSequence()
                             .filter { (it.animalExceptionOutList != null) == exceptionLotsOnly }
-                            .map { lot ->
-                                if (exceptionLotsOnly) lot.lotName.substringBeforeLast("-") else lot.lotName
-                            }
-                            .distinct()
                             .toList(),
                     )
                 }
